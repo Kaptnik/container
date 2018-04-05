@@ -140,7 +140,7 @@ namespace Unity
                 ref var root = ref getParentContextMethod();
 
                 // Initialize root context
-                root.Registration      = GetRegistration(type, name);
+                root.Registration      = RegistrationOrDefault(type, name);
                 root.LifetimeContainer = _lifetimeContainer;
 
                 root.Resolve = (dependencyType, dependencyName) =>

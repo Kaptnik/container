@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Reflection;
 using System.Threading;
+using System.Threading.Tasks;
 using Unity.Build.Context;
 using Unity.Build.Pipeline;
 using Unity.Container.Registration;
@@ -19,43 +20,6 @@ namespace Unity
 
         private const int ContainerInitialCapacity = 37;
         private const int ListToHashCutoverPoint = 8;
-
-        #endregion
-
-
-        #region Registration Aspects
-
-        public static RegisterPipeline DynamicRegistrationAspectFactory(RegisterPipeline next)
-        {
-            // Analise registration and generate mappings
-            return (ILifetimeContainer lifetimeContainer, IPolicySet set, object[] args) =>
-            {
-                var registration = (ImplicitRegistration)set;
-                var info = registration.Type.GetTypeInfo();
-
-                // Generic types require implementation
-                if (info.IsGenericType)
-                {
-                    // Find implementation for this type
-                    var unity = (UnityContainer)lifetimeContainer.Container;
-                    var definition = info.GetGenericTypeDefinition();
-                    var registry = unity._getType(definition) ??
-                                   throw new InvalidOperationException("No such type"); // TODO: Add proper error message
-
-                    // This registration must be present to proceed
-                    var target = (null == registration.Name
-                               ? registry[null]
-                               : registry[registration.Name] ?? registry[null])
-                               ?? throw new InvalidOperationException("No such type");    // TODO: Add proper error message
-
-                    // Build rest of pipeline
-                    return next?.Invoke(lifetimeContainer, registration, target);
-                }
-
-                // Build rest of pipeline
-                return next?.Invoke(lifetimeContainer, registration);
-            };
-        }
 
         #endregion
 
@@ -148,6 +112,136 @@ namespace Unity
 
         #region Registration manipulation
 
+
+        private ImplicitRegistration RegistrationOrDefault(Type type, string name)
+        {
+            return GetOrDefault(type, name, out var container) ?? AddRegistration(type, name);
+        }
+
+        private ImplicitRegistration GetOrDefault(Type type, string name, out UnityContainer container)
+        {
+            ImplicitRegistration typeDefault = null;
+            var hashCode = (type?.GetHashCode() ?? 0) & 0x7FFFFFFF;
+
+            for (container = this; null != container; container = container._parent)
+            {
+                // Skip to parent if nothing registered
+                if (null == container._registrations) continue;
+
+                var targetBucket = hashCode % container._registrations.Buckets.Length;
+                for (var i = container._registrations.Buckets[targetBucket]; i >= 0; i = container._registrations.Entries[i].Next)
+                {
+                    // Get reference to the entry
+                    ref var entry = ref container._registrations.Entries[i];
+
+                    // Continue if no match
+                    if (entry.HashCode != hashCode || entry.Key != type) continue;
+
+                    // Get registration or skip to next container
+                    var registry = entry.Value;
+                    if (null == registry) break;
+
+                    // Return if found
+                    var registration = registry[name];
+                    if (null != registration) return (ImplicitRegistration)registration;
+
+                    // Get default for the type if present
+                    if (null == typeDefault) typeDefault = registry.Default as ImplicitRegistration;
+
+                    // Skip to parent
+                    break;
+                }
+            }
+
+            return typeDefault;
+        }
+
+        private ImplicitRegistration AddRegistration(Type type, string name)
+        {
+            var info = type.GetTypeInfo();
+
+            // Generic type
+            if (info.IsGenericType)
+            {
+                // Find implementation for this type
+                IPolicySet nullDefault = null;
+                IPolicySet typeDefault = null;
+                IPolicySet openGeneric = null;
+                UnityContainer nullContainer = null;
+                UnityContainer typeContainer = null;
+                UnityContainer container;
+
+                var definition = info.GetGenericTypeDefinition();
+                var hashCode = (definition?.GetHashCode() ?? 0) & 0x7FFFFFFF;
+
+                for (container = this; null != container; container = container._parent)
+                {
+                    // Skip to parent if nothing registered
+                    if (null == container._registrations) continue;
+
+                    var targetBucket = hashCode % container._registrations.Buckets.Length;
+                    for (var i = container._registrations.Buckets[targetBucket]; i >= 0; i = container._registrations.Entries[i].Next)
+                    {
+                        // Get reference to the entry
+                        ref var entry = ref container._registrations.Entries[i];
+
+                        // Continue if no match
+                        if (entry.HashCode != hashCode || entry.Key != definition) continue;
+
+                        // Return if found
+                        if (null != name)
+                        {
+                            openGeneric = entry.Value[name];
+                            if (null == nullDefault)
+                            {
+                                nullDefault = entry.Value[null];
+                                nullContainer = container;
+                            }
+                        }
+                        else
+                            openGeneric = entry.Value[null];
+
+                        // Get default for the type if present
+                        if (null == typeDefault)
+                        {
+                            typeDefault = entry.Value.Default as ImplicitRegistration;
+                            typeContainer = container;
+                        }
+
+                        // Skip to parent
+                        break;
+                    }
+
+                    if (null == openGeneric) continue;
+
+                    var registration = container.GetOrAdd(type, name);
+                    registration.ResolveMethod = _implicitRegistrationPipeline(_lifetimeContainer, registration, openGeneric);
+                    return registration;
+                }
+
+                // Build resolve pipeline
+
+                if (null != typeDefault)
+                {
+                    var registration = typeContainer.GetOrAdd(type, name);
+                    registration.ResolveMethod = _implicitRegistrationPipeline(_lifetimeContainer, registration, typeDefault);
+                    return registration;
+                }
+
+                if (null != nullDefault)
+                {
+                    var registration = nullContainer.GetOrAdd(type, name);
+                    registration.ResolveMethod = _implicitRegistrationPipeline(_lifetimeContainer, registration, nullDefault);
+                    return registration;
+                }
+
+                // TODO: Proper message
+                throw new InvalidOperationException("No Open Generic registered");
+            }
+
+            return null;
+        }
+
         private void StoreRegistration(ExplicitRegistration registration)
         {
             // Add to appropriate storage
@@ -224,78 +318,48 @@ namespace Unity
             var hashCode = (type?.GetHashCode() ?? 0) & 0x7FFFFFFF;
             var targetBucket = hashCode % _registrations.Buckets.Length;
 
-            for (var i = _registrations.Buckets[targetBucket]; i >= 0; i = _registrations.Entries[i].Next)
+            lock (_syncRoot)
             {
-                if (_registrations.Entries[i].HashCode != hashCode ||
-                    _registrations.Entries[i].Key != type)
+                for (var i = _registrations.Buckets[targetBucket]; i >= 0; i = _registrations.Entries[i].Next)
                 {
-                    continue;
-                }
-
-                var policy = _registrations.Entries[i].Value?[name];
-                if (null != policy) return (ImplicitRegistration)policy;
-            }
-
-            ImplicitRegistration registration = null;
-
-            try
-            {
-                lock (_syncRoot)
-                {
-                    for (var i = _registrations.Buckets[targetBucket]; i >= 0; i = _registrations.Entries[i].Next)
+                    if (_registrations.Entries[i].HashCode != hashCode ||
+                        _registrations.Entries[i].Key != type)
                     {
-                        if (_registrations.Entries[i].HashCode != hashCode ||
-                            _registrations.Entries[i].Key != type)
-                        {
-                            collisions++;
-                            continue;
-                        }
-
-                        var existing = _registrations.Entries[i].Value;
-                        if (existing.RequireToGrow)
-                        {
-                            existing = existing is HashRegistry<string, IPolicySet> registry
-                                     ? new HashRegistry<string, IPolicySet>(registry)
-                                     : new HashRegistry<string, IPolicySet>(LinkedRegistry.ListToHashCutoverPoint * 2,
-                                                                           (LinkedRegistry)existing)
-                                     { [string.Empty] = null };
-
-                            _registrations.Entries[i].Value = existing;
-                        }
-
-                        registration = (ImplicitRegistration)existing.GetOrAdd(name, () => CreateRegistration(type, name));
-                        break;
+                        collisions++;
+                        continue;
                     }
 
-                    if (null == registration)
+                    var existing = _registrations.Entries[i].Value;
+                    if (existing.RequireToGrow)
                     {
-                        if (_registrations.RequireToGrow || ListToHashCutoverPoint < collisions)
-                        {
-                            _registrations = new HashRegistry<Type, IRegistry<string, IPolicySet>>(_registrations);
-                            targetBucket = hashCode % _registrations.Buckets.Length;
-                        }
+                        existing = existing is HashRegistry<string, IPolicySet> registry
+                                 ? new HashRegistry<string, IPolicySet>(registry)
+                                 : new HashRegistry<string, IPolicySet>(LinkedRegistry.ListToHashCutoverPoint * 2,
+                                                                       (LinkedRegistry)existing)
+                                 { [string.Empty] = null };
 
-                        registration = CreateRegistration(type, name);
-                        _registrations.Entries[_registrations.Count].HashCode = hashCode;
-                        _registrations.Entries[_registrations.Count].Next = _registrations.Buckets[targetBucket];
-                        _registrations.Entries[_registrations.Count].Key = type;
-                        _registrations.Entries[_registrations.Count].Value = new LinkedRegistry(name, registration);
-                        _registrations.Buckets[targetBucket] = _registrations.Count;
-                        _registrations.Count++;
+                        _registrations.Entries[i].Value = existing;
                     }
 
+                    return (ImplicitRegistration)existing.GetOrAdd(name, () => CreateRegistration(type, name));
                 }
 
-                // Build resolve pipeline
-                registration.ResolveMethod = _dynamicRegistrationPipeline(_lifetimeContainer, registration);
-            }
-            finally 
-            {
-                // Release lock on the registration
-                Monitor.Exit(registration);
-            }
+                if (_registrations.RequireToGrow || ListToHashCutoverPoint < collisions)
+                {
+                    _registrations = new HashRegistry<Type, IRegistry<string, IPolicySet>>(_registrations);
+                    targetBucket = hashCode % _registrations.Buckets.Length;
+                }
 
-            return registration;
+                var registration = CreateRegistration(type, name);
+                _registrations.Entries[_registrations.Count].HashCode = hashCode;
+                _registrations.Entries[_registrations.Count].Next = _registrations.Buckets[targetBucket];
+                _registrations.Entries[_registrations.Count].Key = type;
+                _registrations.Entries[_registrations.Count].Value = new LinkedRegistry(name, registration);
+                _registrations.Buckets[targetBucket] = _registrations.Count;
+                _registrations.Count++;
+
+                return registration;
+            }
         }
 
         private ImplicitRegistration CreateRegistration(Type type, string name)
@@ -303,22 +367,24 @@ namespace Unity
             // Create registration
             var registration = new ImplicitRegistration(type, name);
 
-            // Create stub method in case it is requested before pipeline
-            // has been created. It waits for the initialization to complete
-            registration.ResolveMethod = (ref ResolutionContext context) =>
-            {
-                // Once lock is acquired the pipeline has been built
-                lock (Registrations)
-                {
-                    return registration.ResolveMethod(ref context);
-                }
-            };
+            ResolveMethod method = null;
 
-            // Acquire lock on the registration 
-            // until it is initialized
-            Monitor.Enter(registration);
+            registration.ResolveMethod = WaitStub;
+            method = registration.ResolveMethod;
 
             return registration;
+
+            // Create stub method in case it is requested before pipeline
+            // has been created. It waits for the initialization to complete
+            object WaitStub(ref ResolutionContext context)
+            {
+                while (registration.ResolveMethod == method)
+                {
+                    // TODO: Task.Delay(1);
+                }
+
+                return registration.ResolveMethod(ref context);
+            }
         }
 
         private IPolicySet Get(Type type, string name)
@@ -457,7 +523,7 @@ namespace Unity
                 lock (Registrations)
                 {
                     // Build resolve pipeline and replace the stub
-                    registration.ResolveMethod = _dynamicRegistrationPipeline(_lifetimeContainer, registration);
+                    registration.ResolveMethod = _implicitRegistrationPipeline(_lifetimeContainer, registration);
 
                     // Resolve using built pipeline
                     return registration.ResolveMethod(ref context);

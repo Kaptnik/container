@@ -68,7 +68,7 @@ namespace Unity
 
         // Registration
         private RegisterPipeline _explicitRegistrationPipeline;
-        private RegisterPipeline _dynamicRegistrationPipeline;
+        private RegisterPipeline _implicitRegistrationPipeline;
         private RegisterPipeline _instanceRegistrationPipeline;
 
         // Member Selection
@@ -162,7 +162,7 @@ namespace Unity
 
             _explicitRegistrationPipeline = _explicitRegistrationFactories.BuildPipeline();
             _instanceRegistrationPipeline = _instanceRegistrationFactories.BuildPipeline();
-            _dynamicRegistrationPipeline  = DynamicRegistrationAspectFactory( _implicitRegistrationFactories.BuildPipeline());
+            _implicitRegistrationPipeline = _implicitRegistrationFactories.BuildPipeline();
 
             _constructorSelectionPipeline = _selectConstructorFactories.BuildPipeline();
             _injectionMembersPipeline     = _injectionMembersFactories.BuildPipeline();
@@ -202,7 +202,7 @@ namespace Unity
         private UnityContainer(UnityContainer parent)
         {
             #if DEBUG
-            Id = $"{parent.Id}-{Guid.NewGuid().ToString()}";
+            Id = $"{parent.Id}-*";
             #endif
             ///////////////////////////////////////////////////////////////////////
             // Child container initialization
@@ -241,7 +241,7 @@ namespace Unity
             // Create Pipelines
 
             // TODO: Create on demand
-            _dynamicRegistrationPipeline  = _parent._dynamicRegistrationPipeline;
+            _implicitRegistrationPipeline  = _parent._implicitRegistrationPipeline;
             _explicitRegistrationPipeline = _parent._explicitRegistrationPipeline;
             _instanceRegistrationPipeline = _parent._instanceRegistrationPipeline;
             _constructorSelectionPipeline = _parent._constructorSelectionPipeline;

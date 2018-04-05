@@ -35,6 +35,9 @@ namespace Unity
                 var buildTypeInfo = registration.ImplementationType.GetTypeInfo();
                 if (buildTypeInfo.IsGenericTypeDefinition)
                 {
+                    // If resolved throw                          // TODO: Add proper error message
+                    pipeline = (ref ResolutionContext context) => throw new InvalidOperationException("Trying to construct Open Generic");
+
                     // Create generic type factory
                     InjectionConstructor ctor = null;
                     var unity = (UnityContainer)lifetimeContainer.Container;
