@@ -7,7 +7,7 @@ namespace System.Reflection
 {
     using Unity;
 
-    internal class TypeInfo 
+    public class TypeInfo 
     {
         private const BindingFlags DeclaredOnlyLookup = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static | BindingFlags.DeclaredOnly;
         private readonly Type _type;

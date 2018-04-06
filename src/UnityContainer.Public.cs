@@ -5,7 +5,6 @@ using System.Globalization;
 using System.Linq;
 using System.Reflection;
 using Unity.Build.Pipeline;
-using Unity.Build.Policy;
 using Unity.Container.Registration;
 using Unity.Events;
 using Unity.Exceptions;
@@ -37,31 +36,23 @@ namespace Unity
                 }
             }
 
-            // Register type
-            var registration = new ExplicitRegistration(registeredType, name, mappedTo, lifetimeManager);
-
-            // Add injection members policies to the registration
-            if (null != injectionMembers && 0 < injectionMembers.Length)
+            var context = new RegistrationContext
             {
-                foreach (var member in injectionMembers)
-                {
-                    // Validate against ImplementationType with InjectionFactory
-                    if (member is InjectionFactory && registration.ImplementationType != registration.Type)  // TODO: Add proper error message
-                        throw new InvalidOperationException("Registration where both ImplementationType and InjectionFactory are set is not supported");
+                TypeInfo = registeredType.GetTypeInfo(),
+                InjectionMembers = injectionMembers
+            };
 
-                    // Mark as requiring build if any one of the injectors are marked with IRequireBuild
-                    if (member is IRequireBuild) registration.BuildRequired = true;
-
-                    // Add policies
-                    member.AddPolicies(registration.Type, registration.Name, registration.ImplementationType, registration);
-                }
+            // Register type
+            if (context.TypeInfo.IsGenericTypeDefinition)
+            {
+                context.Registration = new GenericRegistration(registeredType, name, mappedTo, lifetimeManager);
+                RegisterGenericType(ref context);
             }
-
-            // Build resolve pipeline
-            registration.ResolveMethod = _explicitRegistrationPipeline(_lifetimeContainer, registration);
-
-            // Add to appropriate storage
-            StoreRegistration(registration);
+            else
+            {
+                context.Registration = new ExplicitRegistration(registeredType, name, mappedTo, lifetimeManager);
+                RegisterConstructableType(ref context);
+            }
 
             return this;
         }

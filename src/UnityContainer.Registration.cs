@@ -5,6 +5,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Unity.Build.Context;
 using Unity.Build.Pipeline;
+using Unity.Build.Policy;
 using Unity.Container.Registration;
 using Unity.Container.Storage;
 using Unity.Lifetime;
@@ -20,6 +21,71 @@ namespace Unity
 
         private const int ContainerInitialCapacity = 37;
         private const int ListToHashCutoverPoint = 8;
+
+        #endregion
+
+
+        #region Type Registration
+
+        private void RegisterGenericType(ref RegistrationContext context)
+        {
+            //// Build resolve pipeline
+            //registration.ResolveMethod = _explicitRegistrationPipeline(_lifetimeContainer, registration);
+
+            //// Add to appropriate storage
+            //StoreRegistration(registration);
+
+
+            // Add injection members policies to the registration
+            if (null != context.InjectionMembers && 0 < context.InjectionMembers.Length)
+            {
+                foreach (var member in context.InjectionMembers)
+                {
+                    // Validate against ImplementationType with InjectionFactory
+                    if (member is InjectionFactory && context.Registration.ImplementationType != context.Registration.Type)  // TODO: Add proper error message
+                        throw new InvalidOperationException("Registration where both ImplementationType and InjectionFactory are set is not supported");
+
+                    // Mark as requiring build if any one of the injectors are marked with IRequireBuild
+                    if (member is IRequireBuild) context.Registration.BuildRequired = true;
+
+                    // Add policies
+                    member.AddPolicies(context.Registration.Type,
+                        context.Registration.Name,
+                        context.Registration.ImplementationType,
+                        context.Registration);
+                }
+            }
+        }
+
+        private void RegisterConstructableType(ref RegistrationContext context)
+        {
+            //// Build resolve pipeline
+            //registration.ResolveMethod = _explicitRegistrationPipeline(_lifetimeContainer, registration);
+
+            //// Add to appropriate storage
+            //StoreRegistration(registration);
+
+
+            // Add injection members policies to the registration
+            if (null != context.InjectionMembers && 0 < context.InjectionMembers.Length)
+            {
+                foreach (var member in context.InjectionMembers)
+                {
+                    // Validate against ImplementationType with InjectionFactory
+                    if (member is InjectionFactory && context.Registration.ImplementationType != context.Registration.Type)  // TODO: Add proper error message
+                        throw new InvalidOperationException("Registration where both ImplementationType and InjectionFactory are set is not supported");
+
+                    // Mark as requiring build if any one of the injectors are marked with IRequireBuild
+                    if (member is IRequireBuild) context.Registration.BuildRequired = true;
+
+                    // Add policies
+                    member.AddPolicies(context.Registration.Type,
+                        context.Registration.Name,
+                        context.Registration.ImplementationType,
+                        context.Registration);
+                }
+            }
+        }
 
         #endregion
 
