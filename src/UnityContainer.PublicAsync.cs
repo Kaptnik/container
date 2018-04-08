@@ -30,6 +30,7 @@ namespace Unity
             }
 
             // Create registration
+/*
             var registration = new ExplicitRegistration(registeredType, name, mappedTo, lifetimeManager); // ReSharper disable once CoVariantArrayConversion
 
             // Register type
@@ -37,7 +38,6 @@ namespace Unity
 
             // Add to appropriate storage
             StoreRegistration(registration);
-/*
             // Define the cancellation token.
             var source = new CancellationTokenSource();
 

@@ -8,9 +8,9 @@ namespace Unity.Aspect.Select
 {
     public static class SelectLongestConstructor
     {
-        public static SelectConstructorPipeline SelectConstructorPipelineFactory(SelectConstructorPipeline next)
+        public static Factory<Type, InjectionConstructor> SelectConstructorPipelineFactory(Factory<Type, InjectionConstructor> next)
         {
-            return (IUnityContainer container, Type type) =>
+            return (Type type) =>
             {
                 int max = -1;
                 ConstructorInfo secondBest = null;
@@ -31,7 +31,7 @@ namespace Unity.Aspect.Select
                      max == secondBest.GetParameters().Length)
                 {
                     // Give next handler a chance to resolve
-                    var result = next?.Invoke(container, type);
+                    var result = next?.Invoke(type);
                     if (null != result) return result;
 
                     throw new InvalidOperationException(

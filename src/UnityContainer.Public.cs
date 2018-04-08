@@ -5,6 +5,7 @@ using System.Globalization;
 using System.Linq;
 using System.Reflection;
 using Unity.Build.Pipeline;
+using Unity.Container.Context;
 using Unity.Container.Registration;
 using Unity.Events;
 using Unity.Exceptions;
@@ -15,7 +16,6 @@ using Unity.Resolution;
 
 namespace Unity
 {
-    [CLSCompliant(true)]
     public partial class UnityContainer
     {
         #region Type Registration
@@ -36,23 +36,37 @@ namespace Unity
                 }
             }
 
+            var unity = lifetimeManager is ISingletonLifetimePolicy ? _root : this;
             var context = new RegistrationContext
             {
+                RegisteredType = registeredType,
+                Name = name,
+                MappedTo = mappedTo,
+                LifetimeManager = lifetimeManager,
+                InjectionMembers = injectionMembers,
+
                 TypeInfo = registeredType.GetTypeInfo(),
-                InjectionMembers = injectionMembers
+                Container = unity,
+                GetInjectionMembers = (Type type) => unity._injectionMembersPipeline(type)
             };
 
-            // Register type
+            // Analise and register type
             if (context.TypeInfo.IsGenericTypeDefinition)
             {
-                context.Registration = new GenericRegistration(registeredType, name, mappedTo, lifetimeManager);
-                RegisterGenericType(ref context);
+                // When registering open generic (the factory) following is possible:
+                //
+                // - InjectionFactory of ITypeFactory<Type> provided for the type
+                // - Plain generic type registration (or mapping)
+
+                // Build resolve pipeline
+                var registration = (GenericRegistration)context.Container._genericRegistrationPipeline(ref context);
+
+                //// Add to appropriate storage
+                StoreFactory(registration);
             }
+
             else
-            {
-                context.Registration = new ExplicitRegistration(registeredType, name, mappedTo, lifetimeManager);
-                RegisterConstructableType(ref context);
-            }
+                context.Container.RegisterConstructableType(ref context);
 
             return this;
         }
@@ -65,22 +79,22 @@ namespace Unity
         /// <inheritdoc />
         public IUnityContainer RegisterInstance(Type registeredType, string name, object instance, LifetimeManager lifetimeManager)
         {
-            // Validate input
-            if (null == instance) throw new ArgumentNullException(nameof(instance));
+            //// Validate input
+            //if (null == instance) throw new ArgumentNullException(nameof(instance));
 
-            // Add value to Lifetime Manager
-            var type = registeredType ?? instance.GetType();
-            var lifetime = lifetimeManager ?? new ContainerControlledLifetimeManager();
-            lifetime.SetValue(instance);
+            //// Add value to Lifetime Manager
+            //var type = registeredType ?? instance.GetType();
+            //var lifetime = lifetimeManager ?? new ContainerControlledLifetimeManager();
+            //lifetime.SetValue(instance);
 
-            // Register instance
-            var registration = new ExplicitRegistration(type, name, type, lifetime);
+            //// Register instance
+            //var registration = new ExplicitRegistration(type, name, type, lifetime);
             
-            // Build resolve pipeline
-            registration.ResolveMethod = _instanceRegistrationPipeline(_lifetimeContainer, registration);
+            //// Build resolve pipeline
+            //registration.ResolveMethod = _instanceRegistrationPipeline(_lifetimeContainer, registration);
 
-            // Add to appropriate storage
-            StoreRegistration(registration);
+            //// Add to appropriate storage
+            //StoreRegistration(registration);
 
             return this;
         }

@@ -35,6 +35,18 @@ namespace Unity.Container.Storage
             _next = new LinkedNode<Type, object>(policyInterface, policy);
         }
 
+        public PolicySet(IPolicySet set)
+        {
+            var policySet = (PolicySet)set ?? throw new ArgumentNullException(nameof(set));
+
+            _hash = policySet._hash;
+            _foregn = policySet._foregn;
+            _next = policySet._next;
+
+            Type = policySet.Type;
+            Name = policySet.Name;
+        }
+
         #endregion
 
 

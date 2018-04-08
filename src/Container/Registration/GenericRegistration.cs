@@ -1,8 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq.Expressions;
-using System.Text;
 using Unity.Build.Pipeline;
 using Unity.Build.Policy;
 using Unity.Lifetime;
@@ -12,14 +10,10 @@ namespace Unity.Container.Registration
 {
     [DebuggerDisplay("GenericRegistration: Type={Type?.Name},  Name={Name},  MappedTo={Type == ImplementationType ? string.Empty : ImplementationType?.Name ?? string.Empty},  {LifetimeManager?.GetType()?.Name}")]
     public class GenericRegistration : ImplicitRegistration,
-                                       IContainerRegistration,
-                                       IPipelineFactory<Type>
+                                       ITypeFactory<Type>,
+                                       IContainerRegistration
     {
         #region Constructors
-
-        public GenericRegistration(Type registeredType, string name, LifetimeManager lifetimeManager)
-            : this(registeredType, name, registeredType, lifetimeManager)
-        { }
 
         public GenericRegistration(Type registeredType, string name, Type mappedTo, LifetimeManager lifetimeManager)
             : base(registeredType, name)
@@ -41,8 +35,8 @@ namespace Unity.Container.Registration
 
         #endregion
 
-        public PipelineFactory<Type, ResolveMethod> CreateActivator { get; }
+        public Factory<Type, ResolveMethod> Activator { get; set; }
 
-        public PipelineFactory<Type, Expression> CreateExpression { get; }
+        public Factory<Type, Expression> Expression { get; set; }
     }
 }

@@ -1,18 +1,20 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Reflection;
 using Unity.Attributes;
 using Unity.Build.Pipeline;
+using Unity.Container.Pipeline;
 using Unity.Registration;
 
 namespace Unity.Aspect.Select
 {
     public static class SelectAttributedMembers
     {
-        public static SelectConstructorPipeline SelectConstructorPipelineFactory(SelectConstructorPipeline next)
+        public static Factory<Type, InjectionConstructor> SelectConstructorPipelineFactory(Factory<Type, InjectionConstructor> next)
         {
-            return (IUnityContainer container, Type type) =>
+            return (Type type) =>
             {
                 ConstructorInfo constructor = null;
                 foreach (var ctor in type.GetTypeInfo().DeclaredConstructors)
@@ -33,31 +35,31 @@ namespace Unity.Aspect.Select
                 if (null != constructor)
                     return new InjectionConstructor(constructor);
 
-                return next?.Invoke(container, type);
+                return next?.Invoke(type);
             };
         }
 
-        public static InjectionMembersPipeline SelectMethodsPipelineFactory(InjectionMembersPipeline next)
+        public static Factory<Type, IEnumerable<InjectionMember>> SelectMethodsPipelineFactory(Factory<Type, IEnumerable<InjectionMember>> next)
         {
-            return (IUnityContainer container, Type type) =>
+            return (Type type) =>
             {
                 return type.GetTypeInfo()
                            .DeclaredMethods
                            .Where(method => method.IsDefined(typeof(InjectionMethodAttribute), true))
                            .Select(method => new InjectionMethod(method))
-                           .Concat(next?.Invoke(container, type) ?? Enumerable.Empty<InjectionMethod>());
+                           .Concat(next?.Invoke(type) ?? Enumerable.Empty<InjectionMethod>());
             };
         }
 
-        public static InjectionMembersPipeline SelectPropertiesPipelineFactory(InjectionMembersPipeline next)
+        public static Factory<Type, IEnumerable<InjectionMember>> SelectPropertiesPipelineFactory(Factory<Type, IEnumerable<InjectionMember>> next)
         {
-            return (IUnityContainer container, Type type) =>
+            return (Type type) =>
             {
                 return type.GetTypeInfo()
                            .DeclaredProperties
                            .Where(property => property.IsDefined(typeof(DependencyAttribute), true))
                            .Select(property => new InjectionProperty(property))
-                           .Concat(next?.Invoke(container, type) ?? Enumerable.Empty<InjectionProperty>());
+                           .Concat(next?.Invoke(type) ?? Enumerable.Empty<InjectionProperty>());
             };
         }
 

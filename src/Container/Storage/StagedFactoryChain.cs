@@ -11,7 +11,7 @@ namespace Unity.Container.Storage
     /// </summary>
     /// <typeparam name="TStageEnum">The stage enumeration to partition the strategies.</typeparam>
     /// <typeparam name="TPipeline"></typeparam>
-    public class StagedFactoryChain<TPipeline, TStageEnum> : IEnumerable<PipelineFactory<TPipeline, TPipeline>>, 
+    public class StagedFactoryChain<TPipeline, TStageEnum> : IEnumerable<Factory<TPipeline, TPipeline>>, 
                                                              IDisposable
     {
         #region Fields
@@ -20,7 +20,7 @@ namespace Unity.Container.Storage
         private readonly object _lockObject = new object();
         private readonly StagedFactoryChain<TPipeline, TStageEnum> _parent;
 
-        private IList<PipelineFactory<TPipeline, TPipeline>>[] _stages;
+        private IList<Factory<TPipeline, TPipeline>>[] _stages;
 
         #endregion
 
@@ -51,7 +51,7 @@ namespace Unity.Container.Storage
 
         public event EventHandler<EventArgs> Invalidated;
 
-        public void Add(PipelineFactory<TPipeline, TPipeline> factory, TStageEnum stage)
+        public void Add(Factory<TPipeline, TPipeline> factory, TStageEnum stage)
         {
             lock (_lockObject)
             {
@@ -62,7 +62,7 @@ namespace Unity.Container.Storage
             }
         }
 
-        public bool Remove(PipelineFactory<TPipeline, TPipeline> item)
+        public bool Remove(Factory<TPipeline, TPipeline> item)
         {
             lock (_lockObject)
             {
@@ -104,7 +104,7 @@ namespace Unity.Container.Storage
 
         #region IEnumerable
 
-        public IEnumerator<PipelineFactory<TPipeline, TPipeline>> GetEnumerator()
+        public IEnumerator<Factory<TPipeline, TPipeline>> GetEnumerator()
         {
             lock (_lockObject)
             {
@@ -158,10 +158,10 @@ namespace Unity.Container.Storage
 
         private void Initialize()
         {
-            _stages = new IList<PipelineFactory<TPipeline, TPipeline>>[_length];
+            _stages = new IList<Factory<TPipeline, TPipeline>>[_length];
 
             for (var i = 0; i < _length; i++)
-                _stages[i] = new List<PipelineFactory<TPipeline, TPipeline>>();
+                _stages[i] = new List<Factory<TPipeline, TPipeline>>();
         }
 
         #endregion

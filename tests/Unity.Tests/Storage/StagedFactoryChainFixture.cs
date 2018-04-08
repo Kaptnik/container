@@ -3,9 +3,9 @@ using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Unity.Build.Pipeline;
 using Unity.Build.Stage;
+using Unity.Container.Context;
+using Unity.Container.Pipeline;
 using Unity.Container.Storage;
-using Unity.Lifetime;
-using Unity.Storage;
 
 namespace Unity.Container.Tests.Storage
 {
@@ -15,22 +15,19 @@ namespace Unity.Container.Tests.Storage
         #region Setup
 
         private string _data;
-        private StagedFactoryChain<RegisterPipeline, RegisterStage> _chain;
+        private StagedFactoryChain<Registration<ResolveMethod>, RegisterStage> _chain;
 
         [TestInitialize]
         public void Setup()
         {
             _data = null;
-            _chain = new StagedFactoryChain<RegisterPipeline, RegisterStage>
+            _chain = new StagedFactoryChain<Registration<ResolveMethod>, RegisterStage>
             {
                 {TestAspectFactory1, RegisterStage.Setup},
                 {TestAspectFactory2, RegisterStage.Collections},
                 {TestAspectFactory3, RegisterStage.Lifetime},
                 {TestAspectFactory4, RegisterStage.TypeMapping},
-                {TestAspectFactory5, RegisterStage.PreCreation},
-                {TestAspectFactory6, RegisterStage.Creation},
-                {TestAspectFactory7, RegisterStage.Initialization},
-                {TestAspectFactory8, RegisterStage.PostInitialization}
+                {TestAspectFactory6, RegisterStage.Creation}
             };
             _chain.Invalidated += (sender, args) => _data = "Invalidated-";
         }
@@ -43,18 +40,19 @@ namespace Unity.Container.Tests.Storage
         [TestMethod]
         public void Container_Storage_StagedFactoryChain_empty()
         {
-            StagedFactoryChain<RegisterPipeline, RegisterStage> chain = new StagedFactoryChain<RegisterPipeline, RegisterStage>();
+            StagedFactoryChain<Registration<ResolveMethod>, RegisterStage> chain = new StagedFactoryChain<Registration<ResolveMethod>, RegisterStage>();
             Assert.IsNull(chain.BuildPipeline());
         }
 
         [TestMethod]
         public void Container_Storage_StagedFactoryChain_build()
         {
+            var context = new RegistrationContext();
             var method = _chain.BuildPipeline();
             Assert.IsNotNull(method);
 
             _data = _data + "-";
-            method.Invoke(null, null, null);
+            method.Invoke(ref context);
             Assert.AreEqual("87654321-12345678", _data);
         }
 
@@ -75,6 +73,7 @@ namespace Unity.Container.Tests.Storage
         [TestMethod]
         public void Container_Storage_StagedFactoryChain_add()
         {
+            var context = new RegistrationContext();
             Assert.IsTrue(_chain.Remove(TestAspectFactory8));
             _chain.Add(TestAspectFactory8, RegisterStage.Setup);
 
@@ -82,7 +81,7 @@ namespace Unity.Container.Tests.Storage
             Assert.IsNotNull(method);
 
             _data = _data + "-";
-            method.Invoke(null, null, null);
+            method.Invoke(ref context);
             Assert.AreEqual("Invalidated-76543218-81234567", _data);
             var array = _chain.ToArray();
             Assert.IsNotNull(array);
@@ -92,13 +91,14 @@ namespace Unity.Container.Tests.Storage
         [TestMethod]
         public void Container_Storage_StagedFactoryChain_remove()
         {
+            var context = new RegistrationContext();
             Assert.IsTrue(_chain.Remove(TestAspectFactory8));
             Assert.IsFalse(_chain.Remove(TestAspectFactory8));
             var method = _chain.BuildPipeline();
             Assert.IsNotNull(method);
 
             _data = _data + "-";
-            method.Invoke(null, null, null);
+            method.Invoke(ref context);
             Assert.AreEqual("Invalidated-7654321-1234567", _data);
             var array = _chain.ToArray();
             Assert.IsNotNull(array);
@@ -111,90 +111,90 @@ namespace Unity.Container.Tests.Storage
 
         #region Test Data
 
-        public RegisterPipeline TestAspectFactory1(RegisterPipeline next)
+        public Registration<ResolveMethod> TestAspectFactory1(Registration<ResolveMethod> next)
         {
             _data = _data + "1";
 
-            return (container, set, args) =>
+            return (ref RegistrationContext context) =>
             {
                 _data = _data + "1";
-                return next?.Invoke(container, set, args);
+                return next?.Invoke(ref context);
             };
 
         }
 
-        public RegisterPipeline TestAspectFactory2(RegisterPipeline next)
+        public Registration<ResolveMethod> TestAspectFactory2(Registration<ResolveMethod> next)
         {
             _data = _data + "2";
 
-            return (ILifetimeContainer container, IPolicySet set, object[] args) =>
+            return (ref RegistrationContext context) =>
             {
                 _data = _data + "2";
-                return next?.Invoke(container, set, args);
+                return next?.Invoke(ref context);
             };
         }
 
-        public RegisterPipeline TestAspectFactory3(RegisterPipeline next)
+        public Registration<ResolveMethod> TestAspectFactory3(Registration<ResolveMethod> next)
         {
             _data = _data + "3";
 
-            return (ILifetimeContainer container, IPolicySet set, object[] args) =>
+            return (ref RegistrationContext context) =>
             {
                 _data = _data + "3";
-                return next?.Invoke(container, set, args);
+                return next?.Invoke(ref context);
             };
         }
 
-        public RegisterPipeline TestAspectFactory4(RegisterPipeline next)
+        public Registration<ResolveMethod> TestAspectFactory4(Registration<ResolveMethod> next)
         {
             _data = _data + "4";
-            return (ILifetimeContainer container, IPolicySet set, object[] args) =>
+            return (ref RegistrationContext context) =>
             {
                 _data = _data + "4";
-                return next?.Invoke(container, set, args);
+                return next?.Invoke(ref context);
             };
         }
 
-        public RegisterPipeline TestAspectFactory5(RegisterPipeline next)
+        public Registration<ResolveMethod> TestAspectFactory5(Registration<ResolveMethod> next)
         {
             _data = _data + "5";
 
-            return (ILifetimeContainer container, IPolicySet set, object[] args) =>
+            return (ref RegistrationContext context) =>
             {
                 _data = _data + "5";
-                return next?.Invoke(container, set, args);
+                return next?.Invoke(ref context);
             };
         }
 
-        public RegisterPipeline TestAspectFactory6(RegisterPipeline next)
+        public Registration<ResolveMethod> TestAspectFactory6(Registration<ResolveMethod> next)
         {
             _data = _data + "6";
 
-            return (ILifetimeContainer container, IPolicySet set, object[] args) =>
+            return (ref RegistrationContext context) =>
             {
                 _data = _data + "6";
-                return next?.Invoke(container, set, args);
+                return next?.Invoke(ref context);
             };
         }
 
-        public RegisterPipeline TestAspectFactory7(RegisterPipeline next)
+        public Registration<ResolveMethod> TestAspectFactory7(Registration<ResolveMethod> next)
         {
             _data = _data + "7";
 
-            return (ILifetimeContainer container, IPolicySet set, object[] args) =>
+            return (ref RegistrationContext context) =>
             {
                 _data = _data + "7";
-                return next?.Invoke(container, set, args);
+                return next?.Invoke(ref context);
             };
         }
 
-        public RegisterPipeline TestAspectFactory8(RegisterPipeline next)
+        public Registration<ResolveMethod> TestAspectFactory8(Registration<ResolveMethod> next)
         {
             _data = _data + "8";
-            return (ILifetimeContainer container, IPolicySet set, object[] args) =>
+            return (ref RegistrationContext context) =>
             {
                 _data = _data + "8";
-                return next?.Invoke(container, set, args);
+                return next?.Invoke(ref context);
             };
         }
 

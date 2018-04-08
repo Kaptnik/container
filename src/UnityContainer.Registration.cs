@@ -1,14 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Reflection;
-using System.Threading;
-using System.Threading.Tasks;
 using Unity.Build.Context;
 using Unity.Build.Pipeline;
 using Unity.Build.Policy;
+using Unity.Container.Context;
 using Unity.Container.Registration;
 using Unity.Container.Storage;
-using Unity.Lifetime;
 using Unity.Policy;
 using Unity.Registration;
 using Unity.Storage;
@@ -25,65 +23,103 @@ namespace Unity
         #endregion
 
 
-        #region Type Registration
+        #region Fields
 
-        private void RegisterGenericType(ref RegistrationContext context)
+        private readonly object _factoriesSync = new object();  // TODO: Replace set with INamedType
+        private HashRegistry<Type, IRegistry<string, IPolicySet>> _factories = new HashRegistry<Type, IRegistry<string, IPolicySet>>(7);
+
+        #endregion
+
+
+        #region Open Generic Registrations
+
+        private void StoreFactory(ImplicitRegistration registration)
         {
-            //// Build resolve pipeline
-            //registration.ResolveMethod = _explicitRegistrationPipeline(_lifetimeContainer, registration);
-
-            //// Add to appropriate storage
-            //StoreRegistration(registration);
-
-
-            // Add injection members policies to the registration
-            if (null != context.InjectionMembers && 0 < context.InjectionMembers.Length)
+            var collisions = 0;
+            var hashCode = (registration.Type?.GetHashCode() ?? 0) & 0x7FFFFFFF;
+            var targetBucket = hashCode % _factories.Buckets.Length;
+            lock (_factoriesSync)
             {
-                foreach (var member in context.InjectionMembers)
+                for (var i = _factories.Buckets[targetBucket]; i >= 0; i = _factories.Entries[i].Next)
                 {
-                    // Validate against ImplementationType with InjectionFactory
-                    if (member is InjectionFactory && context.Registration.ImplementationType != context.Registration.Type)  // TODO: Add proper error message
-                        throw new InvalidOperationException("Registration where both ImplementationType and InjectionFactory are set is not supported");
+                    ref var entry = ref _factories.Entries[i];
+                    if (entry.HashCode != hashCode || entry.Key != registration.Type)
+                    {
+                        collisions++;
+                        continue;
+                    }
 
-                    // Mark as requiring build if any one of the injectors are marked with IRequireBuild
-                    if (member is IRequireBuild) context.Registration.BuildRequired = true;
+                    var existing = entry.Value;
+                    if (existing.RequireToGrow)
+                    {
+                        existing = existing is HashRegistry<string, IPolicySet> registry
+                                 ? new HashRegistry<string, IPolicySet>(registry)
+                                 : new HashRegistry<string, IPolicySet>(LinkedRegistry.ListToHashCutoverPoint * 2, (LinkedRegistry)existing)
+                                 { [string.Empty] = null };
 
-                    // Add policies
-                    member.AddPolicies(context.Registration.Type,
-                        context.Registration.Name,
-                        context.Registration.ImplementationType,
-                        context.Registration);
+                        _factories.Entries[i].Value = existing;
+                    }
+
+                    existing.SetOrReplace(registration.Name, registration);
                 }
+
+                if (_factories.RequireToGrow || ListToHashCutoverPoint < collisions)
+                {
+                    _factories = new HashRegistry<Type, IRegistry<string, IPolicySet>>(_factories);
+                    targetBucket = hashCode % _factories.Buckets.Length;
+                }
+
+                _factories.Entries[_factories.Count].HashCode = hashCode;
+                _factories.Entries[_factories.Count].Next = _factories.Buckets[targetBucket];
+                _factories.Entries[_factories.Count].Key = registration.Type;
+                _factories.Entries[_factories.Count].Value = new LinkedRegistry(registration.Name, registration);
+                _factories.Buckets[targetBucket] = _factories.Count;
+                _factories.Count++;
             }
         }
 
+        #endregion
+
+
+        #region Constructable Type Registrations
+
         private void RegisterConstructableType(ref RegistrationContext context)
         {
-            //// Build resolve pipeline
-            //registration.ResolveMethod = _explicitRegistrationPipeline(_lifetimeContainer, registration);
+            var registration = new ExplicitRegistration(context.RegisteredType, context.Name, context.MappedTo, context.LifetimeManager);
 
-            //// Add to appropriate storage
-            //StoreRegistration(registration);
+            //// Add injection members policies to the registration
+            //if (null != injectionMembers && 0 < injectionMembers.Length)
+            //{
+            //    foreach (var member in injectionMembers)
+            //    {
+            //        // Validate against ImplementationType with InjectionFactory
+            //        if (member is InjectionFactory && mappedTo != registeredType)  // TODO: Add proper error message
+            //            throw new InvalidOperationException("Registration where both ImplementationType and InjectionFactory are set is not supported");
 
+            //        // Mark as requiring build if any one of the injectors are marked with IRequireBuild
+            //        //if (member is IRequireBuild) registration.BuildRequired = true;
 
-            // Add injection members policies to the registration
-            if (null != context.InjectionMembers && 0 < context.InjectionMembers.Length)
+            //        // Add policies
+            //        member.AddPolicies(registeredType, name, mappedTo, context.Policies);
+            //    }
+            //}
+
+            // Build resolve pipeline
+            registration.ResolveMethod = _explicitRegistrationPipeline(ref context);
+
+            // Add or replace if exists 
+            var previous = _register(registration);
+            if (previous is ExplicitRegistration old && old.LifetimeManager is IDisposable disposableOld)
             {
-                foreach (var member in context.InjectionMembers)
-                {
-                    // Validate against ImplementationType with InjectionFactory
-                    if (member is InjectionFactory && context.Registration.ImplementationType != context.Registration.Type)  // TODO: Add proper error message
-                        throw new InvalidOperationException("Registration where both ImplementationType and InjectionFactory are set is not supported");
+                // Dispose replaced lifetime manager
+                _lifetimeContainer.Remove(disposableOld);
+                disposableOld.Dispose();
+            }
 
-                    // Mark as requiring build if any one of the injectors are marked with IRequireBuild
-                    if (member is IRequireBuild) context.Registration.BuildRequired = true;
-
-                    // Add policies
-                    member.AddPolicies(context.Registration.Type,
-                        context.Registration.Name,
-                        context.Registration.ImplementationType,
-                        context.Registration);
-                }
+            // If Disposable add to container's lifetime
+            if (registration.LifetimeManager is IDisposable disposable)
+            {
+                _lifetimeContainer.Add(disposable);
             }
         }
 
@@ -281,7 +317,7 @@ namespace Unity
                     if (null == openGeneric) continue;
 
                     var registration = container.GetOrAdd(type, name);
-                    registration.ResolveMethod = _implicitRegistrationPipeline(_lifetimeContainer, registration, openGeneric);
+//                    registration.ResolveMethod = _implicitRegistrationPipeline(_lifetimeContainer, registration, openGeneric);
                     return registration;
                 }
 
@@ -290,14 +326,14 @@ namespace Unity
                 if (null != typeDefault)
                 {
                     var registration = typeContainer.GetOrAdd(type, name);
-                    registration.ResolveMethod = _implicitRegistrationPipeline(_lifetimeContainer, registration, typeDefault);
+//                    registration.ResolveMethod = _implicitRegistrationPipeline(_lifetimeContainer, registration, typeDefault);
                     return registration;
                 }
 
                 if (null != nullDefault)
                 {
                     var registration = nullContainer.GetOrAdd(type, name);
-                    registration.ResolveMethod = _implicitRegistrationPipeline(_lifetimeContainer, registration, nullDefault);
+//                    registration.ResolveMethod = _implicitRegistrationPipeline(_lifetimeContainer, registration, nullDefault);
                     return registration;
                 }
 
@@ -306,28 +342,6 @@ namespace Unity
             }
 
             return null;
-        }
-
-        private void StoreRegistration(ExplicitRegistration registration)
-        {
-            // Add to appropriate storage
-            var unity = registration.LifetimeManager is ISingletonLifetimePolicy
-                      ? _root : this;
-
-            // Add or replace if exists 
-            var previous = unity._register(registration);
-            if (previous is ExplicitRegistration old && old.LifetimeManager is IDisposable disposableOld)
-            {
-                // Dispose replaced lifetime manager
-                unity._lifetimeContainer.Remove(disposableOld);
-                disposableOld.Dispose();
-            }
-
-            // If Disposable add to container's lifetime
-            if (registration.LifetimeManager is IDisposable)
-            {
-                unity._lifetimeContainer.Add(registration.LifetimeManager);
-            }
         }
 
         private ImplicitRegistration AddOrUpdate(ExplicitRegistration registration)
@@ -589,7 +603,7 @@ namespace Unity
                 lock (Registrations)
                 {
                     // Build resolve pipeline and replace the stub
-                    registration.ResolveMethod = _implicitRegistrationPipeline(_lifetimeContainer, registration);
+// TODO:                    registration.ResolveMethod = _implicitRegistrationPipeline(_lifetimeContainer, registration);
 
                     // Resolve using built pipeline
                     return registration.ResolveMethod(ref context);

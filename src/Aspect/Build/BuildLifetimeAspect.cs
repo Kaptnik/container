@@ -4,65 +4,68 @@ using System.Reflection;
 using Unity.Build.Context;
 using Unity.Build.Pipeline;
 using Unity.Build.Policy;
+using Unity.Container.Context;
+using Unity.Container.Pipeline;
 using Unity.Container.Registration;
 using Unity.Exceptions;
 using Unity.Lifetime;
 using Unity.Storage;
 
-// ReSharper disable RedundantLambdaParameterType
 
 namespace Unity.Aspect.Build
 {
     public static class BuildLifetimeAspect
     {
-        public static RegisterPipeline ExplicitRegistrationLifetimeAspectFactory(RegisterPipeline next)
+        public static Registration<ResolveMethod> ExplicitRegistrationLifetimeAspectFactory(Registration<ResolveMethod> next)
         {
             // Create Lifetime registration aspect
-            return (ILifetimeContainer lifetimeContainer, IPolicySet set, object[] args) =>
+            return (ref RegistrationContext registrationContext) =>
             {
                 // Build rest of pipeline first
-                var pipeline = next?.Invoke(lifetimeContainer, set, args);
+                var pipeline = next?.Invoke(ref registrationContext);
 
-                // Create aspect
-                var registration = (ExplicitRegistration)set;
-                if (registration.LifetimeManager is IRequireBuild) registration.BuildRequired = true;
+                throw new NotImplementedException();
+                //// Create aspect
+                //var registration = (ExplicitRegistration)registrationContext.Registration;
+                //if (registration.LifetimeManager is IRequireBuild) registration.BuildRequired = true;
 
-                // No lifetime management if Transient
-                return registration.LifetimeManager is TransientLifetimeManager 
-                    ? pipeline 
-                    : CreateLifetimeAspect(pipeline, registration.LifetimeManager);
+                //// No lifetime management if Transient
+                //return registration.LifetimeManager is TransientLifetimeManager 
+                //    ? pipeline 
+                //    : CreateLifetimeAspect(pipeline, registration.LifetimeManager);
             };
         }
 
 
-        public static RegisterPipeline ImplicitRegistrationLifetimeAspectFactory(RegisterPipeline next)
+        public static Registration<ResolveMethod> ImplicitRegistrationLifetimeAspectFactory(Registration<ResolveMethod> next)
         {
             // Create Lifetime registration aspect
-            return (ILifetimeContainer lifetimeContainer, IPolicySet set, object[] args) =>
+            return (ref RegistrationContext registrationContext) =>
             {
                 // Build rest of the pipeline first
-                var pipeline = next?.Invoke(lifetimeContainer, set, args);
+                var pipeline = next?.Invoke(ref registrationContext);
 
-                var registration = (ImplicitRegistration)set;
+                throw new NotImplementedException();
+                //var registration = (ImplicitRegistration)registrationContext.Registration;
 
-                // Create appropriate lifetime manager
-                if (registration.Type.GetTypeInfo().IsGenericType)
-                {
-                    // When type is Generic this aspect expects to get corresponding open generic registration
-                    Debug.Assert(null != args && 0 < args.Length, "No generic definition provided");    // TODO: Add proper error message
-                    Debug.Assert(args[0] is ExplicitRegistration, "Registration of incorrect type");    // TODO: Add proper error message
+                //// Create appropriate lifetime manager
+                //if (registration.Type.GetTypeInfo().IsGenericType)
+                //{
+                //    // When type is Generic this aspect expects to get corresponding open generic registration
+                //    Debug.Assert(null != args && 0 < args.Length, "No generic definition provided");    // TODO: Add proper error message
+                //    Debug.Assert(args[0] is ExplicitRegistration, "Registration of incorrect type");    // TODO: Add proper error message
 
-                    var genericRegistration = (ExplicitRegistration)args[0];
-                    if (!(genericRegistration.LifetimeManager is ILifetimeFactoryPolicy factoryPolicy) ||
-                          genericRegistration.LifetimeManager is TransientLifetimeManager) return pipeline;
+                //    var genericRegistration = (ExplicitRegistration)args[0];
+                //    if (!(genericRegistration.LifetimeManager is ILifetimeFactoryPolicy factoryPolicy) ||
+                //          genericRegistration.LifetimeManager is TransientLifetimeManager) return pipeline;
 
-                    var manager = (LifetimeManager)factoryPolicy.CreateLifetimePolicy();
-                    if (manager is IDisposable) lifetimeContainer.Add(manager);
-                    if (manager is IRequireBuild) registration.BuildRequired = true;
+                //    var manager = (LifetimeManager)factoryPolicy.CreateLifetimePolicy();
+                //    if (manager is IDisposable) lifetimeContainer.Add(manager);
+                //    if (manager is IRequireBuild) registration.BuildRequired = true;
 
-                    // Add aspect
-                    return CreateLifetimeAspect(pipeline, manager);
-                }
+                //    // Add aspect
+                //    return CreateLifetimeAspect(pipeline, manager);
+                //}
 
                 return pipeline;
             };

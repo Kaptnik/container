@@ -4,12 +4,15 @@ using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
 using Unity.Aspect.Build;
+using Unity.Aspect.Generic;
 using Unity.Aspect.Select;
 using Unity.Build.Context;
 using Unity.Build.Pipeline;
+using Unity.Build.Policy;
 using Unity.Build.Stage;
 using Unity.Builder;
 using Unity.Container.Lifetime;
+using Unity.Container.Pipeline;
 using Unity.Container.Registration;
 using Unity.Container.Storage;
 using Unity.Events;
@@ -20,9 +23,10 @@ using Unity.Storage;
 
 namespace Unity
 {
-    #if DEBUG
+#if DEBUG
     [DebuggerDisplay("Unity: {Id}  Registrations: {System.Linq.Enumerable.Count(Registrations)}")]
-    #endif
+#endif
+    [CLSCompliant(true)]
     public partial class UnityContainer
     {
         #region Delegates
@@ -36,7 +40,7 @@ namespace Unity
         internal delegate void SetPolicyDelegate(Type type, string name, Type policyInterface, IBuilderPolicy policy);
         internal delegate void ClearPolicyDelegate(Type type, string name, Type policyInterface);
 
-        internal delegate TPipeline BuildPlan<out TPipeline>(IUnityContainer container, IPolicySet set, PipelineFactory<Type, ResolveMethod> factory = null);
+        internal delegate TPipeline BuildPlan<out TPipeline>(IUnityContainer container, IPolicySet set, Factory<Type, ResolveMethod> factory = null);
 
         #endregion
 
@@ -56,24 +60,26 @@ namespace Unity
         ///////////////////////////////////////////////////////////////////////
         // Factories
 
-        private readonly StagedFactoryChain<RegisterPipeline, RegisterStage> _implicitRegistrationFactories;
-        private readonly StagedFactoryChain<RegisterPipeline, RegisterStage> _explicitRegistrationFactories;
-        private readonly StagedFactoryChain<RegisterPipeline, RegisterStage> _instanceRegistrationFactories;
+        private readonly StagedFactoryChain<Registration<ITypeFactory<Type>>, RegisterStage> _genericRegistrationFactories;
+        private readonly StagedFactoryChain<Registration<ResolveMethod>, RegisterStage> _implicitRegistrationFactories;
+        private readonly StagedFactoryChain<Registration<ResolveMethod>, RegisterStage> _explicitRegistrationFactories;
+        private readonly StagedFactoryChain<Registration<ResolveMethod>, RegisterStage> _instanceRegistrationFactories;
 
-        private readonly StagedFactoryChain<SelectConstructorPipeline, SelectMemberStage> _selectConstructorFactories;
-        private readonly StagedFactoryChain<InjectionMembersPipeline,  SelectMemberStage> _injectionMembersFactories;
+        private readonly StagedFactoryChain<Factory<Type, InjectionConstructor>, SelectMemberStage> _selectConstructorFactories;
+        private readonly StagedFactoryChain<Factory<Type, IEnumerable<InjectionMember>>,  SelectMemberStage> _injectionMembersFactories;
 
         ///////////////////////////////////////////////////////////////////////
         // Pipelines
 
         // Registration
-        private RegisterPipeline _explicitRegistrationPipeline;
-        private RegisterPipeline _implicitRegistrationPipeline;
-        private RegisterPipeline _instanceRegistrationPipeline;
+        private Registration<ITypeFactory<Type>> _genericRegistrationPipeline;
+        private Registration<ResolveMethod> _explicitRegistrationPipeline;
+        private Registration<ResolveMethod> _implicitRegistrationPipeline;
+        private Registration<ResolveMethod> _instanceRegistrationPipeline;
 
         // Member Selection
-        private SelectConstructorPipeline _constructorSelectionPipeline;
-        private InjectionMembersPipeline _injectionMembersPipeline;
+        private Factory<Type, InjectionConstructor> _constructorSelectionPipeline;
+        private Factory<Type, IEnumerable<InjectionMember>> _injectionMembersPipeline;
 
         private GetRegistrationDelegate _getRegistration;
 
@@ -128,38 +134,45 @@ namespace Unity
             ///////////////////////////////////////////////////////////////////////
             // Factories
 
-            _implicitRegistrationFactories = new StagedFactoryChain<RegisterPipeline, RegisterStage>
+            _genericRegistrationFactories = new StagedFactoryChain<Registration<ITypeFactory<Type>>, RegisterStage>
+            {
+                { GenericInjectionAspect.InjectionFactoryAspectFactory, RegisterStage.Injection },
+                {   GenericMappingAspect.MappingAspectFactory,          RegisterStage.TypeMapping },
+                {   GenericFactoryAspect.ResolveFactoryAspectFactory,   RegisterStage.Creation }
+            };
+            _implicitRegistrationFactories = new StagedFactoryChain<Registration<ResolveMethod>, RegisterStage>
             {
                 {BuildLifetimeAspect.ImplicitRegistrationLifetimeAspectFactory, RegisterStage.Lifetime},
                 { BuildMappingAspect.ImplicitRegistrationMappingAspectFactory,  RegisterStage.TypeMapping},
                 {                    BuildImplicitRegistrationAspectFactory,    RegisterStage.Creation},
             };
-            _explicitRegistrationFactories = new StagedFactoryChain<RegisterPipeline, RegisterStage>
+            _explicitRegistrationFactories = new StagedFactoryChain<Registration<ResolveMethod>, RegisterStage>
             {
                 {BuildLifetimeAspect.ExplicitRegistrationLifetimeAspectFactory, RegisterStage.Lifetime},
                 { BuildMappingAspect.ExplicitRegistrationMappingAspectFactory,  RegisterStage.TypeMapping},
                 {                    BuildExplicitRegistrationAspectFactory,    RegisterStage.Creation},
             };
-            _instanceRegistrationFactories = new StagedFactoryChain<RegisterPipeline, RegisterStage>
+            _instanceRegistrationFactories = new StagedFactoryChain<Registration<ResolveMethod>, RegisterStage>
             {
                 { BuildLifetimeAspect.ExplicitRegistrationLifetimeAspectFactory, RegisterStage.Lifetime},
             };
 
-            _selectConstructorFactories = new StagedFactoryChain<SelectConstructorPipeline, SelectMemberStage>
+            _selectConstructorFactories = new StagedFactoryChain<Factory<Type, InjectionConstructor>, SelectMemberStage>
             {
                 { SelectAttributedMembers.SelectConstructorPipelineFactory, SelectMemberStage.Attrubute  },
                 {SelectLongestConstructor.SelectConstructorPipelineFactory, SelectMemberStage.Reflection },
             };
 
-            _injectionMembersFactories = new StagedFactoryChain<InjectionMembersPipeline, SelectMemberStage>
+            _injectionMembersFactories = new StagedFactoryChain<Factory<Type, IEnumerable<InjectionMember>>, SelectMemberStage>
             {
                 { SelectAttributedMembers.SelectPropertiesPipelineFactory, SelectMemberStage.Attrubute },
-                {SelectAttributedMembers.SelectMethodsPipelineFactory,    SelectMemberStage.Reflection},
+                {SelectAttributedMembers.SelectMethodsPipelineFactory,     SelectMemberStage.Reflection},
             };
 
             ///////////////////////////////////////////////////////////////////////
             // Create Pipelines
 
+            _genericRegistrationPipeline  = _genericRegistrationFactories.BuildPipeline();
             _explicitRegistrationPipeline = _explicitRegistrationFactories.BuildPipeline();
             _instanceRegistrationPipeline = _instanceRegistrationFactories.BuildPipeline();
             _implicitRegistrationPipeline = _implicitRegistrationFactories.BuildPipeline();
@@ -221,11 +234,12 @@ namespace Unity
             // Factories
 
             // TODO: Create on demand
-            _implicitRegistrationFactories = new StagedFactoryChain<RegisterPipeline, RegisterStage>(_parent._implicitRegistrationFactories);
-            _explicitRegistrationFactories = new StagedFactoryChain<RegisterPipeline, RegisterStage>(_parent._explicitRegistrationFactories);
-            _instanceRegistrationFactories = new StagedFactoryChain<RegisterPipeline, RegisterStage>(_parent._instanceRegistrationFactories);
-            _selectConstructorFactories = new StagedFactoryChain<SelectConstructorPipeline, SelectMemberStage>(_parent._selectConstructorFactories);
-            _injectionMembersFactories =  new StagedFactoryChain<InjectionMembersPipeline, SelectMemberStage>(_parent._injectionMembersFactories);
+            _genericRegistrationFactories = new StagedFactoryChain<Registration<ITypeFactory<Type>>, RegisterStage>(_parent._genericRegistrationFactories);
+            _implicitRegistrationFactories = new StagedFactoryChain<Registration<ResolveMethod>, RegisterStage>(_parent._implicitRegistrationFactories);
+            _explicitRegistrationFactories = new StagedFactoryChain<Registration<ResolveMethod>, RegisterStage>(_parent._explicitRegistrationFactories);
+            _instanceRegistrationFactories = new StagedFactoryChain<Registration<ResolveMethod>, RegisterStage>(_parent._instanceRegistrationFactories);
+            _selectConstructorFactories = new StagedFactoryChain<Factory<Type, InjectionConstructor>, SelectMemberStage>(_parent._selectConstructorFactories);
+            _injectionMembersFactories =  new StagedFactoryChain<Factory<Type, IEnumerable<InjectionMember>>, SelectMemberStage>(_parent._injectionMembersFactories);
 
             ///////////////////////////////////////////////////////////////////////
             // Register disposable factory chains

@@ -7,7 +7,7 @@ namespace Unity.Build.Stage
     public enum RegisterStage
     {
         /// <summary>
-        /// First stage. By default, nothing happens here.
+        /// By default, nothing happens here.
         /// </summary>
         Setup,
 
@@ -17,35 +17,24 @@ namespace Unity.Build.Stage
         Collections,
 
         /// <summary>
-        /// Third stage. lifetime managers are checked here,
+        /// Lifetime managers are checked here,
         /// and if they're available the rest of the pipeline is skipped.
         /// </summary>
         Lifetime,
 
         /// <summary>
-        /// Second stage. Type mapping occurs here.
+        /// Instance creation with injected factory happens here.
+        /// </summary>
+        Injection,
+
+        /// <summary>
+        /// Type mapping occurs here.
         /// </summary>
         TypeMapping,
 
         /// <summary>
-        /// Fourth stage. Reflection over constructors, properties, etc. is
-        /// performed here.
+        /// Instance creation and dependency resolution happens here.
         /// </summary>
-        PreCreation,
-
-        /// <summary>
-        /// Fifth stage. Instance creation happens here.
-        /// </summary>
-        Creation,
-
-        /// <summary>
-        /// Sixth stage. Property sets and method injection happens here.
-        /// </summary>
-        Initialization,
-
-        /// <summary>
-        /// Seventh and final stage. By default, nothing happens here.
-        /// </summary>
-        PostInitialization
+        Creation
     }
 }

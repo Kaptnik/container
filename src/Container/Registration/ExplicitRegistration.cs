@@ -11,7 +11,7 @@ namespace Unity.Container.Registration
     [DebuggerDisplay("ExplicitRegistration: Type={Type?.Name},  Name={Name},  MappedTo={Type == ImplementationType ? string.Empty : ImplementationType?.Name ?? string.Empty},  {LifetimeManager?.GetType()?.Name}")]
     public class ExplicitRegistration : ImplicitRegistration, 
                                         IContainerRegistration,
-                                        IPipelineFactory<Type>
+                                        ITypeFactory<Type>
     {
         #region Constructors
 
@@ -31,9 +31,9 @@ namespace Unity.Container.Registration
 
         #region Public Members
 
-        public PipelineFactory<Type, ResolveMethod> CreateActivator { get; set; }
+        public Factory<Type, ResolveMethod> Activator { get; set; }
 
-        public PipelineFactory<Type, Expression> CreateExpression => throw new NotImplementedException();
+        public Factory<Type, Expression> Expression => throw new NotImplementedException();
 
         #endregion
 
