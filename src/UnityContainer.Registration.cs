@@ -1,12 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Reflection;
-using Unity.Build.Context;
-using Unity.Build.Pipeline;
-using Unity.Build.Policy;
-using Unity.Container.Context;
+using Unity.Container;
 using Unity.Container.Registration;
 using Unity.Container.Storage;
+using Unity.Pipeline;
 using Unity.Policy;
 using Unity.Registration;
 using Unity.Storage;
@@ -27,101 +25,6 @@ namespace Unity
 
         private readonly object _factoriesSync = new object();  // TODO: Replace set with INamedType
         private HashRegistry<Type, IRegistry<string, IPolicySet>> _factories = new HashRegistry<Type, IRegistry<string, IPolicySet>>(7);
-
-        #endregion
-
-
-        #region Open Generic Registrations
-
-        private void StoreFactory(ImplicitRegistration registration)
-        {
-            var collisions = 0;
-            var hashCode = (registration.Type?.GetHashCode() ?? 0) & 0x7FFFFFFF;
-            var targetBucket = hashCode % _factories.Buckets.Length;
-            lock (_factoriesSync)
-            {
-                for (var i = _factories.Buckets[targetBucket]; i >= 0; i = _factories.Entries[i].Next)
-                {
-                    ref var entry = ref _factories.Entries[i];
-                    if (entry.HashCode != hashCode || entry.Key != registration.Type)
-                    {
-                        collisions++;
-                        continue;
-                    }
-
-                    var existing = entry.Value;
-                    if (existing.RequireToGrow)
-                    {
-                        existing = existing is HashRegistry<string, IPolicySet> registry
-                                 ? new HashRegistry<string, IPolicySet>(registry)
-                                 : new HashRegistry<string, IPolicySet>(LinkedRegistry.ListToHashCutoverPoint * 2, (LinkedRegistry)existing)
-                                 { [string.Empty] = null };
-
-                        _factories.Entries[i].Value = existing;
-                    }
-
-                    existing.SetOrReplace(registration.Name, registration);
-                }
-
-                if (_factories.RequireToGrow || ListToHashCutoverPoint < collisions)
-                {
-                    _factories = new HashRegistry<Type, IRegistry<string, IPolicySet>>(_factories);
-                    targetBucket = hashCode % _factories.Buckets.Length;
-                }
-
-                _factories.Entries[_factories.Count].HashCode = hashCode;
-                _factories.Entries[_factories.Count].Next = _factories.Buckets[targetBucket];
-                _factories.Entries[_factories.Count].Key = registration.Type;
-                _factories.Entries[_factories.Count].Value = new LinkedRegistry(registration.Name, registration);
-                _factories.Buckets[targetBucket] = _factories.Count;
-                _factories.Count++;
-            }
-        }
-
-        #endregion
-
-
-        #region Constructable Type Registrations
-
-        private void RegisterConstructableType(ref RegistrationContext context)
-        {
-            var registration = new ExplicitRegistration(context.RegisteredType, context.Name, context.MappedTo, context.LifetimeManager);
-
-            //// Add injection members policies to the registration
-            //if (null != injectionMembers && 0 < injectionMembers.Length)
-            //{
-            //    foreach (var member in injectionMembers)
-            //    {
-            //        // Validate against ImplementationType with InjectionFactory
-            //        if (member is InjectionFactory && mappedTo != registeredType)  // TODO: Add proper error message
-            //            throw new InvalidOperationException("Registration where both ImplementationType and InjectionFactory are set is not supported");
-
-            //        // Mark as requiring build if any one of the injectors are marked with IRequireBuild
-            //        //if (member is IRequireBuild) registration.BuildRequired = true;
-
-            //        // Add policies
-            //        member.AddPolicies(registeredType, name, mappedTo, context.Policies);
-            //    }
-            //}
-
-            // Build resolve pipeline
-            registration.ResolveMethod = _explicitRegistrationPipeline(ref context);
-
-            // Add or replace if exists 
-            var previous = _register(registration);
-            if (previous is ExplicitRegistration old && old.LifetimeManager is IDisposable disposableOld)
-            {
-                // Dispose replaced lifetime manager
-                _lifetimeContainer.Remove(disposableOld);
-                disposableOld.Dispose();
-            }
-
-            // If Disposable add to container's lifetime
-            if (registration.LifetimeManager is IDisposable disposable)
-            {
-                _lifetimeContainer.Add(disposable);
-            }
-        }
 
         #endregion
 
@@ -212,8 +115,71 @@ namespace Unity
         #endregion
 
 
-        #region Registration manipulation
+        #region AspectFactory manipulation
 
+
+        private void StoreFactory(GenericRegistration registration)
+        {
+            var collisions = 0;
+            var hashCode = (registration.Type?.GetHashCode() ?? 0) & 0x7FFFFFFF;
+            var targetBucket = hashCode % _factories.Buckets.Length;
+            lock (_factoriesSync)
+            {
+                for (var i = _factories.Buckets[targetBucket]; i >= 0; i = _factories.Entries[i].Next)
+                {
+                    ref var entry = ref _factories.Entries[i];
+                    if (entry.HashCode != hashCode || entry.Key != registration.Type)
+                    {
+                        collisions++;
+                        continue;
+                    }
+
+                    var existing = entry.Value;
+                    if (existing.RequireToGrow)
+                    {
+                        existing = existing is HashRegistry<string, IPolicySet> registry
+                                 ? new HashRegistry<string, IPolicySet>(registry)
+                                 : new HashRegistry<string, IPolicySet>(LinkedRegistry.ListToHashCutoverPoint * 2, (LinkedRegistry)existing)
+                                 { [string.Empty] = null };
+
+                        _factories.Entries[i].Value = existing;
+                    }
+
+                    existing.SetOrReplace(registration.Name, registration);
+                }
+
+                if (_factories.RequireToGrow || ListToHashCutoverPoint < collisions)
+                {
+                    _factories = new HashRegistry<Type, IRegistry<string, IPolicySet>>(_factories);
+                    targetBucket = hashCode % _factories.Buckets.Length;
+                }
+
+                _factories.Entries[_factories.Count].HashCode = hashCode;
+                _factories.Entries[_factories.Count].Next = _factories.Buckets[targetBucket];
+                _factories.Entries[_factories.Count].Key = registration.Type;
+                _factories.Entries[_factories.Count].Value = new LinkedRegistry(registration.Name, registration);
+                _factories.Buckets[targetBucket] = _factories.Count;
+                _factories.Count++;
+            }
+        }
+
+        private void StoreRegistration(ExplicitRegistration registration)
+        {
+            // Add or replace if exists 
+            var previous = _register(registration);
+            if (previous is ExplicitRegistration old && old.LifetimeManager is IDisposable disposableOld)
+            {
+                // Dispose replaced lifetime manager
+                _lifetimeContainer.Remove(disposableOld);
+                disposableOld.Dispose();
+            }
+
+            // If Disposable add to container's lifetime
+            if (registration.LifetimeManager is IDisposable)
+            {
+                _lifetimeContainer.Add(registration.LifetimeManager);
+            }
+        }
 
         private ImplicitRegistration RegistrationOrDefault(Type type, string name)
         {
@@ -317,7 +283,7 @@ namespace Unity
                     if (null == openGeneric) continue;
 
                     var registration = container.GetOrAdd(type, name);
-//                    registration.ResolveMethod = _implicitRegistrationPipeline(_lifetimeContainer, registration, openGeneric);
+//                    registration.ResolvePipeline = _dynamicAspectPipeline(_lifetimeContainer, registration, openGeneric);
                     return registration;
                 }
 
@@ -326,14 +292,14 @@ namespace Unity
                 if (null != typeDefault)
                 {
                     var registration = typeContainer.GetOrAdd(type, name);
-//                    registration.ResolveMethod = _implicitRegistrationPipeline(_lifetimeContainer, registration, typeDefault);
+//                    registration.ResolvePipeline = _dynamicAspectPipeline(_lifetimeContainer, registration, typeDefault);
                     return registration;
                 }
 
                 if (null != nullDefault)
                 {
                     var registration = nullContainer.GetOrAdd(type, name);
-//                    registration.ResolveMethod = _implicitRegistrationPipeline(_lifetimeContainer, registration, nullDefault);
+//                    registration.ResolvePipeline = _dynamicAspectPipeline(_lifetimeContainer, registration, nullDefault);
                     return registration;
                 }
 
@@ -447,23 +413,23 @@ namespace Unity
             // Create registration
             var registration = new ImplicitRegistration(type, name);
 
-            ResolveMethod method = null;
+            ResolvePipeline pipeline = null;
 
-            registration.ResolveMethod = WaitStub;
-            method = registration.ResolveMethod;
+            registration.ResolvePipeline = WaitStub;
+            pipeline = registration.ResolvePipeline;
 
             return registration;
 
-            // Create stub method in case it is requested before pipeline
+            // Create stub pipeline in case it is requested before pipeline
             // has been created. It waits for the initialization to complete
-            object WaitStub(ref ResolutionContext context)
+            object WaitStub(ref ResolveContext context)
             {
-                while (registration.ResolveMethod == method)
+                while (registration.ResolvePipeline == pipeline)
                 {
                     // TODO: Task.Delay(1);
                 }
 
-                return registration.ResolveMethod(ref context);
+                return registration.ResolvePipeline(ref context);
             }
         }
 
@@ -596,17 +562,17 @@ namespace Unity
             // Create registration and set provided policy
             var registration = new ImplicitRegistration(type, name, policyInterface, policy);
 
-            // Create stub method in case registration is ever resolved
-            registration.ResolveMethod = (ref ResolutionContext context) =>
+            // Create stub pipeline in case registration is ever resolved
+            registration.ResolvePipeline = (ref ResolveContext context) =>
             {
                 // Once lock is acquired the pipeline has been built
                 lock (Registrations)
                 {
                     // Build resolve pipeline and replace the stub
-// TODO:                    registration.ResolveMethod = _implicitRegistrationPipeline(_lifetimeContainer, registration);
+// TODO:                    registration.ResolvePipeline = _dynamicAspectPipeline(_lifetimeContainer, registration);
 
                     // Resolve using built pipeline
-                    return registration.ResolveMethod(ref context);
+                    return registration.ResolvePipeline(ref context);
                 }
             };
 

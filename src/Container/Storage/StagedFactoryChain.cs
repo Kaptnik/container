@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
-using Unity.Build.Pipeline;
 using Unity.Storage;
 
 namespace Unity.Container.Storage
@@ -11,7 +10,7 @@ namespace Unity.Container.Storage
     /// </summary>
     /// <typeparam name="TStageEnum">The stage enumeration to partition the strategies.</typeparam>
     /// <typeparam name="TPipeline"></typeparam>
-    public class StagedFactoryChain<TPipeline, TStageEnum> : IEnumerable<Factory<TPipeline, TPipeline>>, 
+    public class StagedFactoryChain<TPipeline, TStageEnum> : IStagedFactoryChain<TPipeline, TStageEnum>,
                                                              IDisposable
     {
         #region Fields

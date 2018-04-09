@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Diagnostics;
 using System.Linq.Expressions;
-using Unity.Build.Pipeline;
 using Unity.Build.Policy;
 using Unity.Lifetime;
+using Unity.Pipeline;
 using Unity.Registration;
 
 namespace Unity.Container.Registration
@@ -35,8 +35,8 @@ namespace Unity.Container.Registration
 
         #endregion
 
-        public Factory<Type, ResolveMethod> Activator { get; set; }
+        public Factory<Type, ResolvePipeline> CreatePipeline { get; set; }
 
-        public Factory<Type, Expression> Expression { get; set; }
+        public Factory<Type, Expression> CreateExpression { get; set; }
     }
 }

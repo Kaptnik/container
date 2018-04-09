@@ -1,14 +1,14 @@
 using System;
 using System.Diagnostics;
-using Unity.Build.Pipeline;
 using Unity.Container.Storage;
+using Unity.Pipeline;
 using Unity.Storage;
 
 namespace Unity.Container.Registration
 {
     [DebuggerDisplay("ImplicitRegistration:  Type={Type?.Name},    Name={Name},  MappedTo={Type == ImplementationType ? \"Same as Type\" : ImplementationType?.Name ?? string.Empty}")]
     public class ImplicitRegistration : PolicySet,
-                                        IResolveMethod
+                                        IResolvePipeline
     {
         #region Constructors
 
@@ -38,7 +38,7 @@ namespace Unity.Container.Registration
 
         public Type ImplementationType { get; set; }
 
-        public ResolveMethod ResolveMethod { get; set; }
+        public ResolvePipeline ResolvePipeline { get; set; }
 
         #endregion
     }

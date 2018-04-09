@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Unity.Build.Context;
 using Unity.Build.Selected;
 
 namespace Unity.Container.Tests.Aspect.Build.Selected
@@ -55,7 +54,7 @@ namespace Unity.Container.Tests.Aspect.Build.Selected
         [DynamicData(nameof(TestMethodInput))]
         public void Abstractions_Build_Selected_SelectedConstrucotr(int test, Type registerType, Type resolveType, int ctorPosition, object[] args)
         {
-            ResolutionContext context = new ResolutionContext { Resolve = (t, n) => Values[t] };
+            ResolveContext context = new ResolveContext { Resolve = (t, n) => Values[t] };
             var ctor = registerType.GetTypeInfo().DeclaredConstructors.ElementAt(ctorPosition);
             var constructor = new SelectedConstructor(ctor);
             var resolvePipeline = constructor.ResolveMethodFactory(resolveType);
@@ -68,7 +67,7 @@ namespace Unity.Container.Tests.Aspect.Build.Selected
         [DynamicData(nameof(TestMethodInput))]
         public void Abstractions_Build_Selected_SelectedConstrucotr_null(int test, Type registerType, Type resolveType, int ctorPosition, object[] args)
         {
-            ResolutionContext context = new ResolutionContext { Resolve = (t, n) => Values[t] };
+            ResolveContext context = new ResolveContext { Resolve = (t, n) => Values[t] };
             var ctor = registerType.GetTypeInfo().DeclaredConstructors.ElementAt(ctorPosition);
             var constructor = 0 == args.Length
                             ? new SelectedConstructor(ctor, null)
@@ -83,7 +82,7 @@ namespace Unity.Container.Tests.Aspect.Build.Selected
         [DynamicData(nameof(TestMethodInput))]
         public void Abstractions_Build_Selected_SelectedConstrucotr_args(int test, Type registerType, Type resolveType, int ctorPosition, object[] args)
         {
-            ResolutionContext context = new ResolutionContext { Resolve = (t, n) => Values[t] };
+            ResolveContext context = new ResolveContext { Resolve = (t, n) => Values[t] };
             var ctor = registerType.GetTypeInfo().DeclaredConstructors.ElementAt(ctorPosition);
             var constructor = new SelectedConstructor(ctor, args);
             var resolvePipeline = constructor.ResolveMethodFactory(resolveType);

@@ -70,10 +70,10 @@ namespace System.Reflection
 
         public virtual IEnumerable<MethodInfo> GetDeclaredMethods(String name)
         {
-            foreach (MethodInfo method in _type.GetMethods(DeclaredOnlyLookup))
+            foreach (MethodInfo pipeline in _type.GetMethods(DeclaredOnlyLookup))
             {
-                if (method.Name == name)
-                    yield return method;
+                if (pipeline.Name == name)
+                    yield return pipeline;
             }
         }
 
@@ -181,14 +181,14 @@ namespace Unity
             return new TypeInfo(type);
         }
 
-        public static Delegate CreateDelegate(this MethodInfo method, Type delegateType)
+        public static Delegate CreateDelegate(this MethodInfo pipeline, Type delegateType)
         {
-            return Delegate.CreateDelegate(delegateType, method);
+            return Delegate.CreateDelegate(delegateType, pipeline);
         }
 
-        public static Delegate CreateDelegate(this MethodInfo method, Type delegateType, object target)
+        public static Delegate CreateDelegate(this MethodInfo pipeline, Type delegateType, object target)
         {
-            return Delegate.CreateDelegate(delegateType, target, method);
+            return Delegate.CreateDelegate(delegateType, target, pipeline);
         }
 #else
         public static MethodInfo GetGetMethod(this PropertyInfo info, bool _)

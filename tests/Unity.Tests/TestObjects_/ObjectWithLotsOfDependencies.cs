@@ -7,7 +7,7 @@ using Unity.Attributes;
 
 namespace Unity.Tests.TestObjects
 {
-    // An object that has constructor, property, and method injection dependencies.
+    // An object that has constructor, property, and pipeline injection dependencies.
     public class ObjectWithLotsOfDependencies
     {
         private ILogger ctorLogger;

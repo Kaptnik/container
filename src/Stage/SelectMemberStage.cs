@@ -1,5 +1,5 @@
 ﻿
-namespace Unity.Build.Stage
+namespace Unity.Stage
 {
 
     /// <summary>

@@ -3,22 +3,21 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
-using Unity.Aspect.Build;
-using Unity.Aspect.Generic;
-using Unity.Aspect.Select;
-using Unity.Build.Context;
-using Unity.Build.Pipeline;
+using Unity.Aspect;
 using Unity.Build.Policy;
-using Unity.Build.Stage;
 using Unity.Builder;
+using Unity.Container;
 using Unity.Container.Lifetime;
-using Unity.Container.Pipeline;
 using Unity.Container.Registration;
 using Unity.Container.Storage;
 using Unity.Events;
 using Unity.Extension;
+using Unity.Pipeline;
+using Unity.Pipeline.Constructor;
+using Unity.Pipeline.Selection;
 using Unity.Policy;
 using Unity.Registration;
+using Unity.Stage;
 using Unity.Storage;
 
 namespace Unity
@@ -40,13 +39,13 @@ namespace Unity
         internal delegate void SetPolicyDelegate(Type type, string name, Type policyInterface, IBuilderPolicy policy);
         internal delegate void ClearPolicyDelegate(Type type, string name, Type policyInterface);
 
-        internal delegate TPipeline BuildPlan<out TPipeline>(IUnityContainer container, IPolicySet set, Factory<Type, ResolveMethod> factory = null);
+        internal delegate TPipeline BuildPlan<out TPipeline>(IUnityContainer container, IPolicySet set, Factory<Type, ResolvePipeline> factory = null);
 
         #endregion
 
 
         #region Fields
-      
+
 #if DEBUG
         public readonly string Id;
 #endif
@@ -56,36 +55,41 @@ namespace Unity
         private readonly UnityContainer _parent;
         internal readonly LifetimeContainer _lifetimeContainer;
         private List<UnityContainerExtension> _extensions;
+        private readonly ContainerServices _services;
 
         ///////////////////////////////////////////////////////////////////////
         // Factories
 
-        private readonly StagedFactoryChain<Registration<ITypeFactory<Type>>, RegisterStage> _genericRegistrationFactories;
-        private readonly StagedFactoryChain<Registration<ResolveMethod>, RegisterStage> _implicitRegistrationFactories;
-        private readonly StagedFactoryChain<Registration<ResolveMethod>, RegisterStage> _explicitRegistrationFactories;
-        private readonly StagedFactoryChain<Registration<ResolveMethod>, RegisterStage> _instanceRegistrationFactories;
+        private readonly StagedFactoryChain<AspectFactory<ResolvePipeline>,    RegisterStage> _explicitAspectFactories;
+        private readonly StagedFactoryChain<AspectFactory<ResolvePipeline>,    RegisterStage> _instanceAspectFactories;
+        private readonly StagedFactoryChain<AspectFactory<ResolvePipeline>,    RegisterStage> _dynamicAspectFactories;
+        private readonly StagedFactoryChain<AspectFactory<ITypeFactory<Type>>, RegisterStage> _genericAspectFactories;
 
-        private readonly StagedFactoryChain<Factory<Type, InjectionConstructor>, SelectMemberStage> _selectConstructorFactories;
+        private readonly StagedFactoryChain<Factory<Type, ConstructorInfo>, SelectMemberStage>               _selectConstructorFactories;
         private readonly StagedFactoryChain<Factory<Type, IEnumerable<InjectionMember>>,  SelectMemberStage> _injectionMembersFactories;
+        private readonly StagedFactoryChain<Factory<ParameterInfo, ResolvePipeline>, SelectMemberStage>      _parameterPipelineFactories;
 
         ///////////////////////////////////////////////////////////////////////
         // Pipelines
 
-        // Registration
-        private Registration<ITypeFactory<Type>> _genericRegistrationPipeline;
-        private Registration<ResolveMethod> _explicitRegistrationPipeline;
-        private Registration<ResolveMethod> _implicitRegistrationPipeline;
-        private Registration<ResolveMethod> _instanceRegistrationPipeline;
+        private readonly Pipelines _pipelines;
+
+        // AspectFactory
+        private AspectFactory<ResolvePipeline>      _explicitAspectPipeline;
+        private AspectFactory<ResolvePipeline>      _instanceAspectPipeline;
+        private AspectFactory<ResolvePipeline>      _dynamicAspectPipeline;
+        private AspectFactory<ITypeFactory<Type>> _genericAspectPipeline;
 
         // Member Selection
-        private Factory<Type, InjectionConstructor> _constructorSelectionPipeline;
+        private Factory<Type, ConstructorInfo>              _constructorSelectionPipeline;
         private Factory<Type, IEnumerable<InjectionMember>> _injectionMembersPipeline;
+        private Factory<ParameterInfo, ResolvePipeline>     _parameterResolvePipeline;
 
         private GetRegistrationDelegate _getRegistration;
 
         ///////////////////////
 
-        // Policies
+        // AspectFactory
         private readonly ContainerExtensionContext _extensionContext;
 
         // Registrations
@@ -128,57 +132,66 @@ namespace Unity
             // Root container
             _root = this;
             _lifetimeContainer = new LifetimeContainer(this);
-            _registrations = new HashRegistry<Type, IRegistry<string, IPolicySet>>(ContainerInitialCapacity)
-                { [null] = null };
+            _registrations = new HashRegistry<Type, IRegistry<string, IPolicySet>>(ContainerInitialCapacity){ [null] = null };
+            _services = new ContainerServices(this);
+            _pipelines = new Pipelines(this);
 
             ///////////////////////////////////////////////////////////////////////
             // Factories
 
-            _genericRegistrationFactories = new StagedFactoryChain<Registration<ITypeFactory<Type>>, RegisterStage>
+
+            _explicitAspectFactories = new StagedFactoryChain<AspectFactory<ResolvePipeline>, RegisterStage>
             {
-                { GenericInjectionAspect.InjectionFactoryAspectFactory, RegisterStage.Injection },
-                {   GenericMappingAspect.MappingAspectFactory,          RegisterStage.TypeMapping },
-                {   GenericFactoryAspect.ResolveFactoryAspectFactory,   RegisterStage.Creation }
-            };
-            _implicitRegistrationFactories = new StagedFactoryChain<Registration<ResolveMethod>, RegisterStage>
-            {
-                {BuildLifetimeAspect.ImplicitRegistrationLifetimeAspectFactory, RegisterStage.Lifetime},
-                { BuildMappingAspect.ImplicitRegistrationMappingAspectFactory,  RegisterStage.TypeMapping},
-                {                    BuildImplicitRegistrationAspectFactory,    RegisterStage.Creation},
-            };
-            _explicitRegistrationFactories = new StagedFactoryChain<Registration<ResolveMethod>, RegisterStage>
-            {
-                {BuildLifetimeAspect.ExplicitRegistrationLifetimeAspectFactory, RegisterStage.Lifetime},
-                { BuildMappingAspect.ExplicitRegistrationMappingAspectFactory,  RegisterStage.TypeMapping},
-                {                    BuildExplicitRegistrationAspectFactory,    RegisterStage.Creation},
-            };
-            _instanceRegistrationFactories = new StagedFactoryChain<Registration<ResolveMethod>, RegisterStage>
-            {
-                { BuildLifetimeAspect.ExplicitRegistrationLifetimeAspectFactory, RegisterStage.Lifetime},
+                {  Pipeline.Explicit.LifetimeAspect.AspectFactory, RegisterStage.Lifetime},
+                { Pipeline.Explicit.InjectionAspect.AspectFactory, RegisterStage.Injection},
+                { Pipeline.Explicit.ActivatorAspect.AspectFactory, RegisterStage.Creation},
             };
 
-            _selectConstructorFactories = new StagedFactoryChain<Factory<Type, InjectionConstructor>, SelectMemberStage>
+            _instanceAspectFactories = new StagedFactoryChain<AspectFactory<ResolvePipeline>, RegisterStage>
             {
-                { SelectAttributedMembers.SelectConstructorPipelineFactory, SelectMemberStage.Attrubute  },
-                {SelectLongestConstructor.SelectConstructorPipelineFactory, SelectMemberStage.Reflection },
+                { Pipeline.Explicit.LifetimeAspect.AspectFactory, RegisterStage.Lifetime},
+            };
+
+            _dynamicAspectFactories = new StagedFactoryChain<AspectFactory<ResolvePipeline>, RegisterStage>
+            {
+                { Pipeline.Dynamic.LifetimeAspect.AspectFactory, RegisterStage.Lifetime},
+                {  Pipeline.Dynamic.MappingAspect.AspectFactory, RegisterStage.TypeMapping},
+                {        BuildImplicitRegistrationAspectFactory, RegisterStage.Creation},
+            };
+
+            _genericAspectFactories = new StagedFactoryChain<AspectFactory<ITypeFactory<Type>>, RegisterStage>
+            {
+                { Pipeline.Generic.InjectionAspect.AspectFactory, RegisterStage.Injection },
+                {   Pipeline.Generic.FactoryAspect.AspectFactory, RegisterStage.Creation }
+            };
+
+            _selectConstructorFactories = new StagedFactoryChain<Factory<Type, ConstructorInfo>, SelectMemberStage>
+            {
+                { AttributedConstructor.SelectPipelineFactory, SelectMemberStage.Attrubute  },
+                {    LongestConstructor.SelectPipelineFactory, SelectMemberStage.Reflection },
             };
 
             _injectionMembersFactories = new StagedFactoryChain<Factory<Type, IEnumerable<InjectionMember>>, SelectMemberStage>
             {
-                { SelectAttributedMembers.SelectPropertiesPipelineFactory, SelectMemberStage.Attrubute },
-                {SelectAttributedMembers.SelectMethodsPipelineFactory,     SelectMemberStage.Reflection},
+                { SelectAttributedProperty.SelectPipelineFactory, SelectMemberStage.Attrubute },
+                {         AttributedMethod.SelectPipelineFactory, SelectMemberStage.Attrubute },
+            };
+
+            _parameterPipelineFactories = new StagedFactoryChain<Factory<ParameterInfo, ResolvePipeline>, SelectMemberStage>
+            {
             };
 
             ///////////////////////////////////////////////////////////////////////
             // Create Pipelines
 
-            _genericRegistrationPipeline  = _genericRegistrationFactories.BuildPipeline();
-            _explicitRegistrationPipeline = _explicitRegistrationFactories.BuildPipeline();
-            _instanceRegistrationPipeline = _instanceRegistrationFactories.BuildPipeline();
-            _implicitRegistrationPipeline = _implicitRegistrationFactories.BuildPipeline();
+            _genericAspectPipeline  = _genericAspectFactories.BuildPipeline();
+            _explicitAspectPipeline = _explicitAspectFactories.BuildPipeline();
+            _instanceAspectPipeline = _instanceAspectFactories.BuildPipeline();
+            _dynamicAspectPipeline  = _dynamicAspectFactories.BuildPipeline();
 
             _constructorSelectionPipeline = _selectConstructorFactories.BuildPipeline();
             _injectionMembersPipeline     = _injectionMembersFactories.BuildPipeline();
+            _parameterResolvePipeline     = _parameterPipelineFactories.BuildPipeline();
 
             _getRegistration = GetOrAdd;
 
@@ -197,7 +210,7 @@ namespace Unity
             SetPolicy = Set;
             ClearPolicy = Clear;
 
-            // Default Policies
+            // Default AspectFactory
             //Set( null, null, GetDefaultPolicies()); 
             //Set(typeof(Func<>), string.Empty, typeof(ILifetimePolicy), new PerResolveLifetimeManager());
             //Set(typeof(Func<>), string.Empty, typeof(IBuildPlanPolicy), new DeferredResolveCreatorPolicy());
@@ -226,28 +239,30 @@ namespace Unity
             ///////////////////////////////////////////////////////////////////////
             // Parent
             _parent = parent ?? throw new ArgumentNullException(nameof(parent));
-            _parent._lifetimeContainer.Add(this);
             _root = _parent._root;
-
+            _services = _parent._services;
+            _pipelines = _parent._pipelines;
+            _parent._lifetimeContainer.Add(this);
 
             ///////////////////////////////////////////////////////////////////////
             // Factories
 
             // TODO: Create on demand
-            _genericRegistrationFactories = new StagedFactoryChain<Registration<ITypeFactory<Type>>, RegisterStage>(_parent._genericRegistrationFactories);
-            _implicitRegistrationFactories = new StagedFactoryChain<Registration<ResolveMethod>, RegisterStage>(_parent._implicitRegistrationFactories);
-            _explicitRegistrationFactories = new StagedFactoryChain<Registration<ResolveMethod>, RegisterStage>(_parent._explicitRegistrationFactories);
-            _instanceRegistrationFactories = new StagedFactoryChain<Registration<ResolveMethod>, RegisterStage>(_parent._instanceRegistrationFactories);
-            _selectConstructorFactories = new StagedFactoryChain<Factory<Type, InjectionConstructor>, SelectMemberStage>(_parent._selectConstructorFactories);
+            _genericAspectFactories = new StagedFactoryChain<AspectFactory<ITypeFactory<Type>>, RegisterStage>(_parent._genericAspectFactories);
+            _dynamicAspectFactories = new StagedFactoryChain<AspectFactory<ResolvePipeline>, RegisterStage>(_parent._dynamicAspectFactories);
+            _explicitAspectFactories = new StagedFactoryChain<AspectFactory<ResolvePipeline>, RegisterStage>(_parent._explicitAspectFactories);
+            _instanceAspectFactories = new StagedFactoryChain<AspectFactory<ResolvePipeline>, RegisterStage>(_parent._instanceAspectFactories);
+            _selectConstructorFactories = new StagedFactoryChain<Factory<Type, ConstructorInfo>, SelectMemberStage>(_parent._selectConstructorFactories);
             _injectionMembersFactories =  new StagedFactoryChain<Factory<Type, IEnumerable<InjectionMember>>, SelectMemberStage>(_parent._injectionMembersFactories);
+            _parameterPipelineFactories = new StagedFactoryChain<Factory<ParameterInfo, ResolvePipeline>, SelectMemberStage>(_parent._parameterPipelineFactories);
 
             ///////////////////////////////////////////////////////////////////////
             // Register disposable factory chains
 
             // TODO: Create on demand
-            _lifetimeContainer.Add(_implicitRegistrationFactories);
-            _lifetimeContainer.Add(_explicitRegistrationFactories);
-            _lifetimeContainer.Add(_instanceRegistrationFactories);
+            _lifetimeContainer.Add(_dynamicAspectFactories);
+            _lifetimeContainer.Add(_explicitAspectFactories);
+            _lifetimeContainer.Add(_instanceAspectFactories);
             _lifetimeContainer.Add(_selectConstructorFactories);
             _lifetimeContainer.Add(_injectionMembersFactories);
 
@@ -255,12 +270,12 @@ namespace Unity
             // Create Pipelines
 
             // TODO: Create on demand
-            _implicitRegistrationPipeline  = _parent._implicitRegistrationPipeline;
-            _explicitRegistrationPipeline = _parent._explicitRegistrationPipeline;
-            _instanceRegistrationPipeline = _parent._instanceRegistrationPipeline;
+            _dynamicAspectPipeline        = _parent._dynamicAspectPipeline;
+            _explicitAspectPipeline       = _parent._explicitAspectPipeline;
+            _instanceAspectPipeline       = _parent._instanceAspectPipeline;
             _constructorSelectionPipeline = _parent._constructorSelectionPipeline;
             _injectionMembersPipeline     = _parent._injectionMembersPipeline;
-
+            _parameterResolvePipeline     = _parent._parameterResolvePipeline;
 
             // Methods
             _getPolicy = _parent._getPolicy;
@@ -389,7 +404,7 @@ namespace Unity
         /// <remarks>
         /// This class doesn't have a finalizer, so <paramref name="disposing"/> will always be true.</remarks>
         /// <param name="disposing">True if being called registeredType the IDisposable.Dispose
-        /// method, false if being called registeredType a finalizer.</param>
+        /// pipeline, false if being called registeredType a finalizer.</param>
         protected virtual void Dispose(bool disposing)
         {
             if (!disposing) return;
@@ -441,7 +456,7 @@ namespace Unity
 
         private static ParentDelegate GetContextFactoryMethod()
         {
-            var enclosure = new ResolutionContext[1];
+            var enclosure = new ResolveContext[1];
             return () => ref enclosure[0];
         }
 

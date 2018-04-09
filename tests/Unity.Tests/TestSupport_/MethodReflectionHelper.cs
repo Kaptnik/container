@@ -17,16 +17,16 @@ namespace Unity
 
         /// <summary>
         /// Create a new <see cref="MethodReflectionHelper"/> instance that
-        /// lets us do more reflection stuff on that method.
+        /// lets us do more reflection stuff on that pipeline.
         /// </summary>
-        /// <param name="method">The method to reflect on.</param>
+        /// <param name="method">The pipeline to reflect on.</param>
         public MethodReflectionHelper(MethodBase method)
         {
             this.method = method;
         }
 
         /// <summary>
-        /// Returns true if any of the parameters of this method
+        /// Returns true if any of the parameters of this pipeline
         /// are open generics.
         /// </summary>
         public bool MethodHasOpenGenericParameters
@@ -39,7 +39,7 @@ namespace Unity
 
         /// <summary>
         /// Return the <see cref="System.Type"/> of each parameter for this
-        /// method.
+        /// pipeline.
         /// </summary>
         /// <returns>Sequence of <see cref="System.Type"/> objects, one for
         /// each parameter in order.</returns>

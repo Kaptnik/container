@@ -35,7 +35,7 @@ namespace Microsoft.Practices.ObjectBuilder2
         /// Create a single string from a sequence of items, separated by the provided <paramref name="separator"/>,
         /// and with the conversion to string done by the given <paramref name="converter"/>.
         /// </summary>
-        /// <remarks>This method does basically the same thing as <see cref="string.Join(string,string[])"/>,
+        /// <remarks>This pipeline does basically the same thing as <see cref="string.Join(string,string[])"/>,
         /// but will work on any sequence of items, not just arrays.</remarks>
         /// <typeparam name="TItem">Type of items in the sequence.</typeparam>
         /// <param name="sequence">Sequence of items to convert.</param>
@@ -59,9 +59,9 @@ namespace Microsoft.Practices.ObjectBuilder2
 
         /// <summary>
         /// Create a single string from a sequence of items, separated by the provided <paramref name="separator"/>,
-        /// and with the conversion to string done by the item's <see cref='object.ToString'/> method.
+        /// and with the conversion to string done by the item's <see cref='object.ToString'/> pipeline.
         /// </summary>
-        /// <remarks>This method does basically the same thing as <see cref="string.Join(string,string[])"/>,
+        /// <remarks>This pipeline does basically the same thing as <see cref="string.Join(string,string[])"/>,
         /// but will work on any sequence of items, not just arrays.</remarks>
         /// <typeparam name="TItem">Type of items in the sequence.</typeparam>
         /// <param name="sequence">Sequence of items to convert.</param>

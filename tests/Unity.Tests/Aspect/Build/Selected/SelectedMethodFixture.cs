@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Unity.Build.Context;
 using Unity.Build.Selected;
 
 namespace Unity.Container.Tests.Aspect.Build.Selected
@@ -63,7 +62,7 @@ namespace Unity.Container.Tests.Aspect.Build.Selected
         [DynamicData(nameof(TestMethodInputData))]
         public void Abstractions_Build_Selected_SelectedMethod(int test, Type registerType, Type resolveType, int position)
         {
-            ResolutionContext context = new ResolutionContext { Resolve = (t, n) => _values[t] };
+            ResolveContext context = new ResolveContext { Resolve = (t, n) => _values[t] };
 
             var methodInfo = registerType.GetTypeInfo().DeclaredMethods.ElementAt(position);
             var selectedMethod = new SelectedMethod(methodInfo);

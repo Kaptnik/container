@@ -9,7 +9,7 @@ namespace Unity.Container.Tests.Lifetime
         #region Tests
 
         /// <summary>
-        /// Registering a type twice with SetSingleton method. once with default and second with name.
+        /// Registering a type twice with SetSingleton pipeline. once with default and second with name.
         /// </summary>
         [TestMethod]
         public void Container_Lifetime_ContainerControlledLifetimeManager_DoneTwice()
@@ -25,7 +25,7 @@ namespace Unity.Container.Tests.Lifetime
         }
 
         /// <summary>
-        /// Registering a type twice with SetSingleton method. once with default and second with name.
+        /// Registering a type twice with SetSingleton pipeline. once with default and second with name.
         /// </summary>
         [TestMethod]
         public void Container_Lifetime_ContainerControlledLifetimeManager_InstanceDoneTwice()
@@ -60,7 +60,7 @@ namespace Unity.Container.Tests.Lifetime
         }
 
         /// <summary>
-        /// SetLifetime class A. Then use GetOrDefault method to get the instances, once without name, second with name.
+        /// SetLifetime class A. Then use GetOrDefault pipeline to get the instances, once without name, second with name.
         /// </summary>
         [TestMethod]
         public void Container_Lifetime_ContainerControlledLifetimeManager_GetTwice()
@@ -135,7 +135,7 @@ namespace Unity.Container.Tests.Lifetime
         }
 
         /// <summary>
-        /// Registering a type in both parent as well as child. Now trying to ResolveMethod from both
+        /// Registering a type in both parent as well as child. Now trying to ResolvePipeline from both
         /// check if same or different instances are returned.
         /// </summary>
         [TestMethod]

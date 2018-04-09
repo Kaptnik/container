@@ -77,7 +77,7 @@ namespace Microsoft.Practices.Unity.Tests
             try
             {
                 container.Resolve<TypeWithArrayConstructorParameterOfRankTwo>();
-                Assert.Fail("Call to ResolveMethod<>() should have failed");
+                Assert.Fail("Call to ResolvePipeline<>() should have failed");
             }
             catch (ResolutionFailedException)
             {

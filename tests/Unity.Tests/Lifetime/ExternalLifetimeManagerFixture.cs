@@ -13,7 +13,7 @@ namespace Unity.Container.Tests.Lifetime
     public class ExternallyControlledLifetimeManagerFixture
     {
         /// <summary>
-        /// Registering a type as singleton and handling its lifetime. Using SetLifetime method.
+        /// Registering a type as singleton and handling its lifetime. Using SetLifetime pipeline.
         /// </summary>
         [TestMethod]
         public void Container_Lifetime_ExternallyControlledLifetimeManager_SetLifetimeTwice()
@@ -202,7 +202,7 @@ namespace Unity.Container.Tests.Lifetime
 
         /// <summary>
         /// Verify Lifetime managers. When registered using externally controlled. Should return me with new 
-        /// instance every time when asked by ResolveMethod.
+        /// instance every time when asked by ResolvePipeline.
         /// Bug ID : 16372
         /// </summary>
         [TestMethod]
@@ -221,7 +221,7 @@ namespace Unity.Container.Tests.Lifetime
 
         /// <summary>
         /// Verify Lifetime managers. When registered using container controlled and freed, even then
-        /// same instance is returned when asked for ResolveMethod.
+        /// same instance is returned when asked for ResolvePipeline.
         /// </summary>
         [TestMethod]
         public void Container_Lifetime_ExternallyControlledLifetimeManager_Use()
@@ -244,7 +244,7 @@ namespace Unity.Container.Tests.Lifetime
         }
 
         /// <summary>
-        /// The ResolveMethod method returns the object registered with the named mapping, 
+        /// The ResolvePipeline pipeline returns the object registered with the named mapping, 
         /// or raises an exception if there is no mapping that matches the specified name. Testing this scenario
         /// Bug ID : 16371
         /// </summary>

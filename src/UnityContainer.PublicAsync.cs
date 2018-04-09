@@ -11,7 +11,7 @@ namespace Unity
 {
     public partial class UnityContainer : IUnityContainerAsync
     {
-        #region Type Registration
+        #region Type AspectFactory
 
         /// <inheritdoc />
         public IUnityContainer RegisterTypeAsync(Type registeredType, string name, Type mappedTo, LifetimeManager lifetimeManager, InjectionMember[] injectionMembers)
@@ -34,7 +34,7 @@ namespace Unity
             var registration = new ExplicitRegistration(registeredType, name, mappedTo, lifetimeManager); // ReSharper disable once CoVariantArrayConversion
 
             // Register type
-            //registration.ResolveMethod = _asyncRegistrationPipeline(_lifetimeContainer, registration, injectionMembers);
+            //registration.ResolvePipeline = _asyncRegistrationPipeline(_lifetimeContainer, registration, injectionMembers);
 
             // Add to appropriate storage
             StoreRegistration(registration);
@@ -51,7 +51,7 @@ namespace Unity
                     {
                         // Validate against ImplementationType with InjectionFactory
                         if (member is InjectionFactory && registration.ImplementationType != registration.Type)  // TODO: Add proper error message
-                            throw new InvalidOperationException("Registration where both ImplementationType and InjectionFactory are set is not supported");
+                            throw new InvalidOperationException("AspectFactory where both ImplementationType and InjectionFactory are set is not supported");
 
                         // Mark as requiring build if any one of the injectors are marked with IRequireBuild
                         if (member is IRequireBuild) registration.BuildRequired = true;
@@ -61,12 +61,12 @@ namespace Unity
                     }
                 }
 
-                return registration.ResolveMethod = next(lifetimeContainer, registration);
+                return registration.ResolvePipeline = next(lifetimeContainer, registration);
             }, source.Token);
 
             // Return temporary stub in case resolution happened
             // before pipeline has been processed
-            return (ref ResolutionContext context) =>
+            return (ref ResolveContext context) =>
             {
                 // Cancel the Async pipeline build 
                 source.Cancel();
@@ -78,7 +78,7 @@ namespace Unity
                     {
                         // Validate against ImplementationType with InjectionFactory
                         if (member is InjectionFactory && registration.ImplementationType != registration.Type)  // TODO: Add proper error message
-                            throw new InvalidOperationException("Registration where both ImplementationType and InjectionFactory are set is not supported");
+                            throw new InvalidOperationException("AspectFactory where both ImplementationType and InjectionFactory are set is not supported");
 
                         // Mark as requiring build if any one of the injectors are marked with IRequireBuild
                         if (member is IRequireBuild) registration.BuildRequired = true;
@@ -89,10 +89,10 @@ namespace Unity
                 }
 
                 // Build pipeline in real time
-                registration.ResolveMethod = next(lifetimeContainer, registration);
+                registration.ResolvePipeline = next(lifetimeContainer, registration);
 
                 // Build the object
-                return registration.ResolveMethod(ref context);
+                return registration.ResolvePipeline(ref context);
             };
 */
             return this;

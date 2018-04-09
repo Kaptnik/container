@@ -16,7 +16,7 @@ namespace Unity.Container.Lifetime
         /// give value. This value will be returned by <see cref="LifetimeManager.GetValue"/>
         /// but is not stored in the lifetime manager, nor is the value disposed.
         /// This Lifetime manager is intended only for internal use, which is why the
-        /// normal <see cref="LifetimeManager.SetValue"/> method is not used here.
+        /// normal <see cref="LifetimeManager.SetValue"/> pipeline is not used here.
         /// </summary>
         /// <param name="value">Value to store.</param>
         public InternalPerResolveLifetimeManager(object value)

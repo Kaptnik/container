@@ -1,14 +1,13 @@
 ﻿using System;
 using System.Globalization;
 using System.Reflection;
-using Unity.Build.Pipeline;
-using Unity.Registration;
+using Unity.Container;
 
-namespace Unity.Aspect.Select
+namespace Unity.Pipeline.Constructor
 {
-    public static class SelectLongestConstructor
+    public static class LongestConstructor
     {
-        public static Factory<Type, InjectionConstructor> SelectConstructorPipelineFactory(Factory<Type, InjectionConstructor> next)
+        public static Factory<Type, ConstructorInfo> SelectPipelineFactory(Factory<Type, ConstructorInfo> next)
         {
             return (Type type) =>
             {
@@ -39,7 +38,7 @@ namespace Unity.Aspect.Select
                                       type.GetTypeInfo().Name, max));
                 }
 
-                return new InjectionConstructor(constructor);
+                return constructor;
             };
         }
     }

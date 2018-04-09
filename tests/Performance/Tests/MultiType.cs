@@ -6,7 +6,7 @@ using Unity;
 
 namespace Runner.Tests
 {
-    [BenchmarkCategory("Registration")]
+    [BenchmarkCategory("AspectFactory")]
     [Config(typeof(BenchmarkConfiguration))]
     public class MultiType
     {

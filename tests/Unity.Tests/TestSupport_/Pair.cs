@@ -41,12 +41,12 @@ namespace Microsoft.Practices.Unity.Utility
     }
 
     /// <summary>
-    /// Container for a Pair helper method.
+    /// Container for a Pair helper pipeline.
     /// </summary>
     public static class Pair
     {
         /// <summary>
-        /// A helper factory method that lets users take advantage of type inference.
+        /// A helper factory pipeline that lets users take advantage of type inference.
         /// </summary>
         /// <typeparam name="TFirstParameter">Type of first value.</typeparam>
         /// <typeparam name="TSecondParameter">Type of second value.</typeparam>

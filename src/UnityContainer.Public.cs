@@ -4,13 +4,15 @@ using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
 using System.Reflection;
-using Unity.Build.Pipeline;
+using Unity.Aspect;
+using Unity.Container;
 using Unity.Container.Context;
 using Unity.Container.Registration;
 using Unity.Events;
 using Unity.Exceptions;
 using Unity.Extension;
 using Unity.Lifetime;
+using Unity.Pipeline;
 using Unity.Registration;
 using Unity.Resolution;
 
@@ -24,11 +26,10 @@ namespace Unity
         public IUnityContainer RegisterType(Type registeredType, string name, Type mappedTo, LifetimeManager lifetimeManager, InjectionMember[] injectionMembers)
         {
             // Validate input
-            if (null == registeredType) throw new ArgumentNullException(nameof(registeredType));
+            var registeredInfo = registeredType?.GetTypeInfo() ?? throw new ArgumentNullException(nameof(registeredType));
             if (null != mappedTo)
             {
                 var mappedInfo = mappedTo.GetTypeInfo();
-                var registeredInfo = registeredType.GetTypeInfo();
                 if (!registeredInfo.IsGenericType && !mappedInfo.IsGenericType && !registeredInfo.IsAssignableFrom(mappedInfo))
                 {
                     throw new ArgumentException(string.Format(CultureInfo.CurrentCulture,
@@ -39,34 +40,37 @@ namespace Unity
             var unity = lifetimeManager is ISingletonLifetimePolicy ? _root : this;
             var context = new RegistrationContext
             {
-                RegisteredType = registeredType,
-                Name = name,
-                MappedTo = mappedTo,
-                LifetimeManager = lifetimeManager,
-                InjectionMembers = injectionMembers,
-
-                TypeInfo = registeredType.GetTypeInfo(),
-                Container = unity,
-                GetInjectionMembers = (Type type) => unity._injectionMembersPipeline(type)
+                TypeInfo               = registeredInfo,
+                InjectionMembers       = injectionMembers,
+                Container              = unity,
+                SelectConstructor      = unity._constructorSelectionPipeline,
+                SelectInjectionMembers = unity._injectionMembersPipeline
             };
 
             // Analise and register type
             if (context.TypeInfo.IsGenericTypeDefinition)
             {
-                // When registering open generic (the factory) following is possible:
-                //
-                // - InjectionFactory of ITypeFactory<Type> provided for the type
-                // - Plain generic type registration (or mapping)
+                // Create registration
+                context.Registration = new GenericRegistration(registeredType, name, mappedTo, lifetimeManager);
 
-                // Build resolve pipeline
-                var registration = (GenericRegistration)context.Container._genericRegistrationPipeline(ref context);
+                // Create type factory
+                var typeFactory = context.Container._genericAspectPipeline(ref context);
 
-                //// Add to appropriate storage
-                StoreFactory(registration);
+                // Add to appropriate storage
+                unity.StoreFactory((GenericRegistration)typeFactory);
+            }
+            else
+            {
+                // Create registration
+                context.Registration = new ExplicitRegistration(registeredType, name, mappedTo, lifetimeManager);
+
+                // Create resolution pipeline
+                ((ExplicitRegistration)context.Registration).ResolvePipeline = context.Container._explicitAspectPipeline(ref context);
+
+                // Add to appropriate storage
+                unity.StoreRegistration((ExplicitRegistration)context.Registration);
             }
 
-            else
-                context.Container.RegisterConstructableType(ref context);
 
             return this;
         }
@@ -79,22 +83,29 @@ namespace Unity
         /// <inheritdoc />
         public IUnityContainer RegisterInstance(Type registeredType, string name, object instance, LifetimeManager lifetimeManager)
         {
-            //// Validate input
-            //if (null == instance) throw new ArgumentNullException(nameof(instance));
+            // Validate input
+            if (null == instance) throw new ArgumentNullException(nameof(instance));
 
-            //// Add value to Lifetime Manager
-            //var type = registeredType ?? instance.GetType();
-            //var lifetime = lifetimeManager ?? new ContainerControlledLifetimeManager();
-            //lifetime.SetValue(instance);
+            // Add value to Lifetime Manager
+            var type = registeredType ?? instance.GetType();
+            var lifetime = lifetimeManager ?? new ContainerControlledLifetimeManager();
+            lifetime.SetValue(instance);
 
-            //// Register instance
-            //var registration = new ExplicitRegistration(type, name, type, lifetime);
-            
-            //// Build resolve pipeline
-            //registration.ResolveMethod = _instanceRegistrationPipeline(_lifetimeContainer, registration);
+            var unity = lifetimeManager is ISingletonLifetimePolicy ? _root : this;
+            var context = new RegistrationContext
+            {
+                TypeInfo = type.GetTypeInfo(),
+                Registration = new ExplicitRegistration(type, name, type, lifetime),
+                Container = unity,
+                SelectConstructor = unity._constructorSelectionPipeline,
+                SelectInjectionMembers = unity._injectionMembersPipeline
+            };
 
-            //// Add to appropriate storage
-            //StoreRegistration(registration);
+            // Build resolve pipeline
+            ((ExplicitRegistration)context.Registration).ResolvePipeline = _instanceAspectPipeline(ref context);
+
+            // Add to appropriate storage
+            unity.StoreRegistration((ExplicitRegistration)context.Registration);
 
             return this;
         }
@@ -169,7 +180,7 @@ namespace Unity
                         getParentContextMethod = getRecursiveContextMethod;
 
                         // Resolve dependency
-                        return ((IResolveMethod)context.Registration).ResolveMethod(ref context);
+                        return ((IResolvePipeline)context.Registration).ResolvePipeline(ref context);
                     }
                     catch (Exception exception)
                     {
@@ -180,7 +191,7 @@ namespace Unity
                 };
 
                 // Run the resolve
-                return ((ImplicitRegistration)root.Registration).ResolveMethod(ref root);
+                return ((ImplicitRegistration)root.Registration).ResolvePipeline(ref root);
             }
             catch (Exception ex)
             {

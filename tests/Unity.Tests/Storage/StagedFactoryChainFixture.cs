@@ -1,11 +1,9 @@
 ﻿using System.Collections;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Unity.Build.Pipeline;
-using Unity.Build.Stage;
-using Unity.Container.Context;
-using Unity.Container.Pipeline;
 using Unity.Container.Storage;
+using Unity.Pipeline;
+using Unity.Stage;
 
 namespace Unity.Container.Tests.Storage
 {
@@ -15,13 +13,13 @@ namespace Unity.Container.Tests.Storage
         #region Setup
 
         private string _data;
-        private StagedFactoryChain<Registration<ResolveMethod>, RegisterStage> _chain;
+        private StagedFactoryChain<AspectFactory<ResolvePipeline>, RegisterStage> _chain;
 
         [TestInitialize]
         public void Setup()
         {
             _data = null;
-            _chain = new StagedFactoryChain<Registration<ResolveMethod>, RegisterStage>
+            _chain = new StagedFactoryChain<AspectFactory<ResolvePipeline>, RegisterStage>
             {
                 {TestAspectFactory1, RegisterStage.Setup},
                 {TestAspectFactory2, RegisterStage.Collections},
@@ -40,7 +38,7 @@ namespace Unity.Container.Tests.Storage
         [TestMethod]
         public void Container_Storage_StagedFactoryChain_empty()
         {
-            StagedFactoryChain<Registration<ResolveMethod>, RegisterStage> chain = new StagedFactoryChain<Registration<ResolveMethod>, RegisterStage>();
+            StagedFactoryChain<AspectFactory<ResolvePipeline>, RegisterStage> chain = new StagedFactoryChain<AspectFactory<ResolvePipeline>, RegisterStage>();
             Assert.IsNull(chain.BuildPipeline());
         }
 
@@ -111,7 +109,7 @@ namespace Unity.Container.Tests.Storage
 
         #region Test Data
 
-        public Registration<ResolveMethod> TestAspectFactory1(Registration<ResolveMethod> next)
+        public AspectFactory<ResolvePipeline> TestAspectFactory1(AspectFactory<ResolvePipeline> next)
         {
             _data = _data + "1";
 
@@ -123,7 +121,7 @@ namespace Unity.Container.Tests.Storage
 
         }
 
-        public Registration<ResolveMethod> TestAspectFactory2(Registration<ResolveMethod> next)
+        public AspectFactory<ResolvePipeline> TestAspectFactory2(AspectFactory<ResolvePipeline> next)
         {
             _data = _data + "2";
 
@@ -134,7 +132,7 @@ namespace Unity.Container.Tests.Storage
             };
         }
 
-        public Registration<ResolveMethod> TestAspectFactory3(Registration<ResolveMethod> next)
+        public AspectFactory<ResolvePipeline> TestAspectFactory3(AspectFactory<ResolvePipeline> next)
         {
             _data = _data + "3";
 
@@ -145,7 +143,7 @@ namespace Unity.Container.Tests.Storage
             };
         }
 
-        public Registration<ResolveMethod> TestAspectFactory4(Registration<ResolveMethod> next)
+        public AspectFactory<ResolvePipeline> TestAspectFactory4(AspectFactory<ResolvePipeline> next)
         {
             _data = _data + "4";
             return (ref RegistrationContext context) =>
@@ -155,7 +153,7 @@ namespace Unity.Container.Tests.Storage
             };
         }
 
-        public Registration<ResolveMethod> TestAspectFactory5(Registration<ResolveMethod> next)
+        public AspectFactory<ResolvePipeline> TestAspectFactory5(AspectFactory<ResolvePipeline> next)
         {
             _data = _data + "5";
 
@@ -166,7 +164,7 @@ namespace Unity.Container.Tests.Storage
             };
         }
 
-        public Registration<ResolveMethod> TestAspectFactory6(Registration<ResolveMethod> next)
+        public AspectFactory<ResolvePipeline> TestAspectFactory6(AspectFactory<ResolvePipeline> next)
         {
             _data = _data + "6";
 
@@ -177,7 +175,7 @@ namespace Unity.Container.Tests.Storage
             };
         }
 
-        public Registration<ResolveMethod> TestAspectFactory7(Registration<ResolveMethod> next)
+        public AspectFactory<ResolvePipeline> TestAspectFactory7(AspectFactory<ResolvePipeline> next)
         {
             _data = _data + "7";
 
@@ -188,7 +186,7 @@ namespace Unity.Container.Tests.Storage
             };
         }
 
-        public Registration<ResolveMethod> TestAspectFactory8(Registration<ResolveMethod> next)
+        public AspectFactory<ResolvePipeline> TestAspectFactory8(AspectFactory<ResolvePipeline> next)
         {
             _data = _data + "8";
             return (ref RegistrationContext context) =>

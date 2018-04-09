@@ -1,34 +1,19 @@
 ﻿using System;
-using System.Reflection;
-using Unity.Build.Context;
-using Unity.Build.Pipeline;
-using Unity.Container.Context;
-using Unity.Container.Pipeline;
-using Unity.Container.Registration;
-using Unity.Lifetime;
-using Unity.Storage;
+using Unity.Aspect;
+using Unity.Container;
 
-// ReSharper disable RedundantLambdaParameterType
-
-namespace Unity.Aspect.Build
+namespace Unity.Pipeline.Dynamic
 {
-    public static class BuildMappingAspect
+    public static class MappingAspect
     {
 
-        public static Registration<ResolveMethod> ExplicitRegistrationMappingAspectFactory(Registration<ResolveMethod> next)
-        {
-
-            // Bypassed
-            return next;
-        }
-
-        public static Registration<ResolveMethod> ImplicitRegistrationMappingAspectFactory(Registration<ResolveMethod> next)
+        public static AspectFactory<ResolvePipeline> AspectFactory(AspectFactory<ResolvePipeline> next)
         {
             // Analise registration and generate mappings
             return (ref RegistrationContext registrationContext) =>
             {
                 throw new NotImplementedException();
-                //var registration = (ImplicitRegistration)registrationContext.Registration;
+                //var registration = (ImplicitRegistration)registrationContext.AspectFactory;
                 //var info = registration.Type.GetTypeInfo();
 
                 //// Create appropriate mapping if generic
@@ -42,7 +27,7 @@ namespace Unity.Aspect.Build
                 //         lifetimeContainer.Container.IsRegistered(registration.ImplementationType, 
                 //                                                  registration.Name))
                 //{
-                //    return (ref ResolutionContext context) => context.Resolve(registration.ImplementationType, 
+                //    return (ref ResolveContext context) => context.Resolve(registration.ImplementationType, 
                 //                                                              registration.Name);
                 //}
 

@@ -8,7 +8,7 @@ using Unity.Attributes;
 namespace Microsoft.Practices.Unity.Tests
 {
     /// <summary>
-    /// Test for dynamic method creation and the CLR bug. This test will only
+    /// Test for dynamic pipeline creation and the CLR bug. This test will only
     /// fail if run in a release build!
     /// </summary>
     [TestClass]

@@ -13,7 +13,7 @@ namespace Microsoft.Practices.ObjectBuilder2.Tests.Utility
     {
         /// <summary>
         /// Called during the chain of responsibility for a build operation. The
-        /// PreBuildUp method is called when the chain is being executed in the
+        /// PreBuildUp pipeline is called when the chain is being executed in the
         /// forward direction.
         /// </summary>
         /// <param name="context">Context of the build operation.</param>

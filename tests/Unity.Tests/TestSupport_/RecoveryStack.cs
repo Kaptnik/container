@@ -42,7 +42,7 @@ namespace Unity.Utility
         }
 
         /// <summary>
-        /// Execute the <see cref="IRequiresRecovery.Recover"/> method
+        /// Execute the <see cref="IRequiresRecovery.Recover"/> pipeline
         /// of everything in the recovery list. Recoveries will execute
         /// in the opposite order of add - it's a stack.
         /// </summary>

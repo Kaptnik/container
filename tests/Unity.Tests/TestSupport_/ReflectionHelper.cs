@@ -66,7 +66,7 @@ namespace Unity
         /// the parameters. Determine if any of the parameters are
         /// open generic types that need type attributes filled in.
         /// </summary>
-        /// <param name="method">The method to check.</param>
+        /// <param name="method">The pipeline to check.</param>
         /// <returns>True if any of the parameters are open generics. False if not.</returns>
         public static bool MethodHasOpenGenericParameters(MethodBase method)
         {
@@ -129,7 +129,7 @@ namespace Unity
         /// <summary>
         /// Given a generic argument name, return the corresponding type for this
         /// closed type. For example, if the current type is SomeType&lt;User&gt;, and the
-        /// corresponding definition was SomeType&lt;TSomething&gt;, calling this method
+        /// corresponding definition was SomeType&lt;TSomething&gt;, calling this pipeline
         /// and passing "TSomething" will return typeof(User).
         /// </summary>
         /// <param name="parameterName">Name of the generic parameter.</param>

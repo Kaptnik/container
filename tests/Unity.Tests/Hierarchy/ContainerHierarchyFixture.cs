@@ -39,7 +39,7 @@ namespace Unity.Container.Tests.Hierarchy
         }
 
         /// <summary>
-        /// Check whether child inherits the configuration of the parent container or not using registertype method
+        /// Check whether child inherits the configuration of the parent container or not using registertype pipeline
         /// </summary>
         [TestMethod]
         public void Container_Hierarchy_ChildInheritsParentsConfiguration_RegisterTypeResolve()
@@ -56,7 +56,7 @@ namespace Unity.Container.Tests.Hierarchy
 
         /// <summary>
         /// Check whether child inherits the configuration of the parent container or 
-        /// not, using register instance method
+        /// not, using register instance pipeline
         /// </summary>
         [TestMethod]
         public void Container_Hierarchy_ChildInheritsParentsConfiguration_RegisterInstanceResolve()
@@ -75,7 +75,7 @@ namespace Unity.Container.Tests.Hierarchy
 
         /// <summary>
         /// Check whether child inherits the configuration of the parent container or 
-        /// not,using register type method and then resolve all
+        /// not,using register type pipeline and then resolve all
         /// </summary>
         [TestMethod]
         public void Container_Hierarchy_ChildInheritsParentsConfiguration_RegisterTypeResolveAll()
@@ -95,7 +95,7 @@ namespace Unity.Container.Tests.Hierarchy
 
         /// <summary>
         /// Check whether child inherits the configuration of the parent container or 
-        /// not, Using register instance method and then resolve all
+        /// not, Using register instance pipeline and then resolve all
         /// </summary>
         [TestMethod]
         public void Container_Hierarchy_ChildInheritsParentsConfiguration_RegisterInstanceResolveAll()

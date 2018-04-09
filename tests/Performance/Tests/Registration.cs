@@ -5,7 +5,7 @@ using System.Collections.Generic;
 
 namespace Runner.Tests
 {
-    [BenchmarkCategory("Registration")]
+    [BenchmarkCategory("AspectFactory")]
     [Config(typeof(BenchmarkConfiguration))]
     public class Registration
     {
@@ -13,35 +13,35 @@ namespace Runner.Tests
 
         //[Benchmark(Description = "Register Type")]
         //public void RegisterType() => 
-        //    Adapter.RegisterType(typeof(Registration), null);
+        //    Adapter.RegisterType(typeof(AspectFactory), null);
 
         //[Benchmark(Description = "Register Type (Singleton)")]
         //public void RegisterTypeSingleton() => 
-        //    Adapter.RegisterTypeSingleton(typeof(Registration), null);
+        //    Adapter.RegisterTypeSingleton(typeof(AspectFactory), null);
 
         //[Benchmark(Description = "Register Named Type")]
         //public void RegisterNamedType() => 
-        //    Adapter.RegisterType(typeof(Registration), TestName);
+        //    Adapter.RegisterType(typeof(AspectFactory), TestName);
 
         //[Benchmark(Description = "Register Named Type (Singleton)")]
         //public void RegisterNamedTypeSingleton() => 
-        //    Adapter.RegisterTypeSingleton(typeof(Registration), TestName);
+        //    Adapter.RegisterTypeSingleton(typeof(AspectFactory), TestName);
 
 
         //[Benchmark(Description = "Register Type Mapping")]
         //public void RegisterTypeMapping() => 
-        //    Adapter.RegisterTypeMapping(typeof(TestsBase), typeof(Registration), null);
+        //    Adapter.RegisterTypeMapping(typeof(TestsBase), typeof(AspectFactory), null);
 
         //[Benchmark(Description = "Register Type Mapping (Singleton)")]
         //public void RegisterTypeMappingSingleton() => 
-        //    Adapter.RegisterTypeMappingSingleton(typeof(TestsBase), typeof(Registration), null);
+        //    Adapter.RegisterTypeMappingSingleton(typeof(TestsBase), typeof(AspectFactory), null);
 
         //[Benchmark(Description = "Register Named Type Mapping")]
         //public void RegisterNamedTypeMapping() => 
-        //    Adapter.RegisterTypeMapping(typeof(TestsBase), typeof(Registration), TestName);
+        //    Adapter.RegisterTypeMapping(typeof(TestsBase), typeof(AspectFactory), TestName);
 
         //[Benchmark(Description = "Register Named Type Mapping (Singleton)")]
         //public void RegisterNamedTypeMappingSingleton() => 
-        //    Adapter.RegisterTypeMappingSingleton(typeof(TestsBase), typeof(Registration), TestName);
+        //    Adapter.RegisterTypeMappingSingleton(typeof(TestsBase), typeof(AspectFactory), TestName);
     }
 }
