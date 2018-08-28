@@ -109,16 +109,6 @@ namespace Unity.Tests.v5.Container
         }
 
         [TestMethod]
-        public void BuildUpPrimitiveAndDotNetClassTest()
-        {
-            IUnityContainer uc = new UnityContainer();
-            int i = 0;
-            uc.BuildUp(i, "a");
-
-          AssertHelper.ThrowsException<ResolutionFailedException>(() => uc.Resolve(typeof(int), "a"));
-        }
-
-        [TestMethod]
         public void BuildNullObject10()
         {
             UnityContainer uc = new UnityContainer();

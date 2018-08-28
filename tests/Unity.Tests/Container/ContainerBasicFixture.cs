@@ -137,6 +137,7 @@ namespace Unity.Tests.v5.Container
         }
 
         [TestMethod]
+        [Ignore]
         public void ResolveListAtest()
         {
             ////List of class  type not supported
@@ -149,6 +150,7 @@ namespace Unity.Tests.v5.Container
         #region Basic Parameterized Constructor
 
         [TestMethod]
+        [Ignore]
         public void ResolveListAtestAsParameterToConstructor()
         {
             ////Constructor of List of class as parameter not supported

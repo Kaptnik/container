@@ -38,6 +38,10 @@
     <PackageReference Include="Unity.Abstractions" Version="$(UnityAbstractionsVersion)" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="ResolverPolicy\" />
+  </ItemGroup>
+
 
   <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>

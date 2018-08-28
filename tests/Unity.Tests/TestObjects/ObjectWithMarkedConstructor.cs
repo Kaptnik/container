@@ -1,4 +1,5 @@
 ﻿
+using System;
 using Unity.Tests.v5.TestDoubles;
 
 namespace Unity.Tests.v5.TestObjects
@@ -12,6 +13,9 @@ namespace Unity.Tests.v5.TestObjects
         [InjectionConstructor]
         public ObjectWithMarkedConstructor(string theInjectionConstructor)
         {
+            Name = theInjectionConstructor ?? throw new ArgumentNullException(nameof(theInjectionConstructor));
         }
+
+        public string Name { get; }
     }
 }

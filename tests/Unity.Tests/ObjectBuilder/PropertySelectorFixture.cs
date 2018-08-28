@@ -3,11 +3,11 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using Unity.Attributes;
 using Unity.Builder;
 using Unity.Builder.Selection;
-using Unity.ObjectBuilder.BuildPlan.Selection;
+using Unity.ObjectBuilder.Policies;
 using Unity.Policy;
-using Unity.Tests.v5.TestDoubles;
 using Unity.Tests.v5.TestSupport;
 
 namespace Unity.Tests.v5.ObjectBuilder
@@ -43,7 +43,7 @@ namespace Unity.Tests.v5.ObjectBuilder
 
         private List<PropertyInfo> SelectProperties(Type t)
         {
-            IPropertySelectorPolicy selector = new PropertySelectorPolicy<DependencyAttribute>();
+            IPropertySelectorPolicy selector = new DefaultPropertySelectorPolicy();
             IBuilderContext context = GetContext(t);
             var properties = new List<SelectedProperty>(selector.SelectProperties(context, ((MockBuilderContext)context).PersistentPolicies));
             return properties.Select(sp => sp.Property).ToList();

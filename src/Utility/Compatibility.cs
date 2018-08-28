@@ -43,6 +43,12 @@ namespace System.Reflection
 
         public bool IsAbstract => _type.IsAbstract;
 
+        public bool IsClass => _type.IsClass;
+
+        public bool IsEnum => _type.IsEnum;
+
+        public bool IsPrimitive => _type.IsPrimitive;
+
         public bool IsSubclassOf(Type type) => _type.IsSubclassOf(type);
 
         public bool IsValueType => _type.IsValueType;
@@ -164,10 +170,10 @@ namespace Unity
 #endif
 
 #if NET40
-        public static Attribute GetCustomAttribute(this ParameterInfo parameter, Type type)
+        public static Attribute GetCustomAttribute(this MemberInfo parameter, Type type)
         {
             return parameter.GetCustomAttributes(false)
-                            .OfType<DependencyResolutionAttribute>()
+                            .OfType<DependencyAttribute>()
                             .FirstOrDefault();
         }
 
@@ -190,6 +196,7 @@ namespace Unity
         {
             return Delegate.CreateDelegate(delegateType, target, method);
         }
+
 #else
         public static MethodInfo GetGetMethod(this PropertyInfo info, bool _)
         {
