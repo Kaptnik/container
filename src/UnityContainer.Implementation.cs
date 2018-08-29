@@ -15,7 +15,6 @@ using Unity.ObjectBuilder.BuildPlan.DynamicMethod;
 using Unity.ObjectBuilder.BuildPlan.DynamicMethod.Creation;
 using Unity.ObjectBuilder.BuildPlan.DynamicMethod.Method;
 using Unity.ObjectBuilder.BuildPlan.DynamicMethod.Property;
-using Unity.ObjectBuilder.BuildPlan.Selection;
 using Unity.ObjectBuilder.Policies;
 using Unity.Policy;
 using Unity.Policy.BuildPlanCreator;
@@ -197,11 +196,13 @@ namespace Unity
         private IPolicySet GetDefaultPolicies()
         {
             var defaults = new InternalRegistration(null, null);
+            var paramFactory = new DefaultParameterResolverPolicy();
 
             defaults.Set(typeof(IBuildPlanCreatorPolicy), new DynamicMethodBuildPlanCreatorPolicy(_buildPlanStrategies));
-            defaults.Set(typeof(IConstructorSelectorPolicy), new DefaultUnityConstructorSelectorPolicy());
-            defaults.Set(typeof(IPropertySelectorPolicy), new DefaultUnityPropertySelectorPolicy());
-            defaults.Set(typeof(IMethodSelectorPolicy), new DefaultUnityMethodSelectorPolicy());
+            defaults.Set(typeof(IConstructorSelectorPolicy), new DefaultConstructorSelectorPolicy(paramFactory));
+            defaults.Set(typeof(IPropertySelectorPolicy), new DefaultPropertySelectorPolicy());
+            defaults.Set(typeof(IMethodSelectorPolicy), new DefaultMethodSelectorPolicy(paramFactory));
+            defaults.Set(typeof(DefaultParameterResolverPolicy), paramFactory);
 
             return defaults;
         }

@@ -1,5 +1,5 @@
 ﻿
-using Unity.Tests.v5.TestDoubles;
+using Unity.Attributes;
 
 namespace Unity.Tests.v5.TestObjects
 {
