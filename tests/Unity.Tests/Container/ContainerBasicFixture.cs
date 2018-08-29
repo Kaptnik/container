@@ -136,29 +136,7 @@ namespace Unity.Tests.v5.Container
             AssertHelper.ThrowsException<ResolutionFailedException>(() => uc1.Resolve<int>("i"));
         }
 
-        [TestMethod]
-        [Ignore]
-        public void ResolveListAtest()
-        {
-            ////List of class  type not supported
-            UnityContainer uc1 = new UnityContainer();
-
-            uc1.RegisterType<List<ATest>>("List");
-            AssertHelper.ThrowsException<ResolutionFailedException>(() => uc1.Resolve<List<ATest>>("List"));
-        }
-
         #region Basic Parameterized Constructor
-
-        [TestMethod]
-        [Ignore]
-        public void ResolveListAtestAsParameterToConstructor()
-        {
-            ////Constructor of List of class as parameter not supported
-            UnityContainer uc1 = new UnityContainer();
-
-            uc1.RegisterType<ListOfClassParameter>("List");
-            AssertHelper.ThrowsException<ResolutionFailedException>(() => uc1.Resolve<ListOfClassParameter>("List"));
-        }
 
         [TestMethod]
         public void ResolveArrayOfAtestAsParameterToConstructor()

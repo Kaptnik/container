@@ -1,5 +1,6 @@
 ﻿using System;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Unity.Attributes;
 using Unity.Builder.Operation;
 using Unity.Injection;
 using Unity.Resolution;
@@ -45,7 +46,6 @@ namespace Unity.Tests.v5
         }
 
         [TestMethod]
-        [Ignore]
         public void OverrideIsUsedInRecursiveBuilds()
         {
             const int ExpectedValue = 42; // Just need a number, value has no significance.
@@ -58,7 +58,6 @@ namespace Unity.Tests.v5
         }
 
         [TestMethod]
-        [Ignore]
         public void NonMatchingOverridesAreIgnored()
         {
             const int ExpectedValue = 42; // Just need a number, value has no significance.
@@ -221,6 +220,7 @@ namespace Unity.Tests.v5
             {
             }
 
+            [InjectionConstructor]
             public SimpleTestObject(int x)
             {
                 X = x;

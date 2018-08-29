@@ -55,7 +55,6 @@ namespace Unity.ObjectBuilder.Policies
                 .FirstOrDefault();
         }
 
-
         private static ConstructorInfo SelectInjectionConstructor(ConstructorInfo[] constructors, IBuilderContext context)
         {
             Array.Sort(constructors, (a, b) =>
@@ -69,84 +68,59 @@ namespace Unity.ObjectBuilder.Policies
                 return qtd;
             });
 
-            ConstructorInfo bestConstructor = null;
-            HashSet<Type> bestConstructorParameterTypes = null;
+            int parametersCount = 0;
+            ConstructorInfo bestCtor = null;
+            HashSet<Type> bestCtorParameters = null;
 
             foreach (var ctorInfo in constructors)
             {
                 var parameters = ctorInfo.GetParameters();
+
+                if (null != bestCtor && parametersCount > parameters.Length) return bestCtor;
+                parametersCount = parameters.Length;
 #if NET40
-                if (parameters.All(p => CanResolve(context.Container, p.ParameterType) || null != p.DefaultValue && !(p.DefaultValue is DBNull)))
+                if (parameters.All(p => ((UnityContainer)context.Container).CanResolve(p.ParameterType) || null != p.DefaultValue && !(p.DefaultValue is DBNull)))
 #else
-                if (parameters.All(p => CanResolve(context.Container, p.ParameterType) || p.HasDefaultValue))
+                if (parameters.All(p => p.HasDefaultValue || ((UnityContainer)context.Container).CanResolve(p.ParameterType)))
 #endif
                 {
-                    if (bestConstructor == null)
+                    if (bestCtor == null)
                     {
-                        bestConstructor = ctorInfo;
+                        bestCtor = ctorInfo;
                     }
                     else
                     {
                         // Since we're visiting constructors in decreasing order of number of parameters,
                         // we'll only see ambiguities or supersets once we've seen a 'bestConstructor'.
 
-                        if (bestConstructorParameterTypes == null)
+                        if (null == bestCtorParameters)
                         {
-                            bestConstructorParameterTypes = new HashSet<Type>(
-                                bestConstructor.GetParameters().Select(p => p.ParameterType));
+                            bestCtorParameters = new HashSet<Type>(
+                                bestCtor.GetParameters().Select(p => p.ParameterType));
                         }
 
-                        if (!bestConstructorParameterTypes.IsSupersetOf(parameters.Select(p => p.ParameterType)))
+                        if (!bestCtorParameters.IsSupersetOf(parameters.Select(p => p.ParameterType)))
                         {
-                            if (bestConstructorParameterTypes.All(p => p.GetTypeInfo().IsInterface)
-                                && !parameters.All(p => p.ParameterType.GetTypeInfo().IsInterface))
-                                return bestConstructor;
+                            if (bestCtorParameters.All(p => p.GetTypeInfo().IsInterface) && 
+                                !parameters.All(p => p.ParameterType.GetTypeInfo().IsInterface))
+                                return bestCtor;
 
                             throw new InvalidOperationException($"Failed to select a constructor for {context.BuildKey.Type.FullName}");
                         }
 
-                        return bestConstructor;
+                        return bestCtor;
                     }
                 }
             }
 
-            if (bestConstructor == null)
+            if (bestCtor == null)
             {
                 //return null;
                 throw new InvalidOperationException(
                     $"Builder not found for { context.BuildKey.Type.FullName}");
             }
 
-            return bestConstructor;
-        }
-
-        internal static bool CanResolve(IUnityContainer container, Type type)
-        {
-            var info = type.GetTypeInfo();
-
-            if (info.IsClass && !info.IsAbstract)
-            {
-                if (typeof(Delegate).GetTypeInfo().IsAssignableFrom(info) || typeof(string) == type || info.IsEnum
-                    || type.IsArray || info.IsPrimitive)
-                {
-                    return container.IsRegistered(type);
-                }
-
-                return true;
-            }
-
-            if (info.IsGenericType)
-            {
-                var genericType = type.GetGenericTypeDefinition();
-
-                if (genericType == typeof(IEnumerable<>) ||
-                    container.IsRegistered(genericType))
-                {
-                    return true;
-                }
-            }
-
-            return container.IsRegistered(type);
+            return bestCtor;
         }
 
         private SelectedConstructor CreateSelectedConstructor(ConstructorInfo ctor)

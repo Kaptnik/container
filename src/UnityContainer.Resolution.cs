@@ -16,6 +16,13 @@ namespace Unity
     /// </summary>
     public partial class UnityContainer
     {
+        #region Fields
+
+        private static readonly TypeInfo _delegateType = typeof(Delegate).GetTypeInfo();
+
+        #endregion
+
+
         #region Dynamic Registrations
 
         private IPolicySet GetDynamicRegistration(Type type, string name)
@@ -301,6 +308,44 @@ namespace Unity
                         set.Add((InternalRegistration)registration);
                 }
             }
+        }
+
+        #endregion
+
+
+        #region Internal Extensions
+
+        internal bool CanResolve(Type type)
+        {
+            var info = type.GetTypeInfo();
+
+            if (info.IsClass)
+            {
+                if (_delegateType.IsAssignableFrom(info) ||
+                    typeof(string) == type || info.IsEnum || info.IsPrimitive || info.IsAbstract)
+                {
+                    return _isTypeExplicitlyRegistered(type);
+                }
+
+                if (type.IsArray)
+                {
+                    return _isTypeExplicitlyRegistered(type) || CanResolve(type.GetElementType());
+                }
+
+                return true;
+            }
+
+            if (info.IsGenericType)
+            {
+                var genericType = type.GetGenericTypeDefinition();
+
+                if (genericType == typeof(IEnumerable<>) || _isTypeExplicitlyRegistered(genericType))
+                {
+                    return true;
+                }
+            }
+
+            return _isTypeExplicitlyRegistered(type);
         }
 
         #endregion

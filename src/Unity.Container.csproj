@@ -39,7 +39,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="ResolverPolicy\" />
+    <Compile Remove="ResolverPolicy\**" />
+    <EmbeddedResource Remove="ResolverPolicy\**" />
+    <None Remove="ResolverPolicy\**" />
   </ItemGroup>
 
 
