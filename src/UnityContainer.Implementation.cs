@@ -42,7 +42,7 @@ namespace Unity
         // Container specific
         private readonly UnityContainer _parent; 
         internal readonly LifetimeContainer _lifetimeContainer;
-        private List<UnityContainerExtension> _extensions;
+        private List<IUnityContainerExtensionConfigurator> _extensions;
         private UnityContainer _root;
 
         // Policies

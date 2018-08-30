@@ -74,18 +74,21 @@ namespace Unity
         /// <summary>
         /// Add an extension object to the container.
         /// </summary>
-        /// <param name="extension"><see cref="UnityContainerExtension"/> to add.</param>
+        /// <param name="extension"><see cref="IUnityContainerExtensionConfigurator"/> to add.</param>
         /// <returns>The <see cref="UnityContainer"/> object that this method was called on (this in C#, Me in Visual Basic).</returns>
-        public IUnityContainer AddExtension(UnityContainerExtension extension)
+        public IUnityContainer AddExtension(IUnityContainerExtensionConfigurator extension)
         {
+            if (!(extension is UnityContainerExtension))
+                throw new ArgumentException($"Invalid extension type: {extension?.GetType().FullName}\n" +
+                                            "Extension must derive from 'UnityContainerExtension'");
             lock (_lifetimeContainer)
             {
                 if (null == _extensions)
-                    _extensions = new List<UnityContainerExtension>();
+                    _extensions = new List<IUnityContainerExtensionConfigurator>();
 
-                _extensions.Add(extension ?? throw new ArgumentNullException(nameof(extension)));
+                _extensions.Add(extension);
             }
-            extension.InitializeExtension(_context);
+            ((UnityContainerExtension)extension).InitializeExtension(_context);
 
             return this;
         }
