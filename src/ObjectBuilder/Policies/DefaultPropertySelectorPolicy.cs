@@ -3,10 +3,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using Unity.Attributes;
+using Unity.Build;
 using Unity.Builder;
 using Unity.Builder.Selection;
 using Unity.Policy;
-using Unity.ResolverPolicy;
 using Unity.Utility;
 
 namespace Unity.ObjectBuilder.Policies
@@ -19,16 +19,26 @@ namespace Unity.ObjectBuilder.Policies
     {
         public DefaultPropertySelectorPolicy()
         {
-            Markers = new List<KeyValuePair<Type, Func<Type, Attribute, IResolverPolicy>>>
+            Markers = new List<KeyValuePair<Type, Func<Type, Attribute, ResolverDelegate>>>
                 {
-                    new KeyValuePair<Type, Func<Type, Attribute, IResolverPolicy>>(typeof(DependencyAttribute), 
-                        (t, a) =>  new NamedTypeDependencyResolverPolicy(t, ((DependencyAttribute)a).Name)),
-                    new KeyValuePair<Type, Func<Type, Attribute, IResolverPolicy>>(typeof(OptionalDependencyAttribute), 
-                        (t, a) =>  new OptionalDependencyResolverPolicy(t, ((OptionalDependencyAttribute)a).Name)),
+                    new KeyValuePair<Type, Func<Type, Attribute, ResolverDelegate>>(typeof(DependencyAttribute), 
+                        (t, a) => c => c.NewBuildUp(t, ((DependencyAttribute)a).Name)),
+                    new KeyValuePair<Type, Func<Type, Attribute, ResolverDelegate>>(typeof(OptionalDependencyAttribute),
+                        (t, a) => c =>
+                        {
+                            try
+                            {
+                                return c.NewBuildUp(t, ((OptionalDependencyAttribute) a).Name);
+                            }
+                            catch
+                            {
+                                return null;
+                            }
+                        })
                 };
         }
 
-        public IList<KeyValuePair<Type, Func<Type, Attribute, IResolverPolicy>>> Markers { get; }
+        public IList<KeyValuePair<Type, Func<Type, Attribute, ResolverDelegate>>> Markers { get; }
 
         public virtual IEnumerable<SelectedProperty> SelectProperties(IBuilderContext context, IPolicyList resolverPolicyDestination)
         {

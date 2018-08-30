@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using Unity.Build;
 using Unity.Builder.Strategy;
 using Unity.Container;
 using Unity.Exceptions;
@@ -144,7 +145,7 @@ namespace Unity.Builder
             _resolverOverrides.AddRange(newOverrides);
         }
 
-        public IResolverPolicy GetOverriddenResolver(Type dependencyType)
+        public ResolverDelegate GetOverriddenResolver(Type dependencyType)
         {
             return _resolverOverrides?.GetResolver(this, dependencyType);
         }

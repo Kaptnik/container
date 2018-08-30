@@ -1,12 +1,10 @@
-﻿// Copyright (c) Microsoft Corporation. All rights reserved. See License.txt in the project root for license information.
-
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
+using Unity.Build;
 using Unity.Builder;
-using Unity.Policy;
 
 namespace Unity.ObjectBuilder.BuildPlan.DynamicMethod
 {
@@ -17,8 +15,8 @@ namespace Unity.ObjectBuilder.BuildPlan.DynamicMethod
     {
         private readonly Queue<Expression> _buildPlanExpressions;
 
-        private static readonly MethodInfo ResolveDependencyMethod =
-            typeof(IResolverPolicy).GetTypeInfo().GetDeclaredMethod(nameof(IResolverPolicy.Resolve));
+        private static readonly MethodInfo ResolveDependencyMethod = 
+            typeof(ResolverDelegate).GetTypeInfo().GetDeclaredMethod(nameof(ResolverDelegate.Invoke));
 
         private static readonly MethodInfo GetResolverMethod =
             typeof(DynamicBuildPlanGenerationContext).GetTypeInfo()
@@ -64,7 +62,7 @@ namespace Unity.ObjectBuilder.BuildPlan.DynamicMethod
         /// <param name="parameterType"></param>
         /// <param name="setOperationExpression"></param>
         /// <returns></returns>
-        public Expression CreateParameterExpression(IResolverPolicy resolver, Type parameterType, Expression setOperationExpression)
+        public Expression CreateParameterExpression(ResolverDelegate resolver, Type parameterType, Expression setOperationExpression)
         {
             // The intent of this is to create a parameter resolving expression block. The following
             // pseudo code will hopefully make it clearer as to what we're trying to accomplish (of course actual code
@@ -103,7 +101,7 @@ namespace Unity.ObjectBuilder.BuildPlan.DynamicMethod
                                Expression.Constant(null));
         }
 
-        internal Expression GetResolveDependencyExpression(Type dependencyType, IResolverPolicy resolver)
+        internal Expression GetResolveDependencyExpression(Type dependencyType, ResolverDelegate resolver)
         {
             return Expression.Convert(
                            Expression.Call(
@@ -111,7 +109,7 @@ namespace Unity.ObjectBuilder.BuildPlan.DynamicMethod
                                                GetResolverMethod,
                                                ContextParameter,
                                                Expression.Constant(dependencyType, typeof(Type)),
-                                               Expression.Constant(resolver, typeof(IResolverPolicy))),
+                                               Expression.Constant(resolver, typeof(ResolverDelegate))),
                                ResolveDependencyMethod,
                                ContextParameter),
                            dependencyType);
@@ -165,7 +163,7 @@ namespace Unity.ObjectBuilder.BuildPlan.DynamicMethod
         /// <param name="dependencyType">Type of the dependency being resolved.</param>
         /// <param name="resolver">The configured resolver.</param>
         /// <returns>The found dependency resolver.</returns>
-        public static IResolverPolicy GetResolver(IBuilderContext context, Type dependencyType, IResolverPolicy resolver)
+        public static ResolverDelegate GetResolver(IBuilderContext context, Type dependencyType, ResolverDelegate resolver)
         {
             var overridden = (context ?? throw new ArgumentNullException(nameof(context))).GetOverriddenResolver(dependencyType);
             return overridden ?? resolver;

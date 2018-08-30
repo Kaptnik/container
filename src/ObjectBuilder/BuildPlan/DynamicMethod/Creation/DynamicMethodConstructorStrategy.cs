@@ -1,11 +1,10 @@
-﻿// Copyright (c) Microsoft Corporation. All rights reserved. See License.txt in the project root for license information.
-
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
+using Unity.Build;
 using Unity.Builder;
 using Unity.Builder.Operation;
 using Unity.Builder.Selection;
@@ -13,7 +12,6 @@ using Unity.Builder.Strategy;
 using Unity.Container.Lifetime;
 using Unity.Lifetime;
 using Unity.Policy;
-using Unity.Storage;
 
 namespace Unity.ObjectBuilder.BuildPlan.DynamicMethod.Creation
 {
@@ -164,7 +162,6 @@ namespace Unity.ObjectBuilder.BuildPlan.DynamicMethod.Creation
         private IEnumerable<Expression> CreateNewBuildupSequence(DynamicBuildPlanGenerationContext buildContext, SelectedConstructor selectedConstructor, string signature)
         {
             var parameterExpressions = BuildConstructionParameterExpressions(buildContext, selectedConstructor, signature);
-            var newItemExpression = Expression.Variable(selectedConstructor.Constructor.DeclaringType, "newItem");
 
             yield return Expression.Call(null,
                                         SetCurrentOperationToInvokingConstructorMethod,
@@ -186,7 +183,7 @@ namespace Unity.ObjectBuilder.BuildPlan.DynamicMethod.Creation
             int i = 0;
             var constructionParameters = selectedConstructor.Constructor.GetParameters();
 
-            foreach (IResolverPolicy parameterResolver in selectedConstructor.GetParameterResolvers())
+            foreach (ResolverDelegate parameterResolver in selectedConstructor.GetParameterResolvers())
             {
                 yield return buildContext.CreateParameterExpression(
                                 parameterResolver,

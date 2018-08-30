@@ -3,23 +3,33 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using Unity.Attributes;
+using Unity.Build;
 using Unity.Policy;
-using Unity.ResolverPolicy;
 
 namespace Unity.ObjectBuilder.Policies
 {
     public class DefaultParameterResolverPolicy : IBuilderPolicy
     {
-        public IList<KeyValuePair<Type, Func<Type, Attribute, IResolverPolicy>>> Markers { get; }
-            = new List<KeyValuePair<Type, Func<Type, Attribute, IResolverPolicy>>>
+        public IList<KeyValuePair<Type, Func<Type, Attribute, ResolverDelegate>>> Markers { get; }
+            = new List<KeyValuePair<Type, Func<Type, Attribute, ResolverDelegate>>>
             {
-                new KeyValuePair<Type, Func<Type, Attribute, IResolverPolicy>>(typeof(DependencyAttribute),
-                    (t, a) => new NamedTypeDependencyResolverPolicy(t, ((DependencyAttribute) a).Name)),
-                new KeyValuePair<Type, Func<Type, Attribute, IResolverPolicy>>(typeof(OptionalDependencyAttribute),
-                    (t, a) => new OptionalDependencyResolverPolicy(t, ((OptionalDependencyAttribute) a).Name)),
+                new KeyValuePair<Type, Func<Type, Attribute, ResolverDelegate>>(typeof(DependencyAttribute),
+                    (t, a) => c => c.NewBuildUp(t, ((DependencyAttribute) a).Name)),
+                new KeyValuePair<Type, Func<Type, Attribute, ResolverDelegate>>(typeof(OptionalDependencyAttribute),
+                    (t, a) => c =>
+                    {
+                        try
+                        {
+                            return c.NewBuildUp(t, ((OptionalDependencyAttribute) a).Name);
+                        }
+                        catch 
+                        {
+                            return null;
+                        }
+                    })
             };
 
-        public IResolverPolicy CreateResolver(ParameterInfo parameter)
+        public ResolverDelegate CreateResolver(ParameterInfo parameter)
         {
             foreach (var pair in Markers)
             {
@@ -34,7 +44,7 @@ namespace Unity.ObjectBuilder.Policies
             }
 
             // No attribute, just go back to the container for the default for that type.
-            return new NamedTypeDependencyResolverPolicy(parameter.ParameterType, null);
+            return c => c.NewBuildUp(parameter.ParameterType, null);
         }
     }
 }

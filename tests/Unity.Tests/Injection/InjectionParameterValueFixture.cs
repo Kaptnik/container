@@ -2,9 +2,8 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Unity.Build;
 using Unity.Injection;
-using Unity.Policy;
-using Unity.ResolverPolicy;
 using Unity.Tests.v5.Generics;
 using Unity.Tests.v5.TestSupport;
 
@@ -39,33 +38,6 @@ namespace Unity.Tests.v5.Injection
         }
 
         [TestMethod]
-        public void DependencyParameterCreatesExpectedResolver()
-        {
-            Type expectedType = typeof(ILogger);
-
-            ResolvedParameter parameter = new ResolvedParameter<ILogger>();
-            IResolverPolicy resolver = parameter.GetResolverPolicy(expectedType);
-
-            AssertExtensions.IsInstanceOfType(resolver, typeof(NamedTypeDependencyResolverPolicy));
-            Assert.AreEqual(expectedType, ((NamedTypeDependencyResolverPolicy)resolver).Type);
-            Assert.IsNull(((NamedTypeDependencyResolverPolicy)resolver).Name);
-        }
-
-        [TestMethod]
-        public void ResolvedParameterHandledNamedTypes()
-        {
-            Type expectedType = typeof(ILogger);
-            string name = "special";
-
-            ResolvedParameter parameter = new ResolvedParameter(expectedType, name);
-            IResolverPolicy resolver = parameter.GetResolverPolicy(expectedType);
-
-            AssertExtensions.IsInstanceOfType(resolver, typeof(NamedTypeDependencyResolverPolicy));
-            Assert.AreEqual(expectedType, ((NamedTypeDependencyResolverPolicy)resolver).Type);
-            Assert.AreEqual(name, ((NamedTypeDependencyResolverPolicy)resolver).Name);
-        }
-
-        [TestMethod]
         public void TypesImplicitlyConvertToResolvedDependencies()
         {
             List<InjectionParameterValue> values = GetParameterValues(typeof(int));
@@ -81,8 +53,8 @@ namespace Unity.Tests.v5.Injection
 
             InjectionParameter parameter = (InjectionParameter)values[0];
             Assert.AreEqual(typeof(int), parameter.ParameterType);
-            IResolverPolicy policy = parameter.GetResolverPolicy(null);
-            int result = (int)policy.Resolve(null);
+            ResolverDelegate policy = parameter.GetResolverPolicy(null);
+            int result = (int)policy(null);
 
             Assert.AreEqual(15, result);
         }
@@ -129,11 +101,10 @@ namespace Unity.Tests.v5.Injection
 
         private void AssertExpectedValue(InjectionParameter parameter, Type expectedType, object expectedValue)
         {
-            IResolverPolicy resolver = parameter.GetResolverPolicy(expectedType);
-            object result = resolver.Resolve(null);
+            ResolverDelegate resolver = parameter.GetResolverPolicy(expectedType);
+            object result = resolver(null);
 
             Assert.AreEqual(expectedType, parameter.ParameterType);
-            AssertExtensions.IsInstanceOfType(resolver, typeof(LiteralValueDependencyResolverPolicy));
             Assert.AreEqual(expectedValue, result);
         }
 

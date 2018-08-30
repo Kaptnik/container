@@ -4,7 +4,6 @@ using Unity.Attributes;
 using Unity.Builder.Operation;
 using Unity.Injection;
 using Unity.Resolution;
-using Unity.ResolverPolicy;
 using Unity.Tests.v5.TestSupport;
 
 namespace Unity.Tests.v5
@@ -103,9 +102,8 @@ namespace Unity.Tests.v5
             var resolver = overrider.GetResolver(context, typeof(int));
 
             Assert.IsNotNull(resolver);
-            AssertExtensions.IsInstanceOfType(resolver, typeof(LiteralValueDependencyResolverPolicy));
 
-            var result = (int)resolver.Resolve(context);
+            var result = (int)resolver(context);
             Assert.AreEqual(42, result);
         }
 

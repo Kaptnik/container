@@ -1,11 +1,10 @@
-﻿// Copyright (c) Microsoft Corporation. All rights reserved. See License.txt in the project root for license information.
-
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
+using Unity.Build;
 using Unity.Builder;
 using Unity.Builder.Operation;
 using Unity.Builder.Selection;
@@ -83,7 +82,7 @@ namespace Unity.ObjectBuilder.BuildPlan.DynamicMethod.Method
             int i = 0;
             var methodParameters = method.Method.GetParameters();
 
-            foreach (IResolverPolicy parameterResolver in method.GetParameterResolvers())
+            foreach (ResolverDelegate parameterResolver in method.GetParameterResolvers())
             {
                 yield return context.CreateParameterExpression(
                                 parameterResolver,

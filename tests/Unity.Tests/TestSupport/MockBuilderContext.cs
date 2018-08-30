@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using Unity.Build;
 using Unity.Builder;
 using Unity.Builder.Strategy;
 using Unity.Container.Lifetime;
@@ -104,7 +105,7 @@ namespace Unity.Tests.v5.TestSupport
             resolverOverrides.AddRange(newOverrides);
         }
 
-        public IResolverPolicy GetOverriddenResolver(Type dependencyType)
+        public ResolverDelegate GetOverriddenResolver(Type dependencyType)
         {
             return resolverOverrides.GetResolver(this, dependencyType);
         }
