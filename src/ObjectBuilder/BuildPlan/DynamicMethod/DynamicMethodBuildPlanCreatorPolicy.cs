@@ -39,7 +39,7 @@ namespace Unity.ObjectBuilder.BuildPlan.DynamicMethod
 
             IBuilderContext planContext = new BuilderContext(context ?? throw new ArgumentNullException(nameof(context)), _strategies, generatorContext);
 
-            planContext.Strategies.ExecuteBuildUp(planContext);
+            ((BuilderContext)planContext).Strategies.ExecuteBuildUp(planContext);
 
             return new DynamicMethodBuildPlan(generatorContext.GetBuildMethod());
         }

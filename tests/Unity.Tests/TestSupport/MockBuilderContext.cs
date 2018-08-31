@@ -63,11 +63,6 @@ namespace Unity.Tests.v5.TestSupport
             get { return strategies; }
         }
 
-        IStrategyChain IBuilderContext.Strategies
-        {
-            get { return strategies; }
-        }
-
         public INamedType BuildKey
         {
             get { return buildKey; }
@@ -143,7 +138,7 @@ namespace Unity.Tests.v5.TestSupport
             if (null == childCustomizationBlock)
             {
                 var clone = CloneForNewBuild(newBuildKey, null);
-                return clone.Strategies.ExecuteBuildUp(clone);
+                return ((MockBuilderContext)clone).Strategies.ExecuteBuildUp(clone);
             }
 
             var newContext = new MockBuilderContext
