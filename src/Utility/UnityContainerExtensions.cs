@@ -1,5 +1,7 @@
 ﻿using System;
+using Unity.Builder;
 using Unity.Extension;
+using Unity.Policy;
 
 namespace Unity
 {
@@ -42,5 +44,19 @@ namespace Unity
         }
 
         #endregion
+
+        /// <summary>
+        /// Execute this strategy chain against the given context,
+        /// calling the Buildup methods on the strategies.
+        /// </summary>
+        /// <param name="policy"></param>
+        /// <param name="context">Context for the build process.</param>
+        /// <returns>The build up object</returns>
+        public static object ExecuteBuildUp(this IBuildPlanPolicy policy, IBuilderContext context)
+        {
+            policy.BuildUp(context ?? throw new ArgumentNullException(nameof(context)));
+            return context.Existing;
+        }
+
     }
 }
