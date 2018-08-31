@@ -1,8 +1,8 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.Collections.Generic;
 using Unity.Build;
+using Unity.Build.Selection;
 using Unity.Builder;
-using Unity.Builder.Selection;
 using Unity.Builder.Strategy;
 using Unity.Extension;
 using Unity.Policy;

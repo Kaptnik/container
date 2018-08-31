@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using Unity.Attributes;
+using Unity.Build.Selection;
 using Unity.Builder;
 using Unity.Policy;
 using Unity.Utility;
@@ -27,7 +28,7 @@ namespace Unity.ObjectBuilder.Policies
         public IList<Type> Markers { get; }
 
 
-        public virtual IEnumerable<Builder.Selection.SelectedMethod> SelectMethods(IBuilderContext context, IPolicyList resolverPolicyDestination)
+        public virtual IEnumerable<SelectedMethod> SelectMethods(IBuilderContext context, IPolicyList resolverPolicyDestination)
         {
             var candidateMethods = context.BuildKey.Type
                                                    .GetMethodsHierarchical()
@@ -44,9 +45,9 @@ namespace Unity.ObjectBuilder.Policies
             }
         }
 
-        private Builder.Selection.SelectedMethod CreateSelectedMethod(MethodInfo method)
+        private SelectedMethod CreateSelectedMethod(MethodInfo method)
         {
-            var result = new Builder.Selection.SelectedMethod(method);
+            var result = new SelectedMethod(method);
             foreach (ParameterInfo parameter in method.GetParameters())
             {
                 result.AddParameterResolver(_factory.CreateResolver(parameter));
