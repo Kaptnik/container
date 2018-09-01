@@ -9,6 +9,7 @@ using Unity.Builder.Strategy;
 using Unity.Events;
 using Unity.Lifetime;
 using Unity.Policy;
+using Unity.Policy.Lifetime;
 using Unity.Registration;
 using Unity.Storage;
 

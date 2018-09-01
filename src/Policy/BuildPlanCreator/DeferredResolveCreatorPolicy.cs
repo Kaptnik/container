@@ -1,10 +1,8 @@
-﻿// Copyright (c) Microsoft Corporation. All rights reserved. See License.txt in the project root for license information.
-
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Reflection;
 using Unity.Builder;
-using Unity.ObjectBuilder.BuildPlan.DynamicMethod.Creation;
+using Unity.Strategies.Build;
 
 namespace Unity.Policy.BuildPlanCreator
 {
@@ -34,7 +32,7 @@ namespace Unity.Policy.BuildPlanCreator
 
                 context.Existing = resolveMethod;
 
-                DynamicMethodConstructorStrategy.SetPerBuildSingleton(context);
+                ConstructorBuildStrategy.SetPerBuildSingleton(context);
             }
         }
 

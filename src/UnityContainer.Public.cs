@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
 using Unity.Builder;
@@ -104,6 +105,9 @@ namespace Unity
         /// <returns>The requested extension's configuration interface, or null if not found.</returns>
         public object Configure(Type configurationInterface)
         {
+            if (typeof(IUnityContainerConfiguration) == configurationInterface)
+                return new UnityContainerConfiguration(this);
+
             return _extensions?.FirstOrDefault(ex => configurationInterface.GetTypeInfo()
                                                                           .IsAssignableFrom(ex.GetType()
                                                                           .GetTypeInfo()));
@@ -156,6 +160,14 @@ namespace Unity
         /// </summary>
         /// <value>The parent container, or null if this container doesn't have one.</value>
         public IUnityContainer Parent => _parent;
+
+        #endregion
+
+
+        #region Debug
+
+        [Conditional("DEBUG")]
+        public void EnableDiagnosticInDebug() => EnableDiagnostic();
 
         #endregion
 

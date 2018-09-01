@@ -1,28 +1,27 @@
-﻿// Copyright (c) Microsoft Corporation. All rights reserved. See License.txt in the project root for license information.
-
-using System;
+﻿using System;
 using System.Globalization;
 using System.Linq.Expressions;
 using System.Reflection;
 using Unity.Builder;
 using Unity.Builder.Operation;
 using Unity.Builder.Strategy;
+using Unity.ObjectBuilder.BuildPlan.DynamicMethod;
 using Unity.Policy;
 
-namespace Unity.ObjectBuilder.BuildPlan.DynamicMethod.Property
+namespace Unity.Strategies.Build
 {
     /// <summary>
     /// A <see cref="BuilderStrategy"/> that generates IL to resolve properties
     /// on an object being built.
     /// </summary>
-    public class DynamicMethodPropertySetterStrategy : BuilderStrategy
+    public class PropertyBuildStrategy : BuilderStrategy
     {
         private static readonly MethodInfo SetCurrentOperationToResolvingPropertyValueMethod;
         private static readonly MethodInfo SetCurrentOperationToSettingPropertyMethod;
 
-        static DynamicMethodPropertySetterStrategy()
+        static PropertyBuildStrategy()
         {
-            var info = typeof(DynamicMethodPropertySetterStrategy).GetTypeInfo();
+            var info = typeof(PropertyBuildStrategy).GetTypeInfo();
 
             SetCurrentOperationToResolvingPropertyValueMethod =
                 info.GetDeclaredMethod(nameof(SetCurrentOperationToResolvingPropertyValue));

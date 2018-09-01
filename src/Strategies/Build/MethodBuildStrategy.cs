@@ -10,23 +10,24 @@ using Unity.Builder;
 using Unity.Builder.Operation;
 using Unity.Builder.Strategy;
 using Unity.Exceptions;
+using Unity.ObjectBuilder.BuildPlan.DynamicMethod;
 using Unity.Policy;
 
-namespace Unity.ObjectBuilder.BuildPlan.DynamicMethod.Method
+namespace Unity.Strategies.Build
 {
     /// <summary>
     /// A <see cref="BuilderStrategy"/> that generates IL to call
     /// chosen methods (as specified by the current <see cref="IMethodSelectorPolicy"/>)
     /// as part of object build up.
     /// </summary>
-    public class DynamicMethodCallStrategy : BuilderStrategy
+    public class MethodBuildStrategy : BuilderStrategy
     {
         private static readonly MethodInfo SetCurrentOperationToResolvingParameterMethod;
         private static readonly MethodInfo SetCurrentOperationToInvokingMethodInfo;
 
-        static DynamicMethodCallStrategy()
+        static MethodBuildStrategy()
         {
-            var info = typeof(DynamicMethodCallStrategy).GetTypeInfo();
+            var info = typeof(MethodBuildStrategy).GetTypeInfo();
 
             SetCurrentOperationToResolvingParameterMethod =
                 info.GetDeclaredMethod(nameof(SetCurrentOperationToResolvingParameter));

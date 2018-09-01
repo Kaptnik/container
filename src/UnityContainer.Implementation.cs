@@ -5,7 +5,6 @@ using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Linq;
 using System.Reflection;
-using System.Text;
 using Unity.Builder;
 using Unity.Builder.Strategy;
 using Unity.Container;
@@ -14,15 +13,14 @@ using Unity.Events;
 using Unity.Extension;
 using Unity.Lifetime;
 using Unity.ObjectBuilder.BuildPlan.DynamicMethod;
-using Unity.ObjectBuilder.BuildPlan.DynamicMethod.Creation;
-using Unity.ObjectBuilder.BuildPlan.DynamicMethod.Method;
-using Unity.ObjectBuilder.BuildPlan.DynamicMethod.Property;
 using Unity.ObjectBuilder.Policies;
 using Unity.Policy;
 using Unity.Policy.BuildPlanCreator;
+using Unity.Policy.Lifetime;
 using Unity.Registration;
 using Unity.Storage;
 using Unity.Strategies;
+using Unity.Strategies.Build;
 using Unity.Strategy;
 
 namespace Unity
@@ -131,9 +129,9 @@ namespace Unity
             _strategies.Add(new BuildPlanStrategy(), UnityBuildStage.Creation);
 
             // Build plan strategy chain
-            _buildPlanStrategies.Add(new DynamicMethodConstructorStrategy(), BuilderStage.Creation);
-            _buildPlanStrategies.Add(new DynamicMethodPropertySetterStrategy(), BuilderStage.Initialization);
-            _buildPlanStrategies.Add(new DynamicMethodCallStrategy(), BuilderStage.Initialization);
+            _buildPlanStrategies.Add(new ConstructorBuildStrategy(), BuilderStage.Creation);
+            _buildPlanStrategies.Add(new PropertyBuildStrategy(), BuilderStage.Initialization);
+            _buildPlanStrategies.Add(new MethodBuildStrategy(), BuilderStage.Initialization);
 
             // Caches
             _strategyChain = new StrategyChain(_strategies);
@@ -214,18 +212,6 @@ namespace Unity
 
 
         #region Implementation
-
-        private string DebugName()
-        {
-            var types = (_registrations?.Keys ?? Enumerable.Empty<Type>())
-                .SelectMany(t => _registrations[t].Values)
-                .OfType<IContainerRegistration>()
-                .Count();
-
-            if (null == _parent) return $"Container[{types}]";
-
-            return _parent.DebugName() + $".Child[{types}]"; ;
-        }
 
         private void CreateAndSetPolicy(Type type, string name, Type policyInterface, IBuilderPolicy policy)
         {
@@ -314,7 +300,6 @@ namespace Unity
             return chain;
         }
 
-        [SuppressMessage("ReSharper", "InconsistentlySynchronizedField")]
         internal Type GetFinalType(Type argType)
         {
             Type next;
@@ -343,6 +328,27 @@ namespace Unity
             }
 
             return argType;
+        }
+
+        #endregion
+
+
+        #region Debugging Support
+
+        private void EnableDiagnostic()
+        {
+        }
+
+        private string DebugName()
+        {
+            var types = (_registrations?.Keys ?? Enumerable.Empty<Type>())
+                .SelectMany(t => _registrations[t].Values)
+                .OfType<IContainerRegistration>()
+                .Count();
+
+            if (null == _parent) return $"Container[{types}]";
+
+            return _parent.DebugName() + $".Child[{types}]"; ;
         }
 
         #endregion

@@ -4,6 +4,7 @@ using Unity.Builder;
 using Unity.Builder.Strategy;
 using Unity.Exceptions;
 using Unity.Lifetime;
+using Unity.Policy.Lifetime;
 using Unity.Registration;
 
 namespace Unity.Strategies

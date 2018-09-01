@@ -11,15 +11,17 @@ using Unity.Builder.Operation;
 using Unity.Builder.Strategy;
 using Unity.Container.Lifetime;
 using Unity.Lifetime;
+using Unity.ObjectBuilder.BuildPlan.DynamicMethod;
 using Unity.Policy;
+using Unity.Policy.Lifetime;
 
-namespace Unity.ObjectBuilder.BuildPlan.DynamicMethod.Creation
+namespace Unity.Strategies.Build
 {
     /// <summary>
     /// A <see cref="BuilderStrategy"/> that emits IL to call constructors
     /// as part of creating a build plan.
     /// </summary>
-    public class DynamicMethodConstructorStrategy : BuilderStrategy
+    public class ConstructorBuildStrategy : BuilderStrategy
     {
         private static readonly MethodInfo ThrowForNullExistingObjectMethod;
         private static readonly MethodInfo ThrowForNullExistingObjectWithInvalidConstructorMethod;
@@ -31,9 +33,9 @@ namespace Unity.ObjectBuilder.BuildPlan.DynamicMethod.Creation
         private static readonly MethodInfo SetPerBuildSingletonMethod;
         private static readonly MethodInfo ThrowForReferenceItselfConstructorMethod;
 
-        static DynamicMethodConstructorStrategy()
+        static ConstructorBuildStrategy()
         {
-            var info = typeof(DynamicMethodConstructorStrategy).GetTypeInfo();
+            var info = typeof(ConstructorBuildStrategy).GetTypeInfo();
 
             ThrowForNullExistingObjectMethod = info.GetDeclaredMethod(nameof(ThrowForNullExistingObject));
             ThrowForNullExistingObjectWithInvalidConstructorMethod = info.GetDeclaredMethod(nameof(ThrowForNullExistingObjectWithInvalidConstructor));
@@ -121,7 +123,7 @@ namespace Unity.ObjectBuilder.BuildPlan.DynamicMethod.Creation
 
         private static bool IsInvalidConstructor(TypeInfo target, IBuilderContext context, SelectedConstructor selectedConstructor)
         {
-            if (selectedConstructor.Constructor.GetParameters().Any(p => p.ParameterType.GetTypeInfo() == target))
+            if (selectedConstructor.Constructor.GetParameters().Any(p => Equals(p.ParameterType.GetTypeInfo(), target)))
             {
                 var policy = (ILifetimePolicy)context.Policies.Get(context.BuildKey.Type, 
                                                                    context.BuildKey.Name, 

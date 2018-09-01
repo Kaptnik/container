@@ -3,6 +3,7 @@ using System.Diagnostics;
 using Unity.Injection;
 using Unity.Lifetime;
 using Unity.Policy;
+using Unity.Policy.Lifetime;
 
 namespace Unity.Registration
 {
