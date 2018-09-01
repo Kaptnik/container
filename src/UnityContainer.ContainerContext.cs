@@ -20,12 +20,12 @@ namespace Unity
         /// Implemented as a nested class to gain access to  
         /// container that would otherwise be inaccessible.
         /// </remarks>
-        private class ContainerContext : ExtensionContext,
-                                         IPolicyList 
+        private sealed class ContainerContext : ExtensionContext,
+                                                IPolicyList 
         {
             #region Fields
 
-            private readonly object syncRoot = new object();
+            private readonly object _syncRoot = new object();
             private readonly UnityContainer _container;
 
             #endregion
@@ -53,7 +53,7 @@ namespace Unity
                     if (null != _container._parent && 
                         _container._parent._strategies == _container._strategies)
                     {
-                        lock (syncRoot)
+                        lock (_syncRoot)
                         {
                             if (_container._parent._strategies == _container._strategies)
                             {
@@ -78,7 +78,7 @@ namespace Unity
                     if (null != _container._parent && 
                         _container._parent._buildPlanStrategies == _container._buildPlanStrategies)
                     {
-                        lock (syncRoot)
+                        lock (_syncRoot)
                         {
                             if (_container._parent._buildPlanStrategies == _container._buildPlanStrategies)
                             {
@@ -120,17 +120,17 @@ namespace Unity
 
             #region IPolicyList
 
-            public virtual void ClearAll()
+            public void ClearAll()
             {
             }
 
-            public virtual IBuilderPolicy Get(Type type, string name, Type policyInterface, out IPolicyList list) 
+            public object Get(Type type, string name, Type policyInterface, out IPolicyList list) 
                 => _container.GetPolicy(type, name, policyInterface, out list);
 
-            public virtual void Set(Type type, string name, Type policyInterface, IBuilderPolicy policy)
+            public void Set(Type type, string name, Type policyInterface, object policy)
                 => _container.SetPolicy(type, name, policyInterface, policy);
 
-            public virtual void Clear(Type type, string name, Type policyInterface)
+            public void Clear(Type type, string name, Type policyInterface)
             {
             }
 

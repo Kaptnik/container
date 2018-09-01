@@ -47,7 +47,7 @@ namespace Unity.Registration
 
         #region IPolicySet
 
-        public override void Set(Type policyInterface, IBuilderPolicy policy)
+        public override void Set(Type policyInterface, object policy)
         {
             if (policy is InjectionFactory && (MappedToType != RegisteredType))
                 throw new InvalidOperationException("Registration where both MappedToType and InjectionFactory are set is not supported");

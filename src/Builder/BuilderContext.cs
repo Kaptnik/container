@@ -249,7 +249,7 @@ namespace Unity.Builder
 
         #region  : Policies
 
-        IBuilderPolicy IPolicyList.Get(Type type, string name, Type policyInterface, out IPolicyList list)
+        object IPolicyList.Get(Type type, string name, Type policyInterface, out IPolicyList list)
         {
             list = null;
 
@@ -262,7 +262,7 @@ namespace Unity.Builder
             return result;
         }
 
-        void IPolicyList.Set(Type type, string name, Type policyInterface, IBuilderPolicy policy)
+        void IPolicyList.Set(Type type, string name, Type policyInterface, object policy)
         {
             Policies.Set(type, name, policyInterface, policy);
         }
@@ -284,7 +284,7 @@ namespace Unity.Builder
 
         #region Registration
 
-        IBuilderPolicy Get(Type type, string name, Type policyInterface, out IPolicyList list)
+        object Get(Type type, string name, Type policyInterface, out IPolicyList list)
         {
             list = null;
 
@@ -297,7 +297,7 @@ namespace Unity.Builder
             return result;
         }
 
-        void Set(Type type, string name, Type policyInterface, IBuilderPolicy policy)
+        void Set(Type type, string name, Type policyInterface, object policy)
         {
             if (type != OriginalBuildKey.Type || name != OriginalBuildKey.Name)
                 _container.SetPolicy(type, name, policyInterface, policy);

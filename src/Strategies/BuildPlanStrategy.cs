@@ -57,7 +57,7 @@ namespace Unity.Strategies
                                       list.Get(null, null, typeof(TPolicyInterface), out _));    // Nothing! Get Default
         }
 
-        private static IBuilderPolicy GetGeneric(IPolicyList list, Type policyInterface, INamedType buildKey, Type buildType)
+        private static object GetGeneric(IPolicyList list, Type policyInterface, INamedType buildKey, Type buildType)
         {
             // Check if generic
             if (buildType.GetTypeInfo().IsGenericType)
