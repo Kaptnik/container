@@ -96,9 +96,9 @@ namespace Unity.Strategies.Build
             }
 
             IConstructorSelectorPolicy selector =
-                context.Policies.GetPolicy<IConstructorSelectorPolicy>(context.OriginalBuildKey, out var resolverPolicyDestination);
+                context.Policies.GetPolicy<IConstructorSelectorPolicy>(context.OriginalBuildKey);
 
-            SelectedConstructor selectedConstructor = selector.SelectConstructor(context, resolverPolicyDestination);
+            SelectedConstructor selectedConstructor = selector.SelectConstructor(context);
 
             if (selectedConstructor == null)
             {

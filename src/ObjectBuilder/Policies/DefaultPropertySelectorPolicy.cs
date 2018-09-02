@@ -40,7 +40,7 @@ namespace Unity.ObjectBuilder.Policies
 
         public IList<KeyValuePair<Type, Func<Type, Attribute, ResolverDelegate>>> Markers { get; }
 
-        public virtual IEnumerable<SelectedProperty> SelectProperties(IBuilderContext context, IPolicyList resolverPolicyDestination)
+        public virtual IEnumerable<SelectedProperty> SelectProperties(IBuilderContext context)
         {
             foreach (var property in context.BuildKey.Type
                                             .GetPropertiesHierarchical()

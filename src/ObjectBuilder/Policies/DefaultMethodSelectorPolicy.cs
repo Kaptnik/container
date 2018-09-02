@@ -28,7 +28,7 @@ namespace Unity.ObjectBuilder.Policies
         public IList<Type> Markers { get; }
 
 
-        public virtual IEnumerable<SelectedMethod> SelectMethods(IBuilderContext context, IPolicyList resolverPolicyDestination)
+        public virtual IEnumerable<SelectedMethod> SelectMethods(IBuilderContext context)
         {
             var candidateMethods = context.BuildKey.Type
                                                    .GetMethodsHierarchical()

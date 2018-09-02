@@ -27,7 +27,7 @@ namespace Unity.ObjectBuilder.Policies
         public IList<Type> Markers { get; }
 
 
-        public SelectedConstructor SelectConstructor(IBuilderContext context, IPolicyList resolverPolicyDestination)
+        public SelectedConstructor SelectConstructor(IBuilderContext context)
         {
             Type typeToConstruct = context.BuildKey.Type;
             var constructors = typeToConstruct.GetTypeInfo()
