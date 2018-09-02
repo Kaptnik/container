@@ -1,6 +1,6 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.Collections.Generic;
-using Unity.Build;
+using Unity.Build.Delegates;
 using Unity.Build.Selection;
 using Unity.Builder;
 using Unity.Builder.Strategy;

@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using Unity.Build;
+using Unity.Build.Delegates;
 using Unity.Builder.Strategy;
 using Unity.Container;
 using Unity.Exceptions;

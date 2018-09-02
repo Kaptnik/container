@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using Unity.Attributes;
-using Unity.Build;
+using Unity.Build.Delegates;
 using Unity.Policy;
 
 namespace Unity.ObjectBuilder.Policies

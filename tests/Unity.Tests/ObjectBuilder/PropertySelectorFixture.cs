@@ -4,10 +4,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using Unity.Attributes;
+using Unity.Build.Delegates;
 using Unity.Build.Selection;
 using Unity.Builder;
 using Unity.ObjectBuilder.Policies;
-using Unity.Policy;
 using Unity.Tests.v5.TestSupport;
 
 namespace Unity.Tests.v5.ObjectBuilder
@@ -43,9 +43,9 @@ namespace Unity.Tests.v5.ObjectBuilder
 
         private List<PropertyInfo> SelectProperties(Type t)
         {
-            IPropertySelectorPolicy selector = new DefaultPropertySelectorPolicy();
+            SelectPropertiesDelegate selector = new DefaultPropertySelectorPolicy().SelectPropertiesDelegate;
             IBuilderContext context = GetContext(t);
-            var properties = new List<SelectedProperty>(selector.SelectProperties(context));
+            var properties = new List<SelectedProperty>(selector(context));
             return properties.Select(sp => sp.Property).ToList();
         }
 

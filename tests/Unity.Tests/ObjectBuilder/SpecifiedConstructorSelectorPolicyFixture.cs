@@ -1,9 +1,9 @@
-﻿using System;
+﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Unity.Build;
+using Unity.Build.Delegates;
 using Unity.Build.Selection;
 using Unity.Builder;
 using Unity.Builder.Policy;

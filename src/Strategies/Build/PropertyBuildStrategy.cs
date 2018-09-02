@@ -2,11 +2,11 @@
 using System.Globalization;
 using System.Linq.Expressions;
 using System.Reflection;
+using Unity.Build.Delegates;
 using Unity.Builder;
 using Unity.Builder.Operation;
 using Unity.Builder.Strategy;
 using Unity.ObjectBuilder.BuildPlan.DynamicMethod;
-using Unity.Policy;
 
 namespace Unity.Strategies.Build
 {
@@ -38,11 +38,11 @@ namespace Unity.Strategies.Build
         {
             var dynamicBuildContext = (DynamicBuildPlanGenerationContext)(context ?? throw new ArgumentNullException(nameof(context))).Existing;
 
-            var selector = context.Policies.GetPolicy<IPropertySelectorPolicy>( context.OriginalBuildKey);
+            var selector = context.Policies.GetPolicy<SelectPropertiesDelegate>( context.OriginalBuildKey);
 
             bool shouldClearOperation = false;
 
-            foreach (var property in selector.SelectProperties(context))
+            foreach (var property in selector(context))
             {
                 shouldClearOperation = true;
 

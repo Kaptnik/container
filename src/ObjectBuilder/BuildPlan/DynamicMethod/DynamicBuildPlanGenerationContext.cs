@@ -4,6 +4,7 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using Unity.Build;
+using Unity.Build.Delegates;
 using Unity.Builder;
 
 namespace Unity.ObjectBuilder.BuildPlan.DynamicMethod

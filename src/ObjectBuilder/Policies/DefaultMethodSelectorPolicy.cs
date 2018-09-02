@@ -3,58 +3,77 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using Unity.Attributes;
+using Unity.Build.Delegates;
 using Unity.Build.Selection;
-using Unity.Builder;
-using Unity.Policy;
 using Unity.Utility;
 
 namespace Unity.ObjectBuilder.Policies
 {
     /// <summary>
-    /// An implementation of <see cref="IMethodSelectorPolicy"/> that is aware
+    /// An implementation of <see cref="SelectMethodsDelegate"/> that is aware
     /// of the build keys used by the Unity container.
     /// </summary>
-    public class DefaultMethodSelectorPolicy : IMethodSelectorPolicy
+    public class DefaultMethodSelectorPolicy : List<Type>
     {
-        private DefaultParameterResolverPolicy _factory;
+        #region Fields
+
+        private readonly DefaultParameterResolverPolicy _factory;
+
+        #endregion
+
+
+        #region Constructors
 
         public DefaultMethodSelectorPolicy(DefaultParameterResolverPolicy factory = null)
+            : base(new[] { typeof(InjectionMethodAttribute) })
         {
             _factory = factory ?? new DefaultParameterResolverPolicy();
-            Markers = new List<Type> { typeof(InjectionMethodAttribute) };
         }
 
+        #endregion
 
-        public IList<Type> Markers { get; }
 
+        #region SelectMethodsDelegate
 
-        public virtual IEnumerable<SelectedMethod> SelectMethods(IBuilderContext context)
+        public virtual SelectMethodsDelegate SelectMethodsDelegate => context =>
         {
-            var candidateMethods = context.BuildKey.Type
-                                                   .GetMethodsHierarchical()
-                                                   .Where(m => m.IsStatic == false && m.IsPublic);
-            foreach (var method in candidateMethods)
+            var type = context.BuildKey.Type;
+
+            return type.GetMethodsHierarchical()
+                       .Where(TypePredicate)
+                       .Select(MethodSelector)
+                       .Where(method => null != method);
+        };
+
+        #endregion
+
+
+        #region Implementation
+
+        private static bool TypePredicate(MethodInfo method)
+        {
+            return method.IsStatic == false && method.IsPublic;
+        }
+
+        protected SelectedMethod MethodSelector(MethodInfo method)
+        {
+            foreach (var attribute in this)
             {
-                foreach (var type in Markers)
+                if (method.IsDefined(attribute, false))
                 {
-                    if (method.IsDefined(type, false))
+                    var result = new SelectedMethod(method);
+                    foreach (var parameter in method.GetParameters())
                     {
-                        yield return CreateSelectedMethod(method);
+                        result.AddParameterResolver(_factory.CreateResolver(parameter));
                     }
+
+                    return result;
                 }
             }
+
+            return null;
         }
 
-        private SelectedMethod CreateSelectedMethod(MethodInfo method)
-        {
-            var result = new SelectedMethod(method);
-            foreach (ParameterInfo parameter in method.GetParameters())
-            {
-                result.AddParameterResolver(_factory.CreateResolver(parameter));
-            }
-
-            return result;
-        }
-
+        #endregion
     }
 }

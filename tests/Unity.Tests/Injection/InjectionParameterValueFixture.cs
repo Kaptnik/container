@@ -2,7 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Unity.Build;
+using Unity.Build.Delegates;
 using Unity.Injection;
 using Unity.Tests.v5.Generics;
 using Unity.Tests.v5.TestSupport;

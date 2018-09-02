@@ -4,20 +4,19 @@ using System.Globalization;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
-using Unity.Build;
+using Unity.Build.Delegates;
 using Unity.Build.Selection;
 using Unity.Builder;
 using Unity.Builder.Operation;
 using Unity.Builder.Strategy;
 using Unity.Exceptions;
 using Unity.ObjectBuilder.BuildPlan.DynamicMethod;
-using Unity.Policy;
 
 namespace Unity.Strategies.Build
 {
     /// <summary>
     /// A <see cref="BuilderStrategy"/> that generates IL to call
-    /// chosen methods (as specified by the current <see cref="IMethodSelectorPolicy"/>)
+    /// chosen methods (as specified by the current <see cref="SelectMethodsDelegate"/>)
     /// as part of object build up.
     /// </summary>
     public class MethodBuildStrategy : BuilderStrategy
@@ -46,15 +45,15 @@ namespace Unity.Strategies.Build
         {
             var dynamicBuildContext = (DynamicBuildPlanGenerationContext)(context ?? throw new ArgumentNullException(nameof(context))).Existing;
 
-            var selector = context.Policies.GetPolicy<IMethodSelectorPolicy>(context.OriginalBuildKey);
+            var selector = context.Policies.GetPolicy<SelectMethodsDelegate>(context.OriginalBuildKey);
 
-            bool shouldClearOperation = false;
+            var shouldClearOperation = false;
 
-            foreach (SelectedMethod method in selector.SelectMethods(context))
+            foreach (SelectedMethod method in selector(context))
             {
                 shouldClearOperation = true;
 
-                string signatureString = GetMethodSignature(method.Method);
+                var signatureString = GetMethodSignature(method.Method);
 
                 GuardMethodIsNotOpenGeneric(method.Method);
                 GuardMethodHasNoOutParams(method.Method);

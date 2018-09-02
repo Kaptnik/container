@@ -5,6 +5,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Linq;
 using System.Reflection;
+using Unity.Build.Delegates;
 using Unity.Builder;
 using Unity.Builder.Strategy;
 using Unity.Container;
@@ -201,8 +202,8 @@ namespace Unity
 
             defaults.Set(typeof(IBuildPlanCreatorPolicy), new DynamicMethodBuildPlanCreatorPolicy(_buildPlanStrategies));
             defaults.Set(typeof(IConstructorSelectorPolicy), new DefaultConstructorSelectorPolicy(paramFactory));
-            defaults.Set(typeof(IPropertySelectorPolicy), new DefaultPropertySelectorPolicy());
-            defaults.Set(typeof(IMethodSelectorPolicy), new DefaultMethodSelectorPolicy(paramFactory));
+            defaults.Set(typeof(SelectPropertiesDelegate), new DefaultPropertySelectorPolicy().SelectPropertiesDelegate);
+            defaults.Set(typeof(SelectMethodsDelegate), new DefaultMethodSelectorPolicy(paramFactory).SelectMethodsDelegate);
             defaults.Set(typeof(DefaultParameterResolverPolicy), paramFactory);
 
             return defaults;

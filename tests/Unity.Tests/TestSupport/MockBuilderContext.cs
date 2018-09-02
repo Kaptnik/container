@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using Unity.Build;
+using Unity.Build.Delegates;
 using Unity.Builder;
 using Unity.Builder.Strategy;
 using Unity.Container.Lifetime;
@@ -9,7 +9,6 @@ using Unity.Lifetime;
 using Unity.Policy;
 using Unity.Resolution;
 using Unity.Storage;
-using Unity.Strategy;
 using Unity.Utility;
 
 namespace Unity.Tests.v5.TestSupport
