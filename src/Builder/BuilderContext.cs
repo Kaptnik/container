@@ -249,17 +249,13 @@ namespace Unity.Builder
 
         #region  : Policies
 
-        object IPolicyList.Get(Type type, string name, Type policyInterface, out IPolicyList list)
+        object IPolicyList.Get(Type type, string name, Type policyInterface)
         {
-            list = null;
-
             if (!ReferenceEquals(type, OriginalBuildKey.Type) || name != OriginalBuildKey.Name)
-                return _container.GetPolicy(type, name, policyInterface, out list);
+                return _container.GetPolicy(type, name, policyInterface);
 
-            var result = Registration.Get(policyInterface);
-            if (null != result) list = this;
+            return Registration.Get(policyInterface);
 
-            return result;
         }
 
         void IPolicyList.Set(Type type, string name, Type policyInterface, object policy)
@@ -284,17 +280,13 @@ namespace Unity.Builder
 
         #region Registration
 
-        object Get(Type type, string name, Type policyInterface, out IPolicyList list)
+        object Get(Type type, string name, Type policyInterface)
         {
-            list = null;
-
             if (!ReferenceEquals(type, OriginalBuildKey.Type) || name != OriginalBuildKey.Name)
-                return _container.GetPolicy(type, name, policyInterface, out list);
+                return _container.GetPolicy(type, name, policyInterface);
 
-            var result = Registration.Get(policyInterface);
-            if (null != result) list = this;
+            return Registration.Get(policyInterface);
 
-            return result;
         }
 
         void Set(Type type, string name, Type policyInterface, object policy)
