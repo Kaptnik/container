@@ -11,7 +11,6 @@ namespace Unity.Storage
     {
         #region Fields
 
-        private readonly object _sync = new object();
         private readonly IPolicyList _innerPolicyList;
         private IDictionary<PolicyKey, object> _policies;
 
@@ -72,25 +71,29 @@ namespace Unity.Storage
         }
 
 
-        public object Get(Type type, string name, Type policyInterface, out IPolicyList list)
+        public object Get(Type type, string name, Type policyInterface)
         {
-            list = null;
             object policy = null;
 
             if (_policies?.TryGetValue(new PolicyKey(type, name, policyInterface), out policy) ?? false)
             {
-                list = this;
                 return policy;
             }
 
-            return _innerPolicyList?.Get(type, name, policyInterface, out list);
+            return _innerPolicyList?.Get(type, name, policyInterface);
         }
 
 
         public void Set(Type type, string name, Type policyInterface, object policy)
         {
             if (null == _policies)
-                _policies = new Dictionary<PolicyKey, object>(PolicyKeyEqualityComparer.Default);
+            {
+                lock (this)
+                {
+                    if (null == _policies)
+                        _policies = new Dictionary<PolicyKey, object>(PolicyKeyEqualityComparer.Default);
+                }
+            }
 
             _policies[new PolicyKey(type, name, policyInterface)] = policy;
         }

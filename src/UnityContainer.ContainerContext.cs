@@ -124,8 +124,8 @@ namespace Unity
             {
             }
 
-            public object Get(Type type, string name, Type policyInterface, out IPolicyList list) 
-                => _container.GetPolicy(type, name, policyInterface, out list);
+            public object Get(Type type, string name, Type policyInterface) 
+                => _container.GetPolicy(type, name, policyInterface);
 
             public void Set(Type type, string name, Type policyInterface, object policy)
                 => _container.SetPolicy(type, name, policyInterface, policy);

@@ -125,9 +125,7 @@ namespace Unity.Strategies.Build
         {
             if (selectedConstructor.Constructor.GetParameters().Any(p => Equals(p.ParameterType.GetTypeInfo(), target)))
             {
-                var policy = (ILifetimePolicy)context.Policies.Get(context.BuildKey.Type, 
-                                                                   context.BuildKey.Name, 
-                                                                   typeof(ILifetimePolicy), out var _);
+                var policy = (ILifetimePolicy)context.Policies.Get(context.BuildKey.Type,  context.BuildKey.Name,  typeof(ILifetimePolicy));
                 if (null == policy?.GetValue())
                     return true;
             }
