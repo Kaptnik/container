@@ -12,7 +12,7 @@ namespace Unity.Strategies.Build
 {
     /// <summary>
     /// A <see cref="BuilderStrategy"/> that generates IL to resolve properties
-    /// on an object being built.
+    /// on an object being built.     
     /// </summary>
     public class PropertyBuildStrategy : BuilderStrategy
     {
