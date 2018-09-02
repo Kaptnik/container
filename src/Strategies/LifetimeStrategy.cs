@@ -4,6 +4,7 @@ using Unity.Builder;
 using Unity.Builder.Strategy;
 using Unity.Exceptions;
 using Unity.Lifetime;
+using Unity.Policy;
 using Unity.Policy.Lifetime;
 using Unity.Registration;
 
@@ -30,13 +31,13 @@ namespace Unity.Strategies
         {
             ILifetimePolicy policy = (ILifetimePolicy)context.Policies.Get(context.OriginalBuildKey.Type, 
                                                                   context.OriginalBuildKey.Name, 
-                                                                  typeof(ILifetimePolicy), out _);
+                                                                  typeof(ILifetimePolicy));
             if (null == policy)
             {
                 if (context.OriginalBuildKey.Type.GetTypeInfo().IsGenericType)
                 {
                     policy = (ILifetimePolicy)context.Policies.Get(context.BuildKey.Type.GetGenericTypeDefinition(),
-                                                          context.BuildKey.Name, typeof(ILifetimePolicy), out _);
+                                                          context.BuildKey.Name, typeof(ILifetimePolicy));
                     if (policy is ILifetimeFactoryPolicy factoryPolicy)
                     {
                         lock (_genericLifetimeManagerLock)
@@ -76,7 +77,7 @@ namespace Unity.Strategies
         {
             var lifetimePolicy = (ILifetimePolicy)context.Policies.Get(context.OriginalBuildKey.Type, 
                                                                        context.OriginalBuildKey.Name, 
-                                                                       typeof(ILifetimePolicy), out _);
+                                                                       typeof(ILifetimePolicy));
             lifetimePolicy?.SetValue(context.Existing, context.Lifetime);
         }
 

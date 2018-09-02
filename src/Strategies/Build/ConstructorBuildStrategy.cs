@@ -68,7 +68,7 @@ namespace Unity.Strategies.Build
                             Expression.Constant(null)),
                             CreateInstanceBuildupExpression(buildContext, context)));
 
-            var policy = context.Policies.Get(context.OriginalBuildKey.Type, context.OriginalBuildKey.Name, typeof(ILifetimePolicy), out _);
+            var policy = context.Policies.Get(context.OriginalBuildKey.Type, context.OriginalBuildKey.Name, typeof(ILifetimePolicy));
             if (policy is PerResolveLifetimeManager)
             {
                 buildContext.AddToBuildPlan(
