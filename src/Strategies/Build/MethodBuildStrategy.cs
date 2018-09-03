@@ -144,7 +144,7 @@ namespace Unity.Strategies.Build
         /// </summary>
         public static void SetCurrentOperationToInvokingMethod(string methodSignature, IBuilderContext context)
         {
-            (context ?? throw new ArgumentNullException(nameof(context))).CurrentOperation = new InvokingMethodOperation(context.BuildKey.Type, methodSignature);
+            context.CurrentOperation = Operations.InvokingMethodOperation;
         }
 
         private static string GetMethodSignature(MethodBase method)
