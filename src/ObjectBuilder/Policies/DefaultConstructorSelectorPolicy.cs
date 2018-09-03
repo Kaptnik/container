@@ -3,53 +3,64 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using Unity.Attributes;
+using Unity.Build.Delegates;
 using Unity.Build.Selection;
 using Unity.Builder;
-using Unity.Policy;
 
 namespace Unity.ObjectBuilder.Policies
 {
     /// <summary>
-    /// An implementation of <see cref="IConstructorSelectorPolicy"/> that is
+    /// An implementation of <see cref="SelectConstructorDelegate"/> that is
     /// aware of the build keys used by the Unity container.
     /// </summary>
-    public class DefaultConstructorSelectorPolicy : IConstructorSelectorPolicy
+    public class DefaultConstructorSelectorPolicy : List<Type>
     {
-        private DefaultParameterResolverPolicy _factory;
+        #region Fields
+
+        private readonly DefaultParameterResolverPolicy _factory;
+
+        #endregion
+
+
+        #region Constructors
 
         public DefaultConstructorSelectorPolicy(DefaultParameterResolverPolicy factory = null)
+            : base(new[] { typeof(InjectionConstructorAttribute) })
         {
             _factory = factory ?? new DefaultParameterResolverPolicy();
-            Markers = new List<Type> { typeof(InjectionConstructorAttribute) };
         }
 
+        #endregion
 
-        public IList<Type> Markers { get; }
 
+        #region SelectMethodsDelegate
 
-        public SelectedConstructor SelectConstructor(IBuilderContext context)
+        public virtual SelectConstructorDelegate SelectDelegate => context =>
         {
-            Type typeToConstruct = context.BuildKey.Type;
-            var constructors = typeToConstruct.GetTypeInfo()
-                                              .DeclaredConstructors
-                                              .Where(c => c.IsStatic == false && c.IsPublic)
-                                              .ToArray();
+            var type = context.BuildKey.Type;
 
-            var ctor = 1 == constructors.Length ? constructors[0]
-                                                : SelectAttributedConstructor(constructors) ??
-                                                  SelectInjectionConstructor(constructors, context);
-            if (ctor != null)
-            {
-                return CreateSelectedConstructor(ctor);
-            }
+            var constructors = type.GetTypeInfo()
+                                   .DeclaredConstructors
+                                   .Where(info => info.IsStatic == false && info.IsPublic)
+                                   .ToArray();
 
-            return null;
-        }
+            var ctor = 1 == constructors.Length
+                ? constructors[0]
+                : SelectAttributedConstructor(constructors) ??
+                  SelectInjectionConstructor(constructors, context);
+
+            return ctor != null ? CreateSelectedConstructor(ctor) : null;
+        };
+
+        #endregion
+
+
+        #region Implementation
 
         private ConstructorInfo SelectAttributedConstructor(IEnumerable<ConstructorInfo> constructors)
         {
             return (from constructor in constructors
-                    from type in Markers
+                    from type in this
                     where constructor.IsDefined(type, true)
                     select constructor)
                 .FirstOrDefault();
@@ -101,7 +112,7 @@ namespace Unity.ObjectBuilder.Policies
 
                         if (!bestCtorParameters.IsSupersetOf(parameters.Select(p => p.ParameterType)))
                         {
-                            if (bestCtorParameters.All(p => p.GetTypeInfo().IsInterface) && 
+                            if (bestCtorParameters.All(p => p.GetTypeInfo().IsInterface) &&
                                 !parameters.All(p => p.ParameterType.GetTypeInfo().IsInterface))
                                 return bestCtor;
 
@@ -134,5 +145,7 @@ namespace Unity.ObjectBuilder.Policies
 
             return result;
         }
+
+        #endregion
     }
 }

@@ -1,8 +1,8 @@
 ﻿using System.Collections.Generic;
 using System.Threading;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Unity.Injection;
 using Unity.Lifetime;
+using Unity.Registration;
 using Unity.Resolution;
 
 namespace Unity.Tests.v5.Override

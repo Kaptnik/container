@@ -1,5 +1,5 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Unity.Injection;
+using Unity.Registration;
 
 namespace Unity.Tests.v5.ContainerRegistration
 {

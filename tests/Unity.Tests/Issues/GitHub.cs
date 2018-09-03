@@ -3,8 +3,8 @@ using System.Diagnostics;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Unity.Attributes;
 using Unity.Exceptions;
-using Unity.Injection;
 using Unity.Lifetime;
+using Unity.Registration;
 
 namespace Unity.Tests.v5.Issues
 {

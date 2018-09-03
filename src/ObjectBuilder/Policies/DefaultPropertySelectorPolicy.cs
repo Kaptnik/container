@@ -31,9 +31,9 @@ namespace Unity.ObjectBuilder.Policies
         #endregion
 
 
-        #region SelectPropertiesDelegate
+        #region DefaultSelectorPolicyBase
 
-        public virtual SelectPropertiesDelegate SelectPropertiesDelegate => context =>
+        public SelectPropertiesDelegate SelectDelegate => context =>
         {
             var type = context.BuildKey.Type;
 
@@ -44,7 +44,6 @@ namespace Unity.ObjectBuilder.Policies
         };
 
         #endregion
-
 
 
         #region Implementation

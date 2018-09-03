@@ -1,11 +1,7 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.Collections.Generic;
-using Unity.Build.Delegates;
-using Unity.Build.Selection;
 using Unity.Builder;
 using Unity.Builder.Strategy;
-using Unity.Extension;
-using Unity.Policy;
 using Unity.Tests.v5.TestSupport;
 
 namespace Unity.Tests.v5
@@ -42,42 +38,6 @@ namespace Unity.Tests.v5
 
             List<ILogger> results = new List<ILogger>(container.ResolveAll<ILogger>());
             CollectionAssertExtensions.AreEqual(new ILogger[] { o1, o2 }, results);
-        }
-
-        private class InjectedObjectConfigurationExtension : UnityContainerExtension
-        {
-            private readonly ResolverDelegate resolverPolicy;
-
-            public InjectedObjectConfigurationExtension(ResolverDelegate resolverPolicy)
-            {
-                this.resolverPolicy = resolverPolicy;
-            }
-
-            protected override void Initialize()
-            {
-                Context.Policies.Set(typeof(InjectedObject), null, 
-                                     typeof(IConstructorSelectorPolicy),
-                                     new InjectedObjectSelectorPolicy(this.resolverPolicy));
-            }
-        }
-
-        private class InjectedObjectSelectorPolicy : IConstructorSelectorPolicy
-        {
-            private readonly ResolverDelegate resolverPolicy;
-
-            public InjectedObjectSelectorPolicy(ResolverDelegate resolverPolicy)
-            {
-                this.resolverPolicy = resolverPolicy;
-            }
-
-            public SelectedConstructor SelectConstructor(IBuilderContext context)
-            {
-                var ctr = typeof(InjectedObject).GetMatchingConstructor(new[] { typeof(object) });
-                var selectedConstructor = new SelectedConstructor(ctr);
-                selectedConstructor.AddParameterResolver(this.resolverPolicy);
-
-                return selectedConstructor;
-            }
         }
 
         public class InjectedObject

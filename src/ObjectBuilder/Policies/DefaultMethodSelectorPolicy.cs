@@ -35,7 +35,7 @@ namespace Unity.ObjectBuilder.Policies
 
         #region SelectMethodsDelegate
 
-        public virtual SelectMethodsDelegate SelectMethodsDelegate => context =>
+        public virtual SelectMethodsDelegate SelectDelegate => context =>
         {
             var type = context.BuildKey.Type;
 

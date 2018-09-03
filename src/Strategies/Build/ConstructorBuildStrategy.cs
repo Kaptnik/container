@@ -4,7 +4,6 @@ using System.Globalization;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
-using Unity.Build;
 using Unity.Build.Delegates;
 using Unity.Build.Selection;
 using Unity.Builder;
@@ -14,7 +13,6 @@ using Unity.Container.Lifetime;
 using Unity.Lifetime;
 using Unity.ObjectBuilder.BuildPlan.DynamicMethod;
 using Unity.Policy;
-using Unity.Policy.Lifetime;
 
 namespace Unity.Strategies.Build
 {
@@ -96,10 +94,9 @@ namespace Unity.Strategies.Build
                 return CreateThrowWithContext(buildContext, ThrowForAttemptingToConstructDelegateMethod);
             }
 
-            IConstructorSelectorPolicy selector =
-                context.Policies.GetPolicy<IConstructorSelectorPolicy>(context.OriginalBuildKey);
+            var selector = context.Policies.GetPolicy<SelectConstructorDelegate>(context.OriginalBuildKey);
 
-            SelectedConstructor selectedConstructor = selector.SelectConstructor(context);
+            SelectedConstructor selectedConstructor = selector(context);
 
             if (selectedConstructor == null)
             {

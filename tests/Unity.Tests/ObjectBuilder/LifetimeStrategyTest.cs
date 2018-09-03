@@ -3,7 +3,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Unity.Builder;
 using Unity.Exceptions;
 using Unity.Lifetime;
-using Unity.Policy.Lifetime;
+using Unity.Policy;
 using Unity.Strategies;
 using Unity.Tests.v5.ObjectBuilder.Utility;
 using Unity.Tests.v5.TestSupport;

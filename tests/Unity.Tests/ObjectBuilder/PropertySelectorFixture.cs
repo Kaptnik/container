@@ -43,7 +43,7 @@ namespace Unity.Tests.v5.ObjectBuilder
 
         private List<PropertyInfo> SelectProperties(Type t)
         {
-            SelectPropertiesDelegate selector = new DefaultPropertySelectorPolicy().SelectPropertiesDelegate;
+            SelectPropertiesDelegate selector = new DefaultPropertySelectorPolicy().SelectDelegate;
             IBuilderContext context = GetContext(t);
             var properties = new List<SelectedProperty>(selector(context));
             return properties.Select(sp => sp.Property).ToList();

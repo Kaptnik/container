@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Unity.Exceptions;
-using Unity.Injection;
+using Unity.Registration;
 using Unity.Resolution;
 using Unity.Tests.v5.TestSupport;
 
