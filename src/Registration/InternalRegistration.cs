@@ -110,13 +110,6 @@ namespace Unity.Registration
             }
         }
 
-        public virtual void ClearAll()
-        {
-            Key = null;
-            Value = null;
-            Next  = null;
-        }
-
         #endregion
 
 
