@@ -103,19 +103,19 @@ namespace Unity.Strategies.Build
                 return CreateThrowWithContext(buildContext, ThrowForNullExistingObjectMethod);
             }
 
-            string signature = CreateSignatureString(selectedConstructor.Constructor);
-
             if (selectedConstructor.Constructor.GetParameters().Any(pi => pi.ParameterType.IsByRef))
             {
-                return CreateThrowForNullExistingObjectWithInvalidConstructor(buildContext, signature);
+                return CreateThrowForNullExistingObjectWithInvalidConstructor(buildContext,
+                    CreateSignatureString(selectedConstructor.Constructor));
             }
 
             if (IsInvalidConstructor(targetTypeInfo, context, selectedConstructor))
             {
-                return CreateThrowForReferenceItselfMethodConstructor(buildContext, signature);
+                return CreateThrowForReferenceItselfMethodConstructor(buildContext,
+                    CreateSignatureString(selectedConstructor.Constructor));
             }
 
-            return Expression.Block(CreateNewBuildupSequence(buildContext, selectedConstructor, signature));
+            return Expression.Block(CreateNewBuildupSequence(buildContext, selectedConstructor));
         }
 
 
@@ -157,13 +157,13 @@ namespace Unity.Strategies.Build
                                 Expression.Constant(signature, typeof(string)));
         }
 
-        private IEnumerable<Expression> CreateNewBuildupSequence(DynamicBuildPlanGenerationContext buildContext, SelectedConstructor selectedConstructor, string signature)
+        private IEnumerable<Expression> CreateNewBuildupSequence(DynamicBuildPlanGenerationContext buildContext, SelectedConstructor selectedConstructor)
         {
-            var parameterExpressions = BuildConstructionParameterExpressions(buildContext, selectedConstructor, signature);
+            var parameterExpressions = BuildConstructionParameterExpressions(buildContext, selectedConstructor);
 
             yield return Expression.Call(null,
                                         SetCurrentOperationToInvokingConstructorMethod,
-                                        Expression.Constant(signature),
+                                        Expression.Constant(selectedConstructor.Constructor),
                                         buildContext.ContextParameter,
                                         Expression.Constant(selectedConstructor.Constructor.DeclaringType));
 
@@ -176,20 +176,22 @@ namespace Unity.Strategies.Build
             yield return buildContext.GetClearCurrentOperationExpression();
         }
 
-        private IEnumerable<Expression> BuildConstructionParameterExpressions(DynamicBuildPlanGenerationContext buildContext, SelectedConstructor selectedConstructor, string constructorSignature)
+        private IEnumerable<Expression> BuildConstructionParameterExpressions(DynamicBuildPlanGenerationContext buildContext, SelectedConstructor selectedConstructor)
         {
             int i = 0;
             var constructionParameters = selectedConstructor.Constructor.GetParameters();
 
             foreach (ResolverDelegate parameterResolver in selectedConstructor.GetParameterResolvers())
             {
+                var target = parameterResolver.Target;
+
                 yield return buildContext.CreateParameterExpression(
                                 parameterResolver,
                                 constructionParameters[i].ParameterType,
                                 Expression.Call(null,
                                                 SetCurrentOperationToResolvingParameterMethod,
                                                 Expression.Constant(constructionParameters[i].Name, typeof(string)),
-                                                Expression.Constant(constructorSignature),
+                                                Expression.Constant(selectedConstructor.Constructor),
                                                 buildContext.ContextParameter,
                                                 Expression.Constant(selectedConstructor.Constructor.DeclaringType)));
                 i++;
@@ -255,17 +257,18 @@ namespace Unity.Strategies.Build
         /// <summary>
         /// A helper method used by the generated IL to store the current operation in the build context.
         /// </summary>
-        public static void SetCurrentOperationToResolvingParameter(string parameterName, string constructorSignature, IBuilderContext context, Type type)
+        public static void SetCurrentOperationToResolvingParameter(string parameterName, ConstructorInfo info, IBuilderContext context, Type type)
         {
-            context.CurrentOperation = new ConstructorArgumentResolveOperation(type, constructorSignature, parameterName);
+            context.CurrentOperation = new ConstructorArgumentResolveOperation(type, CreateSignatureString(info), parameterName);
         }
 
         /// <summary>
         /// A helper method used by the generated IL to store the current operation in the build context.
         /// </summary>
-        public static void SetCurrentOperationToInvokingConstructor(string constructorSignature, IBuilderContext context, Type type)
+        public static void SetCurrentOperationToInvokingConstructor(ConstructorInfo info, IBuilderContext context, Type type)
         {
-            context.CurrentOperation = new InvokingConstructorOperation(type, constructorSignature);
+            context.CurrentOperation = info;
+            context.TypeBeingConstructed = type;
         }
 
         /// <summary>

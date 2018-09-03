@@ -39,7 +39,7 @@ namespace Unity.Builder.Strategy
         #region Registration and Analysis
 
         /// <summary>
-        /// Analyses registered type
+        /// Analyzes registered type
         /// </summary>
         /// <param name="container">Reference to hositng container</param>
         /// <param name="registration">Reference to registration</param>
@@ -50,7 +50,7 @@ namespace Unity.Builder.Strategy
         }
 
         /// <summary>
-        /// Analyses registered type
+        /// Analyzes registered type
         /// </summary>
         /// <param name="container">Reference to hositng container</param>
         /// <param name="registration">Reference to registration</param>

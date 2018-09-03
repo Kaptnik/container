@@ -6,7 +6,6 @@ using Unity.Builder.Strategy;
 using Unity.Container;
 using Unity.Exceptions;
 using Unity.Lifetime;
-using Unity.Policy;
 using Unity.Registration;
 using Unity.Resolution;
 using Unity.Storage;
@@ -41,7 +40,8 @@ namespace Unity.Builder
             Registration = registration;
             OriginalBuildKey = registration;
             BuildKey = OriginalBuildKey;
-            Policies = new Storage.PolicyList(this);
+            Policies = new PolicyList(this);
+            TypeBeingConstructed = registration.Type;
 
             _ownsOverrides = true;
             if (null != resolverOverrides && 0 < resolverOverrides.Length)
@@ -55,6 +55,7 @@ namespace Unity.Builder
             _container = ((BuilderContext)original)._container;
             _chain = new StrategyChain(chain);
             ParentContext = original;
+            TypeBeingConstructed = original.TypeBeingConstructed;
             OriginalBuildKey = original.OriginalBuildKey;
             BuildKey = original.BuildKey;
             Registration = original.Registration;
@@ -71,6 +72,7 @@ namespace Unity.Builder
             _chain = parent._chain;
             _resolverOverrides = parent._resolverOverrides;
             _ownsOverrides = false;
+            TypeBeingConstructed = registration.Type;
             ParentContext = original;
             Existing = null;
             Policies = parent.Policies;
@@ -94,6 +96,7 @@ namespace Unity.Builder
             Registration = registration;
             OriginalBuildKey = registration;
             BuildKey = OriginalBuildKey;
+            TypeBeingConstructed = type;
         }
 
         #endregion
@@ -122,6 +125,8 @@ namespace Unity.Builder
         public bool BuildComplete { get; set; }
 
         public object CurrentOperation { get; set; }
+
+        public Type TypeBeingConstructed { get; set; }
 
         public IBuilderContext ChildContext { get; internal set; }
 

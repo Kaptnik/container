@@ -6,7 +6,6 @@ using Unity.Builder.Strategy;
 using Unity.Container.Lifetime;
 using Unity.Exceptions;
 using Unity.Lifetime;
-using Unity.Policy;
 using Unity.Resolution;
 using Unity.Storage;
 using Unity.Utility;
@@ -81,6 +80,7 @@ namespace Unity.Tests.v5.TestSupport
         public bool BuildComplete { get; set; }
 
         public object CurrentOperation { get; set; }
+        public Type TypeBeingConstructed { get; set; }
 
         public IBuilderContext ChildContext { get; set; }
 

@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
-using Unity.Build;
 using Unity.Build.Delegates;
 using Unity.Builder;
 
@@ -76,17 +75,20 @@ namespace Unity.ObjectBuilder.BuildPlan.DynamicMethod
             //  dependencyResult ; // return item from Block
 
             var savedOperationExpression = Expression.Parameter(typeof(object));
+            var savedConstructedTypeExpression = Expression.Parameter(typeof(Type));
             var resolvedObjectExpression = Expression.Parameter(parameterType);
-            return
-                Expression.Block(
-                    new[] { savedOperationExpression, resolvedObjectExpression },
-                    SaveCurrentOperationExpression(savedOperationExpression),
-                    setOperationExpression,
-                    Expression.Assign(
-                        resolvedObjectExpression,
-                        GetResolveDependencyExpression(parameterType, resolver)),
-                    RestoreCurrentOperationExpression(savedOperationExpression),
-                    resolvedObjectExpression);
+
+            var block = Expression.Block(
+                new[] { savedOperationExpression, savedConstructedTypeExpression, resolvedObjectExpression },
+                SaveCurrentOperationExpression(savedOperationExpression),
+                SaveTypeBeingConstructedExpression(savedConstructedTypeExpression),
+                setOperationExpression,
+                Expression.Assign( resolvedObjectExpression, GetResolveDependencyExpression(parameterType, resolver)), 
+                RestoreTypeBeingConstructedExpression(savedConstructedTypeExpression),
+                RestoreCurrentOperationExpression(savedOperationExpression), 
+                resolvedObjectExpression);
+            return block;
+
         }
 
         internal Expression GetExistingObjectExpression()
@@ -144,7 +146,7 @@ namespace Unity.ObjectBuilder.BuildPlan.DynamicMethod
             return Expression.Assign(
                 Expression.MakeMemberAccess(
                     ContextParameter,
-                    typeof(IBuilderContext).GetTypeInfo().GetDeclaredProperty("CurrentOperation")),
+                    typeof(IBuilderContext).GetTypeInfo().GetDeclaredProperty(nameof(IBuilderContext.CurrentOperation))),
                     savedOperationExpression);
         }
 
@@ -154,7 +156,26 @@ namespace Unity.ObjectBuilder.BuildPlan.DynamicMethod
                 saveExpression,
                 Expression.MakeMemberAccess(
                     ContextParameter,
-                    typeof(IBuilderContext).GetTypeInfo().GetDeclaredProperty("CurrentOperation")));
+                    typeof(IBuilderContext).GetTypeInfo().GetDeclaredProperty(nameof(IBuilderContext.CurrentOperation))));
+        }
+
+
+        private Expression RestoreTypeBeingConstructedExpression(ParameterExpression savedOperationExpression)
+        {
+            return Expression.Assign(
+                Expression.MakeMemberAccess(
+                    ContextParameter,
+                    typeof(IBuilderContext).GetTypeInfo().GetDeclaredProperty(nameof(IBuilderContext.TypeBeingConstructed))),
+                savedOperationExpression);
+        }
+
+        private Expression SaveTypeBeingConstructedExpression(ParameterExpression saveExpression)
+        {
+            return Expression.Assign(
+                saveExpression,
+                Expression.MakeMemberAccess(
+                    ContextParameter,
+                    typeof(IBuilderContext).GetTypeInfo().GetDeclaredProperty(nameof(IBuilderContext.TypeBeingConstructed))));
         }
 
         /// <summary>

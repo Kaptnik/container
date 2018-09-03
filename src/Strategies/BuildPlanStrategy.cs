@@ -41,7 +41,7 @@ namespace Unity.Strategies
                     context.Registration.Set(typeof(IBuildPlanPolicy), plan);
                 }
                 else
-                    throw new ResolutionFailedException(context.OriginalBuildKey.Type, context.OriginalBuildKey.Name, null, context);
+                    throw new InvalidOperationException($"Unable to find suitable build plan for {context.BuildKey}");
             }
 
             plan?.BuildUp(context);
