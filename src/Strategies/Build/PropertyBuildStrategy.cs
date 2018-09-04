@@ -36,7 +36,7 @@ namespace Unity.Strategies.Build
         /// <param name="context">The context for the operation.</param>
         public override void PreBuildUp(IBuilderContext context)
         {
-            var dynamicBuildContext = (DynamicBuildPlanGenerationContext)(context ?? throw new ArgumentNullException(nameof(context))).Existing;
+            var dynamicBuildContext = (DynamicBuildPlanGenerationContext)context.Existing;
 
             var selector = context.Policies.GetPolicy<SelectPropertiesDelegate>( context.OriginalBuildKey);
 
@@ -55,7 +55,7 @@ namespace Unity.Strategies.Build
                                     null,
                                     SetCurrentOperationToResolvingPropertyValueMethod,
                                     Expression.Constant(property.Property.Name),
-                                    dynamicBuildContext.ContextParameter),
+                                    Expressions.ContextParameter),
                         Expression.Assign(
                                 resolvedObjectParameter,
                                 dynamicBuildContext.GetResolveDependencyExpression(property.Property.PropertyType, property.Resolver)),
@@ -63,9 +63,9 @@ namespace Unity.Strategies.Build
                                     null,
                                     SetCurrentOperationToSettingPropertyMethod,
                                     Expression.Constant(property.Property.Name),
-                                    dynamicBuildContext.ContextParameter),
+                                    Expressions.ContextParameter),
                         Expression.Call(
-                            Expression.Convert(dynamicBuildContext.GetExistingObjectExpression(), dynamicBuildContext.TypeToBuild),
+                            Expression.Convert(Expressions.ExistingProperty, dynamicBuildContext.TypeToBuild),
                             GetValidatedPropertySetter(property.Property),
                             resolvedObjectParameter)));
             }
@@ -73,7 +73,7 @@ namespace Unity.Strategies.Build
             // Clear the current operation
             if (shouldClearOperation)
             {
-                dynamicBuildContext.AddToBuildPlan(dynamicBuildContext.GetClearCurrentOperationExpression());
+                dynamicBuildContext.AddToBuildPlan(Expressions.ClearCurrentOperationExpression);
             }
         }
 

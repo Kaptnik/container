@@ -63,7 +63,7 @@ namespace Unity.Strategies.Build
             buildContext.AddToBuildPlan(
                  Expression.IfThen(
                         Expression.Equal(
-                            buildContext.GetExistingObjectExpression(),
+                            Expressions.ExistingProperty,
                             Expression.Constant(null)),
                             CreateInstanceBuildupExpression(buildContext, context)));
 
@@ -71,7 +71,7 @@ namespace Unity.Strategies.Build
             if (policy is PerResolveLifetimeManager)
             {
                 buildContext.AddToBuildPlan(
-                    Expression.Call(null, SetPerBuildSingletonMethod, buildContext.ContextParameter));
+                    Expression.Call(null, SetPerBuildSingletonMethod, Expressions.ContextParameter));
             }
         }
 
@@ -136,7 +136,7 @@ namespace Unity.Strategies.Build
             return Expression.Call(
                                 null,
                                 throwMethod,
-                                buildContext.ContextParameter);
+                                Expressions.ContextParameter);
         }
 
         private static Expression CreateThrowForNullExistingObjectWithInvalidConstructor(DynamicBuildPlanGenerationContext buildContext, string signature)
@@ -144,7 +144,7 @@ namespace Unity.Strategies.Build
             return Expression.Call(
                                 null,
                                 ThrowForNullExistingObjectWithInvalidConstructorMethod,
-                                buildContext.ContextParameter,
+                                Expressions.ContextParameter,
                                 Expression.Constant(signature, typeof(string)));
         }
 
@@ -153,7 +153,7 @@ namespace Unity.Strategies.Build
             return Expression.Call(
                                 null,
                                 ThrowForReferenceItselfConstructorMethod,
-                                buildContext.ContextParameter,
+                                Expressions.ContextParameter,
                                 Expression.Constant(signature, typeof(string)));
         }
 
@@ -164,16 +164,16 @@ namespace Unity.Strategies.Build
             yield return Expression.Call(null,
                                         SetCurrentOperationToInvokingConstructorMethod,
                                         Expression.Constant(selectedConstructor.Constructor),
-                                        buildContext.ContextParameter,
+                                        Expressions.ContextParameter,
                                         Expression.Constant(selectedConstructor.Constructor.DeclaringType));
 
             yield return Expression.Assign(
-                            buildContext.GetExistingObjectExpression(),
+                            Expressions.ExistingProperty,
                             Expression.Convert(
                                 Expression.New(selectedConstructor.Constructor, parameterExpressions),
                                 typeof(object)));
 
-            yield return buildContext.GetClearCurrentOperationExpression();
+            yield return Expressions.ClearCurrentOperationExpression;
         }
 
         private IEnumerable<Expression> BuildConstructionParameterExpressions(DynamicBuildPlanGenerationContext buildContext, SelectedConstructor selectedConstructor)
@@ -192,7 +192,7 @@ namespace Unity.Strategies.Build
                                                 SetCurrentOperationToResolvingParameterMethod,
                                                 Expression.Constant(constructionParameters[i].Name, typeof(string)),
                                                 Expression.Constant(selectedConstructor.Constructor),
-                                                buildContext.ContextParameter,
+                                                Expressions.ContextParameter,
                                                 Expression.Constant(selectedConstructor.Constructor.DeclaringType)));
                 i++;
             }

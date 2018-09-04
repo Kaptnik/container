@@ -43,7 +43,7 @@ namespace Unity.Strategies.Build
         /// <param name="context">Context of the build operation.</param>
         public override void PreBuildUp(IBuilderContext context)
         {
-            var dynamicBuildContext = (DynamicBuildPlanGenerationContext)(context ?? throw new ArgumentNullException(nameof(context))).Existing;
+            var dynamicBuildContext = (DynamicBuildPlanGenerationContext)context.Existing;
 
             var selector = context.Policies.GetPolicy<SelectMethodsDelegate>(context.OriginalBuildKey);
 
@@ -61,11 +61,9 @@ namespace Unity.Strategies.Build
 
                 dynamicBuildContext.AddToBuildPlan(
                     Expression.Block(
-                        Expression.Call(null, SetCurrentOperationToInvokingMethodInfo, Expression.Constant(signatureString), dynamicBuildContext.ContextParameter),
+                        Expression.Call(null, SetCurrentOperationToInvokingMethodInfo, Expression.Constant(signatureString), Expressions.ContextParameter),
                         Expression.Call(
-                            Expression.Convert(
-                                dynamicBuildContext.GetExistingObjectExpression(),
-                                dynamicBuildContext.TypeToBuild),
+                            Expression.Convert(Expressions.ExistingProperty, dynamicBuildContext.TypeToBuild),
                             method.Method,
                             BuildMethodParameterExpressions(dynamicBuildContext, method, signatureString))));
             }
@@ -73,7 +71,7 @@ namespace Unity.Strategies.Build
             // Clear the current operation
             if (shouldClearOperation)
             {
-                dynamicBuildContext.AddToBuildPlan(dynamicBuildContext.GetClearCurrentOperationExpression());
+                dynamicBuildContext.AddToBuildPlan(Expressions.ClearCurrentOperationExpression);
             }
         }
 
@@ -91,7 +89,7 @@ namespace Unity.Strategies.Build
                                     SetCurrentOperationToResolvingParameterMethod,
                                     Expression.Constant(methodParameters[i].Name, typeof(string)),
                                     Expression.Constant(methodSignature),
-                                    context.ContextParameter));
+                                    Expressions.ContextParameter));
                 i++;
             }
         }

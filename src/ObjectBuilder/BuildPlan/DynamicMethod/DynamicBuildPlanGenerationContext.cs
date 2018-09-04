@@ -21,10 +21,6 @@ namespace Unity.ObjectBuilder.BuildPlan.DynamicMethod
         private static readonly MethodInfo GetResolverMethod =
             typeof(DynamicBuildPlanGenerationContext).GetTypeInfo()
                                                      .GetDeclaredMethod(nameof(GetResolver));
-        private static readonly MemberInfo GetBuildContextExistingObjectProperty =
-            typeof(IBuilderContext).GetTypeInfo()
-                                   .DeclaredMembers
-                                   .First(m => m.Name == nameof(IBuilderContext.Existing));
         /// <summary>
         /// 
         /// </summary>
@@ -32,7 +28,6 @@ namespace Unity.ObjectBuilder.BuildPlan.DynamicMethod
         public DynamicBuildPlanGenerationContext(Type typeToBuild)
         {
             TypeToBuild = typeToBuild;
-            ContextParameter = Expression.Parameter(typeof(IBuilderContext), "context");
             _buildPlanExpressions = new Queue<Expression>();
         }
 
@@ -40,11 +35,6 @@ namespace Unity.ObjectBuilder.BuildPlan.DynamicMethod
         /// The type that is to be built with the dynamic build plan.
         /// </summary>
         public Type TypeToBuild { get; }
-
-        /// <summary>
-        /// The context parameter representing the <see cref="IBuilderContext"/> used when the build plan is executed.
-        /// </summary>
-        public ParameterExpression ContextParameter { get; }
 
         /// <summary>
         /// 
@@ -80,28 +70,20 @@ namespace Unity.ObjectBuilder.BuildPlan.DynamicMethod
 
             var block = Expression.Block(
                 new[] { savedOperationExpression, savedConstructedTypeExpression, resolvedObjectExpression },
-                SaveCurrentOperationExpression(savedOperationExpression),
-                SaveTypeBeingConstructedExpression(savedConstructedTypeExpression),
+
+                Expression.Assign(savedOperationExpression,       Expressions.CurrentOperationProperty),
+                Expression.Assign(savedConstructedTypeExpression, Expressions.TypeBeingConstructedProperty),
+                
                 setOperationExpression,
-                Expression.Assign( resolvedObjectExpression, GetResolveDependencyExpression(parameterType, resolver)), 
-                RestoreTypeBeingConstructedExpression(savedConstructedTypeExpression),
-                RestoreCurrentOperationExpression(savedOperationExpression), 
+                Expression.Assign( resolvedObjectExpression, GetResolveDependencyExpression(parameterType, resolver)),
+
+                Expression.Assign(Expressions.TypeBeingConstructedProperty, savedConstructedTypeExpression),
+                Expression.Assign(Expressions.CurrentOperationProperty, savedOperationExpression), 
+
                 resolvedObjectExpression);
+
             return block;
 
-        }
-
-        internal Expression GetExistingObjectExpression()
-        {
-            return Expression.MakeMemberAccess(ContextParameter,
-                                                GetBuildContextExistingObjectProperty);
-        }
-
-        internal Expression GetClearCurrentOperationExpression()
-        {
-            return Expression.Assign(
-                               Expression.Property(ContextParameter, typeof(IBuilderContext).GetTypeInfo().GetDeclaredProperty("CurrentOperation")),
-                               Expression.Constant(null));
         }
 
         internal Expression GetResolveDependencyExpression(Type dependencyType, ResolverDelegate resolver)
@@ -110,11 +92,11 @@ namespace Unity.ObjectBuilder.BuildPlan.DynamicMethod
                            Expression.Call(
                                Expression.Call(null,
                                                GetResolverMethod,
-                                               ContextParameter,
+                                               Expressions.ContextParameter,
                                                Expression.Constant(dependencyType, typeof(Type)),
                                                Expression.Constant(resolver, typeof(ResolverDelegate))),
                                ResolveDependencyMethod,
-                               ContextParameter),
+                               Expressions.ContextParameter),
                            dependencyType);
         }
 
@@ -123,8 +105,8 @@ namespace Unity.ObjectBuilder.BuildPlan.DynamicMethod
             var planDelegate = (Func<IBuilderContext, object>)
                 Expression.Lambda(
                     Expression.Block(
-                        _buildPlanExpressions.Concat(new[] { GetExistingObjectExpression() })),
-                        ContextParameter)
+                        _buildPlanExpressions.Concat(new[] { Expressions.ExistingProperty })),
+                        Expressions.ContextParameter)
                 .Compile();
 
             return context =>
@@ -141,42 +123,6 @@ namespace Unity.ObjectBuilder.BuildPlan.DynamicMethod
                 };
         }
 
-        private Expression RestoreCurrentOperationExpression(ParameterExpression savedOperationExpression)
-        {
-            return Expression.Assign(
-                Expression.MakeMemberAccess(
-                    ContextParameter,
-                    typeof(IBuilderContext).GetTypeInfo().GetDeclaredProperty(nameof(IBuilderContext.CurrentOperation))),
-                    savedOperationExpression);
-        }
-
-        private Expression SaveCurrentOperationExpression(ParameterExpression saveExpression)
-        {
-            return Expression.Assign(
-                saveExpression,
-                Expression.MakeMemberAccess(
-                    ContextParameter,
-                    typeof(IBuilderContext).GetTypeInfo().GetDeclaredProperty(nameof(IBuilderContext.CurrentOperation))));
-        }
-
-
-        private Expression RestoreTypeBeingConstructedExpression(ParameterExpression savedOperationExpression)
-        {
-            return Expression.Assign(
-                Expression.MakeMemberAccess(
-                    ContextParameter,
-                    typeof(IBuilderContext).GetTypeInfo().GetDeclaredProperty(nameof(IBuilderContext.TypeBeingConstructed))),
-                savedOperationExpression);
-        }
-
-        private Expression SaveTypeBeingConstructedExpression(ParameterExpression saveExpression)
-        {
-            return Expression.Assign(
-                saveExpression,
-                Expression.MakeMemberAccess(
-                    ContextParameter,
-                    typeof(IBuilderContext).GetTypeInfo().GetDeclaredProperty(nameof(IBuilderContext.TypeBeingConstructed))));
-        }
 
         /// <summary>
         /// Helper method used by generated IL to look up a dependency resolver based on the given key.
@@ -187,7 +133,7 @@ namespace Unity.ObjectBuilder.BuildPlan.DynamicMethod
         /// <returns>The found dependency resolver.</returns>
         public static ResolverDelegate GetResolver(IBuilderContext context, Type dependencyType, ResolverDelegate resolver)
         {
-            var overridden = (context ?? throw new ArgumentNullException(nameof(context))).GetOverriddenResolver(dependencyType);
+            var overridden = context.GetOverriddenResolver(dependencyType);
             return overridden ?? resolver;
         }
     }
