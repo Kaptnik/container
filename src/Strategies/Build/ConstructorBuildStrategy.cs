@@ -22,31 +22,26 @@ namespace Unity.Strategies.Build
     /// </summary>
     public class ConstructorBuildStrategy : BuilderStrategy
     {
-        private static readonly MethodInfo ThrowForNullExistingObjectMethod;
-        private static readonly MethodInfo ThrowForNullExistingObjectWithInvalidConstructorMethod;
-        private static readonly MethodInfo ThrowForAttemptingToConstructInterfaceMethod;
-        private static readonly MethodInfo ThrowForAttemptingToConstructAbstractClassMethod;
-        private static readonly MethodInfo ThrowForAttemptingToConstructDelegateMethod;
-        private static readonly MethodInfo SetCurrentOperationToResolvingParameterMethod;
-        private static readonly MethodInfo SetCurrentOperationToInvokingConstructorMethod;
-        private static readonly MethodInfo SetPerBuildSingletonMethod;
-        private static readonly MethodInfo ThrowForReferenceItselfConstructorMethod;
+        private static readonly TypeInfo TypeInfo = typeof(ConstructorBuildStrategy).GetTypeInfo();
 
-        static ConstructorBuildStrategy()
-        {
-            var info = typeof(ConstructorBuildStrategy).GetTypeInfo();
+        private static readonly Expression ThrowOnInterfaceExpression =
+            Expression.Call(null, TypeInfo.GetDeclaredMethod(nameof(ThrowForAttemptingToConstructInterface)), Expressions.ContextParameter);
 
-            ThrowForNullExistingObjectMethod = info.GetDeclaredMethod(nameof(ThrowForNullExistingObject));
-            ThrowForNullExistingObjectWithInvalidConstructorMethod = info.GetDeclaredMethod(nameof(ThrowForNullExistingObjectWithInvalidConstructor));
-            ThrowForAttemptingToConstructInterfaceMethod = info.GetDeclaredMethod(nameof(ThrowForAttemptingToConstructInterface));
-            ThrowForAttemptingToConstructAbstractClassMethod = info.GetDeclaredMethod(nameof(ThrowForAttemptingToConstructAbstractClass));
-            ThrowForAttemptingToConstructDelegateMethod = info.GetDeclaredMethod(nameof(ThrowForAttemptingToConstructDelegate));
-            SetCurrentOperationToResolvingParameterMethod = info.GetDeclaredMethod(nameof(SetCurrentOperationToResolvingParameter));
-            SetCurrentOperationToInvokingConstructorMethod = info.GetDeclaredMethod(nameof(SetCurrentOperationToInvokingConstructor));
-            SetPerBuildSingletonMethod = info.GetDeclaredMethod(nameof(SetPerBuildSingleton));
-            ThrowForReferenceItselfConstructorMethod = info.GetDeclaredMethod(nameof(ThrowForReferenceItselfConstructor));
+        private static readonly Expression ThrowOnAbstractClassExpression =
+            Expression.Call(null, TypeInfo.GetDeclaredMethod(nameof(ThrowForAttemptingToConstructAbstractClass)), Expressions.ContextParameter);
 
-        }
+        private static readonly Expression ThrowOnDelegateExpression =
+            Expression.Call(null, TypeInfo.GetDeclaredMethod(nameof(ThrowForAttemptingToConstructDelegate)), Expressions.ContextParameter);
+
+        private static readonly Expression ThrowForNullExistingObjectExpression =
+            Expression.Call(null, TypeInfo.GetDeclaredMethod(nameof(ThrowForNullExistingObject)), Expressions.ContextParameter);
+
+        private static readonly MethodInfo ThrowOnInvalidConstructorMethod = TypeInfo.GetDeclaredMethod(nameof(ThrowForNullExistingObjectWithInvalidConstructor));
+        private static readonly MethodInfo SetCurrentOperationToResolvingParameterMethod = TypeInfo.GetDeclaredMethod(nameof(SetCurrentOperationToResolvingParameter));
+        private static readonly MethodInfo SetCurrentOperationToInvokingConstructorMethod = TypeInfo.GetDeclaredMethod(nameof(SetCurrentOperationToInvokingConstructor));
+        private static readonly MethodInfo SetPerBuildSingletonMethod = TypeInfo.GetDeclaredMethod(nameof(SetPerBuildSingleton));
+        private static readonly MethodInfo ThrowOnItselfMethod = TypeInfo.GetDeclaredMethod(nameof(ThrowForReferenceItselfConstructor));
+
 
         /// <summary>
         /// Called during the chain of responsibility for a build operation.
@@ -55,8 +50,7 @@ namespace Unity.Strategies.Build
         /// <param name="context">The context for the operation.</param>
         public override void PreBuildUp(IBuilderContext context)
         {
-            DynamicBuildPlanGenerationContext buildContext =
-                (DynamicBuildPlanGenerationContext)(context ?? throw new ArgumentNullException(nameof(context))).Existing;
+            DynamicBuildPlanGenerationContext buildContext = (DynamicBuildPlanGenerationContext)context.Existing;
 
             GuardTypeIsNonPrimitive(context);
 
@@ -79,40 +73,25 @@ namespace Unity.Strategies.Build
         {
             var targetTypeInfo = context.BuildKey.Type.GetTypeInfo();
 
-            if (targetTypeInfo.IsInterface)
-            {
-                return CreateThrowWithContext(buildContext, ThrowForAttemptingToConstructInterfaceMethod);
-            }
-
-            if (targetTypeInfo.IsAbstract)
-            {
-                return CreateThrowWithContext(buildContext, ThrowForAttemptingToConstructAbstractClassMethod);
-            }
-
-            if (targetTypeInfo.IsSubclassOf(typeof(Delegate)))
-            {
-                return CreateThrowWithContext(buildContext, ThrowForAttemptingToConstructDelegateMethod);
-            }
+            if (targetTypeInfo.IsInterface) return ThrowOnInterfaceExpression;
+            if (targetTypeInfo.IsAbstract)  return ThrowOnAbstractClassExpression;
+            if (targetTypeInfo.IsSubclassOf(typeof(Delegate))) return ThrowOnDelegateExpression;
 
             var selector = context.Policies.GetPolicy<SelectConstructorDelegate>(context.OriginalBuildKey);
+            var selectedConstructor = selector(context);
 
-            SelectedConstructor selectedConstructor = selector(context);
-
-            if (selectedConstructor == null)
-            {
-                return CreateThrowWithContext(buildContext, ThrowForNullExistingObjectMethod);
-            }
+            if (selectedConstructor == null) return ThrowForNullExistingObjectExpression;
 
             if (selectedConstructor.Constructor.GetParameters().Any(pi => pi.ParameterType.IsByRef))
             {
-                return CreateThrowForNullExistingObjectWithInvalidConstructor(buildContext,
-                    CreateSignatureString(selectedConstructor.Constructor));
+                return Expression.Call(null, ThrowOnInvalidConstructorMethod, Expressions.ContextParameter,
+                    Expression.Constant(CreateSignatureString(selectedConstructor.Constructor), typeof(string)));
             }
 
             if (IsInvalidConstructor(targetTypeInfo, context, selectedConstructor))
             {
-                return CreateThrowForReferenceItselfMethodConstructor(buildContext,
-                    CreateSignatureString(selectedConstructor.Constructor));
+                return Expression.Call(null, ThrowOnItselfMethod, Expressions.ContextParameter,
+                    Expression.Constant(CreateSignatureString(selectedConstructor.Constructor), typeof(string)));
             }
 
             return Expression.Block(CreateNewBuildupSequence(buildContext, selectedConstructor));
@@ -131,31 +110,6 @@ namespace Unity.Strategies.Build
             return false;
         }
 
-        private static Expression CreateThrowWithContext(DynamicBuildPlanGenerationContext buildContext, MethodInfo throwMethod)
-        {
-            return Expression.Call(
-                                null,
-                                throwMethod,
-                                Expressions.ContextParameter);
-        }
-
-        private static Expression CreateThrowForNullExistingObjectWithInvalidConstructor(DynamicBuildPlanGenerationContext buildContext, string signature)
-        {
-            return Expression.Call(
-                                null,
-                                ThrowForNullExistingObjectWithInvalidConstructorMethod,
-                                Expressions.ContextParameter,
-                                Expression.Constant(signature, typeof(string)));
-        }
-
-        private static Expression CreateThrowForReferenceItselfMethodConstructor(DynamicBuildPlanGenerationContext buildContext, string signature)
-        {
-            return Expression.Call(
-                                null,
-                                ThrowForReferenceItselfConstructorMethod,
-                                Expressions.ContextParameter,
-                                Expression.Constant(signature, typeof(string)));
-        }
 
         private IEnumerable<Expression> CreateNewBuildupSequence(DynamicBuildPlanGenerationContext buildContext, SelectedConstructor selectedConstructor)
         {
@@ -206,8 +160,7 @@ namespace Unity.Strategies.Build
         public static void SetPerBuildSingleton(IBuilderContext context)
         {
             var perBuildLifetime = new InternalPerResolveLifetimeManager(context.Existing);
-            context.Policies.Set(context.OriginalBuildKey.Type,
-                                 context.OriginalBuildKey.Name,
+            context.Policies.Set(context.OriginalBuildKey.Type, context.OriginalBuildKey.Name,
                                  typeof(ILifetimePolicy), perBuildLifetime);
         }
 

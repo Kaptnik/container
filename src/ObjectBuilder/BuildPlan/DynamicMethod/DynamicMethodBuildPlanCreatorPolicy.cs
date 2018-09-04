@@ -34,10 +34,9 @@ namespace Unity.ObjectBuilder.BuildPlan.DynamicMethod
         /// <returns>The created build plan.</returns>
         public IBuildPlanPolicy CreatePlan(IBuilderContext context, INamedType buildKey)
         {
-            var generatorContext =
-                new DynamicBuildPlanGenerationContext((buildKey ?? throw new ArgumentNullException(nameof(buildKey))).Type);
+            var generatorContext = new DynamicBuildPlanGenerationContext(buildKey.Type);
 
-            IBuilderContext planContext = new BuilderContext(context ?? throw new ArgumentNullException(nameof(context)), _strategies, generatorContext);
+            IBuilderContext planContext = new BuilderContext(context, _strategies, generatorContext);
 
             ((BuilderContext)planContext).Strategies.ExecuteBuildUp(planContext);
 

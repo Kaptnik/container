@@ -29,11 +29,10 @@ namespace Unity.Container
         /// <summary>
         /// Execute this strategy chain against the given context to build up.
         /// </summary>
-        /// <param name="builderContext">Context for the build processes.</param>
+        /// <param name="context">Context for the build processes.</param>
         /// <returns>The build up object</returns>
-        public void BuildUp(IBuilderContext builderContext)
+        public void BuildUp(IBuilderContext context)
         {
-            var context = builderContext ?? throw new ArgumentNullException(nameof(builderContext));
             var i = -1;
 
             try

@@ -54,7 +54,7 @@ namespace Unity
         /// <returns>The build up object</returns>
         public static object ExecuteBuildUp(this IBuildPlanPolicy policy, IBuilderContext context)
         {
-            policy.BuildUp(context ?? throw new ArgumentNullException(nameof(context)));
+            policy.BuildUp(context);
             return context.Existing;
         }
 
