@@ -3,12 +3,11 @@ using System.Globalization;
 using System.Reflection;
 using Unity.Builder;
 using Unity.Builder.Strategy;
-using Unity.Exceptions;
 using Unity.Policy;
 using Unity.Registration;
 using Unity.Storage;
 
-namespace Unity.Strategies
+namespace Unity.Strategies.Resolve
 {
     /// <summary>
     /// A <see cref="BuilderStrategy"/> that will look for a build plan

@@ -6,6 +6,8 @@ namespace Unity.ObjectBuilder.BuildPlan.DynamicMethod
 {
     public class Expressions
     {
+        #region BuildContext
+
         public static readonly ParameterExpression ContextParameter = Expression.Parameter(typeof(IBuilderContext), "context");
 
         public static readonly Expression TypeBeingConstructedProperty = Expression.Property(ContextParameter,
@@ -20,6 +22,8 @@ namespace Unity.ObjectBuilder.BuildPlan.DynamicMethod
         public static readonly Expression ClearCurrentOperationExpression =
             Expression.Assign(CurrentOperationProperty, Expression.Constant(null));
 
-        //public static readonly Expression GetResolverMethodExpression
+        #endregion
+
+        
     }
 }

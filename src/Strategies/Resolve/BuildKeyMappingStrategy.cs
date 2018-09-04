@@ -9,7 +9,7 @@ using Unity.Policy.Mapping;
 using Unity.Registration;
 using Unity.Storage;
 
-namespace Unity.Strategies
+namespace Unity.Strategies.Resolve
 {
     /// <summary>
     /// Represents a strategy for mapping build keys in the build up operation.

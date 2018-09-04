@@ -7,7 +7,7 @@ using Unity.Lifetime;
 using Unity.Policy;
 using Unity.Registration;
 
-namespace Unity.Strategies
+namespace Unity.Strategies.Resolve
 {
     /// <summary>
     /// An <see cref="BuilderStrategy"/> implementation that uses

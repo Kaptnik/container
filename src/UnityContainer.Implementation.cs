@@ -21,6 +21,7 @@ using Unity.Registration;
 using Unity.Storage;
 using Unity.Strategies;
 using Unity.Strategies.Build;
+using Unity.Strategies.Resolve;
 using Unity.Strategy;
 
 namespace Unity
