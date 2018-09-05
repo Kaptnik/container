@@ -3,6 +3,7 @@ using Unity.Builder;
 using Unity.Builder.Strategy;
 using Unity.Events;
 using Unity.Lifetime;
+using Unity.Registration;
 using Unity.Storage;
 using Unity.Strategy;
 
@@ -64,7 +65,7 @@ namespace Unity.Extension
 
         /// <summary>
         /// This event is raised when the 
-        /// <see cref="IUnityContainer.RegisterType(Type,Type,string,LifetimeManager, Unity.Registration.InjectionMember[])"/> 
+        /// <see cref="IUnityContainer.RegisterType(Type,Type,string,LifetimeManager, IInjectionMember[])"/> 
         /// method, or one of its overloads, is called.
         /// </summary>
         public abstract event EventHandler<RegisterEventArgs> Registering;

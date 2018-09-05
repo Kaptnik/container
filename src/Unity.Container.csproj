@@ -47,6 +47,10 @@
     <None Remove="ResolverPolicy\**" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Obsolete\" />
+  </ItemGroup>
+
 
   <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
