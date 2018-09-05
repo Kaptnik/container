@@ -1,6 +1,7 @@
 using System;
 using System.Globalization;
 using System.Reflection;
+using Unity.Build.Delegates;
 using Unity.Builder;
 using Unity.Builder.Strategy;
 using Unity.Policy;
@@ -24,26 +25,39 @@ namespace Unity.Strategies.Resolve
         /// <param name="context">The context for the operation.</param>
         public override void PreBuildUp(IBuilderContext context)
         {
-            var plan = context.Registration.Get<IBuildPlanPolicy>() ?? (IBuildPlanPolicy)(
-                       context.Policies.Get(context.BuildKey.Type, string.Empty, typeof(IBuildPlanPolicy)) ?? 
-                       GetGeneric(context.Policies, typeof(IBuildPlanPolicy), 
-                                                    context.OriginalBuildKey, 
-                                                    context.OriginalBuildKey.Type));
+            var resolver = context.Registration.Get<ResolverDelegate>() ?? (ResolverDelegate)(
+                           context.Policies.Get(context.BuildKey.Type, string.Empty, typeof(ResolverDelegate)) ??
+                           GetGeneric(context.Policies, typeof(ResolverDelegate),
+                               context.OriginalBuildKey,
+                               context.OriginalBuildKey.Type));
 
-            if (plan == null || plan is OverriddenBuildPlanMarkerPolicy)
+            if (null == resolver)
             {
-                var planCreator = context.Registration.Get<IBuildPlanCreatorPolicy>() ?? CheckIfOpenGeneric(context.Registration) ??
-                    GetPolicy<IBuildPlanCreatorPolicy>(context.Policies, context.BuildKey);
-                if (planCreator != null)
-                {
-                    plan = planCreator.CreatePlan(context, context.BuildKey);
-                    context.Registration.Set(typeof(IBuildPlanPolicy), plan);
-                }
-                else
-                    throw new InvalidOperationException($"Unable to find suitable build plan for {context.BuildKey}");
-            }
+                var plan = context.Registration.Get<IBuildPlanPolicy>() ?? (IBuildPlanPolicy)(
+                               context.Policies.Get(context.BuildKey.Type, string.Empty, typeof(IBuildPlanPolicy)) ??
+                               GetGeneric(context.Policies, typeof(IBuildPlanPolicy),
+                                   context.OriginalBuildKey,
+                                   context.OriginalBuildKey.Type));
 
-            plan?.BuildUp(context);
+                if (plan == null || plan is OverriddenBuildPlanMarkerPolicy)
+                {
+                    var planCreator = context.Registration.Get<IBuildPlanCreatorPolicy>() ?? CheckIfOpenGeneric(context.Registration) ??
+                                      GetPolicy<IBuildPlanCreatorPolicy>(context.Policies, context.BuildKey);
+                    if (planCreator != null)
+                    {
+                        plan = planCreator.CreatePlan(context, context.BuildKey);
+                        context.Registration.Set(typeof(IBuildPlanPolicy), plan);
+                    }
+                    else
+                        throw new InvalidOperationException($"Unable to find suitable build plan for {context.BuildKey}");
+                }
+
+                plan?.BuildUp(context);
+            }
+            else
+            {
+                context.Existing = resolver(context);
+            }
         }
 
         #endregion
