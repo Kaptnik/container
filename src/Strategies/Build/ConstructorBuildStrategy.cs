@@ -5,6 +5,7 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using Unity.Build.Delegates;
+using Unity.Build.Policy;
 using Unity.Build.Selection;
 using Unity.Builder;
 using Unity.Builder.Operation;
@@ -12,7 +13,6 @@ using Unity.Builder.Strategy;
 using Unity.Container.Lifetime;
 using Unity.Lifetime;
 using Unity.ObjectBuilder.BuildPlan.DynamicMethod;
-using Unity.Policy;
 
 namespace Unity.Strategies.Build
 {

@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
+using Unity.Build.Policy;
 using Unity.Lifetime;
-using Unity.Policy;
 
 namespace Unity.Registration
 {
