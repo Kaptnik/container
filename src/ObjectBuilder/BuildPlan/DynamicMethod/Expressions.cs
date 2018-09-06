@@ -21,7 +21,7 @@ namespace Unity.ObjectBuilder.BuildPlan.DynamicMethod
 
         private static readonly MethodInfo StringFormat = typeof(string).GetTypeInfo()
                                                                         .DeclaredMethods
-                                                                        .First(m => m.Name == nameof(string.Format));
+                                                                        .First(m => m.Name == nameof(string.Format)); // Check for types
         #endregion
 
 
