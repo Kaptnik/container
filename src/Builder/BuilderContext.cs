@@ -277,10 +277,6 @@ namespace Unity.Builder
                 Registration.Clear(policyInterface);
         }
 
-        void IPolicyList.ClearAll()
-        {
-        }
-
         #endregion
 
 

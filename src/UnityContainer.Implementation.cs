@@ -460,10 +460,6 @@ namespace Unity
                     _registration.Clear(policyInterface);
             }
 
-            public void ClearAll()
-            {
-            }
-
             #endregion
         }
 

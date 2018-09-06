@@ -54,14 +54,6 @@ namespace Unity.Storage
         }
 
         /// <summary>
-        /// Removes all policies from the list.
-        /// </summary>
-        public void ClearAll()
-        {
-            _policies = null;
-        }
-
-        /// <summary>
         /// Removes a default policy.
         /// </summary>
         /// <param name="policyInterface">The type the policy was registered as.</param>

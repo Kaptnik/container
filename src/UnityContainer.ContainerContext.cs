@@ -120,10 +120,6 @@ namespace Unity
 
             #region IPolicyList
 
-            public void ClearAll()
-            {
-            }
-
             public object Get(Type type, string name, Type policyInterface) 
                 => _container.GetPolicy(type, name, policyInterface);
 
