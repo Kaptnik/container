@@ -50,16 +50,23 @@ namespace Unity.Strategies.Build
         /// <param name="context">The context for the operation.</param>
         public override void PreBuildUp(IBuilderContext context)
         {
+            // Verify the type we're trying to build is actually constructable -
+            // CLR primitive types like string and int aren't.
+            var typeToBuild = context.BuildKey.Type;
+
+            if (!typeToBuild.GetTypeInfo().IsInterface)
+            {
+                if (ReferenceEquals(typeToBuild, typeof(string)))
+                {
+                    throw new InvalidOperationException( string.Format( CultureInfo.CurrentCulture,
+                        Constants.TypeIsNotConstructable, typeToBuild.GetTypeInfo().Name));
+                }
+            }
+
             DynamicBuildPlanGenerationContext buildContext = (DynamicBuildPlanGenerationContext)context.Existing;
-
-            GuardTypeIsNonPrimitive(context);
-
-            buildContext.AddToBuildPlan(
-                 Expression.IfThen(
-                        Expression.Equal(
-                            Expressions.ExistingProperty,
-                            Expression.Constant(null)),
-                            CreateInstanceBuildupExpression(buildContext, context)));
+            buildContext.AddToBuildPlan(Expression.IfThen(Expression.Equal(Expressions.ExistingProperty,
+                                                                            Expression.Constant(null)),
+                CreateInstanceBuildupExpression(buildContext, context)));
 
             var policy = context.Policies.Get(context.OriginalBuildKey.Type, context.OriginalBuildKey.Name, typeof(ILifetimePolicy));
             if (policy is PerResolveLifetimeManager)
@@ -74,11 +81,11 @@ namespace Unity.Strategies.Build
             var targetTypeInfo = context.BuildKey.Type.GetTypeInfo();
 
             if (targetTypeInfo.IsInterface) return ThrowOnInterfaceExpression;
-            if (targetTypeInfo.IsAbstract)  return ThrowOnAbstractClassExpression;
+            if (targetTypeInfo.IsAbstract) return ThrowOnAbstractClassExpression;
             if (targetTypeInfo.IsSubclassOf(typeof(Delegate))) return ThrowOnDelegateExpression;
 
             var selector = context.Policies.GetPolicy<SelectConstructorDelegate>(context.OriginalBuildKey);
-            var selectedConstructor = selector(context);
+            var selectedConstructor = (SelectedConstructor)selector(context);
 
             if (selectedConstructor == null) return ThrowForNullExistingObjectExpression;
 
@@ -102,7 +109,7 @@ namespace Unity.Strategies.Build
         {
             if (selectedConstructor.Constructor.GetParameters().Any(p => Equals(p.ParameterType.GetTypeInfo(), target)))
             {
-                var policy = (ILifetimePolicy)context.Policies.Get(context.BuildKey.Type,  context.BuildKey.Name,  typeof(ILifetimePolicy));
+                var policy = (ILifetimePolicy)context.Policies.Get(context.BuildKey.Type, context.BuildKey.Name, typeof(ILifetimePolicy));
                 if (null == policy?.GetValue())
                     return true;
             }
@@ -189,24 +196,6 @@ namespace Unity.Strategies.Build
                 string.Join(", ", parameterDescriptions));
         }
 
-        // Verify the type we're trying to build is actually constructable -
-        // CLR primitive types like string and int aren't.
-        private static void GuardTypeIsNonPrimitive(IBuilderContext context)
-        {
-            var typeToBuild = context.BuildKey.Type;
-            if (!typeToBuild.GetTypeInfo().IsInterface)
-            {
-                if (ReferenceEquals(typeToBuild, typeof(string)))
-                {
-                    throw new InvalidOperationException(
-                        string.Format(
-                            CultureInfo.CurrentCulture,
-                            Constants.TypeIsNotConstructable,
-                            typeToBuild.GetTypeInfo().Name));
-                }
-            }
-        }
-
         /// <summary>
         /// A helper method used by the generated IL to store the current operation in the build context.
         /// </summary>
@@ -236,7 +225,7 @@ namespace Unity.Strategies.Build
             throw new InvalidOperationException(
                 string.Format(CultureInfo.CurrentCulture,
                     Constants.CannotConstructInterface,
-                    context.BuildKey.Type), 
+                    context.BuildKey.Type),
                 new InvalidRegistrationException());
         }
 
@@ -251,8 +240,8 @@ namespace Unity.Strategies.Build
         {
             throw new InvalidOperationException(
                 string.Format(CultureInfo.CurrentCulture,
-                    Constants.CannotConstructAbstractClass, 
-                    context.BuildKey.Type), 
+                    Constants.CannotConstructAbstractClass,
+                    context.BuildKey.Type),
                 new InvalidRegistrationException());
         }
 
@@ -267,14 +256,14 @@ namespace Unity.Strategies.Build
         {
             throw new InvalidOperationException(
                 string.Format(
-                    CultureInfo.CurrentCulture, Constants.CannotConstructDelegate, 
-                    context.BuildKey.Type), 
+                    CultureInfo.CurrentCulture, Constants.CannotConstructDelegate,
+                    context.BuildKey.Type),
                 new InvalidRegistrationException());
         }
 
         public class InvalidRegistrationException : Exception
         {
-            
+
         }
 
         /// <summary>

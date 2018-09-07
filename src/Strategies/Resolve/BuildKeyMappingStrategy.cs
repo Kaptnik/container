@@ -80,7 +80,7 @@ namespace Unity.Strategies.Resolve
 
         #region Registration and Analysis
 
-        public override bool RequiredToBuildType(IUnityContainer container, INamedType namedType, params IInjectionMember[] injectionMembers)
+        public override bool RequiredToBuildType(IUnityContainer container, INamedType namedType, params InjectionMember[] injectionMembers)
         {
             switch (namedType)
             {
@@ -95,7 +95,7 @@ namespace Unity.Strategies.Resolve
             }
         }
 
-        private bool AnaliseStaticRegistration(ContainerRegistration registration, params IInjectionMember[] injectionMembers)
+        private bool AnaliseStaticRegistration(ContainerRegistration registration, params InjectionMember[] injectionMembers)
         {
             // Validate input  
             if (null == registration.MappedToType || registration.RegisteredType == registration.MappedToType) return false;

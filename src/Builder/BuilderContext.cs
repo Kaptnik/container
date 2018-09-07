@@ -132,8 +132,6 @@ namespace Unity.Builder
 
         public IBuilderContext ParentContext { get; private set; }
 
-        public IPolicyList PersistentPolicies => this;
-
         public void AddResolverOverrides(IEnumerable<ResolverOverride> newOverrides)
         {
             if (null == _resolverOverrides)
@@ -275,40 +273,6 @@ namespace Unity.Builder
                 _container.ClearPolicy(type, name, policyInterface);
             else
                 Registration.Clear(policyInterface);
-        }
-
-        #endregion
-
-
-        #region Registration
-
-        object Get(Type type, string name, Type policyInterface)
-        {
-            if (!ReferenceEquals(type, OriginalBuildKey.Type) || name != OriginalBuildKey.Name)
-                return _container.GetPolicy(type, name, policyInterface);
-
-            return Registration.Get(policyInterface);
-
-        }
-
-        void Set(Type type, string name, Type policyInterface, object policy)
-        {
-            if (type != OriginalBuildKey.Type || name != OriginalBuildKey.Name)
-                _container.SetPolicy(type, name, policyInterface, policy);
-            else
-                Registration.Set(policyInterface, policy);
-        }
-
-        void Clear(Type type, string name, Type policyInterface)
-        {
-            if (!ReferenceEquals(type, OriginalBuildKey.Type) || name != OriginalBuildKey.Name)
-                _container.ClearPolicy(type, name, policyInterface);
-            else
-                Registration.Clear(policyInterface);
-        }
-
-        void ClearAll()
-        {
         }
 
         #endregion

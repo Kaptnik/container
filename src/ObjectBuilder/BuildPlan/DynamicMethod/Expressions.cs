@@ -1,6 +1,9 @@
-﻿using System.Linq.Expressions;
+﻿using System;
+using System.Linq;
+using System.Linq.Expressions;
 using System.Reflection;
 using Unity.Builder;
+using static Unity.Strategies.Build.ConstructorBuildStrategy;
 
 namespace Unity.ObjectBuilder.BuildPlan.DynamicMethod
 {
@@ -29,8 +32,8 @@ namespace Unity.ObjectBuilder.BuildPlan.DynamicMethod
 
         public static readonly ParameterExpression ContextParameter = Expression.Parameter(typeof(IBuilderContext), "context");
 
-        //public static readonly Expression TypeBeingConstructedProperty = Expression.Property(ContextParameter,
-        //    typeof(IBuilderContext).GetTypeInfo().GetDeclaredProperty(nameof(IBuilderContext.TypeBeingConstructed)));
+        public static readonly Expression TypeBeingConstructedProperty = Expression.Property(ContextParameter,
+            typeof(IBuilderContext).GetTypeInfo().GetDeclaredProperty(nameof(IBuilderContext.TypeBeingConstructed)));
 
         public static readonly Expression CurrentOperationProperty = Expression.Property(ContextParameter,
             typeof(IBuilderContext).GetTypeInfo().GetDeclaredProperty(nameof(IBuilderContext.CurrentOperation)));
