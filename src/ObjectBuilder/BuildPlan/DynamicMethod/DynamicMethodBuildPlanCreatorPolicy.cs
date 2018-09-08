@@ -1,7 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation. All rights reserved. See License.txt in the project root for license information.
-
-using System;
-using Unity.Builder;
+﻿using Unity.Builder;
 using Unity.Builder.Strategy;
 using Unity.Policy;
 using Unity.Strategy;

@@ -17,7 +17,7 @@ using Unity.Lifetime;
 using Unity.ObjectBuilder.BuildPlan.DynamicMethod;
 using Unity.ObjectBuilder.Policies;
 using Unity.Policy;
-using Unity.Policy.BuildPlanCreator;
+using Unity.Policy.Factory;
 using Unity.Registration;
 using Unity.Storage;
 using Unity.Strategies.Build;
@@ -142,8 +142,8 @@ namespace Unity
             // Default Policies
             Set(null, null, GetDefaultPolicies());
             Set(typeof(Func<>), string.Empty, typeof(ILifetimePolicy), new PerResolveLifetimeManager());
-            Set(typeof(Func<>), string.Empty, typeof(IBuildPlanPolicy), new DeferredResolveCreatorPolicy());
-            Set(typeof(Lazy<>), string.Empty, typeof(IBuildPlanCreatorPolicy), new GenericLazyBuildPlanCreatorPolicy(_context.Policies));
+            Set(typeof(Func<>), string.Empty, typeof(ResolverDelegate), DeferredFuncResolver.ResolverDelegate);
+            Set(typeof(Lazy<>), string.Empty, typeof(FactoryDelegate<IBuilderContext, ResolverDelegate>), DeferredLazyResolverFactory.FactoryDelegate);
 
             // Register this instance
             RegisterInstance(typeof(IUnityContainer), null, this, new ContainerLifetimeManager());

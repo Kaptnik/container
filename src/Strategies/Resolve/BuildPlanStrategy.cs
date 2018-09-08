@@ -33,6 +33,17 @@ namespace Unity.Strategies.Resolve
 
             if (null == resolver)
             {
+                var factory = context.Registration.Get<FactoryDelegate<IBuilderContext, ResolverDelegate>>() ?? 
+                              CheckIfOpenGeneric<FactoryDelegate<IBuilderContext, ResolverDelegate>>(context.Registration) ??
+                              GetPolicy<FactoryDelegate<IBuilderContext, ResolverDelegate>>(context.Policies, context.BuildKey);
+
+                resolver = factory?.Invoke(context);
+                if (null != resolver)context.Registration.Set(typeof(ResolverDelegate), resolver);
+            }
+
+            // Legacy support
+            if (null == resolver)
+            {
                 var plan = context.Registration.Get<IBuildPlanPolicy>() ?? (IBuildPlanPolicy)(
                                context.Policies.Get(context.BuildKey.Type, string.Empty, typeof(IBuildPlanPolicy)) ??
                                GetGeneric(context.Policies, typeof(IBuildPlanPolicy),
@@ -41,7 +52,8 @@ namespace Unity.Strategies.Resolve
 
                 if (plan == null || plan is OverriddenBuildPlanMarkerPolicy)
                 {
-                    var planCreator = context.Registration.Get<IBuildPlanCreatorPolicy>() ?? CheckIfOpenGeneric(context.Registration) ??
+                    var planCreator = context.Registration.Get<IBuildPlanCreatorPolicy>() ?? 
+                                      CheckIfOpenGeneric<IBuildPlanCreatorPolicy>(context.Registration) ??
                                       GetPolicy<IBuildPlanCreatorPolicy>(context.Policies, context.BuildKey);
                     if (planCreator != null)
                     {
@@ -84,7 +96,7 @@ namespace Unity.Strategies.Resolve
             return null;
         }
 
-        private static IBuildPlanCreatorPolicy CheckIfOpenGeneric(IPolicySet namedType)
+        private static T CheckIfOpenGeneric<T>(IPolicySet namedType)
         {
             if (namedType is InternalRegistration registration && !(namedType is ContainerRegistration) && 
                 null != registration.Type && registration.Type.GetTypeInfo().IsGenericTypeDefinition)
@@ -93,7 +105,7 @@ namespace Unity.Strategies.Resolve
                     Constants.CannotResolveOpenGenericType, registration.Type.FullName));
             }
 
-            return null;
+            return default;
         }
 
         #endregion

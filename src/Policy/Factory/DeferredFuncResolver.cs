@@ -3,22 +3,17 @@ using System.Reflection;
 using Unity.Build.Delegates;
 using Unity.Builder;
 
-namespace Unity.Policy
+namespace Unity.Policy.Factory
 {
-
-    /// <summary>
-    /// Build plan for <see cref="Func{TResult}"/> that will return a Func that will resolve the requested type
-    /// through this container later.
-    /// </summary>
-    internal class SupportedTypesCreatorPolicy
+    internal class DeferredFuncResolver
     {
         private delegate Func<T> ReturnDelegate<out T>(IBuilderContext context);
 
         private static readonly MethodInfo DeferredResolveMethodInfo 
-            = typeof(SupportedTypesCreatorPolicy).GetTypeInfo()
+            = typeof(DeferredFuncResolver).GetTypeInfo()
                                                   .GetDeclaredMethod(nameof(DeferredResolve));
 
-        public static ResolverDelegate DeferredResolverDelegate => context =>
+        public static ResolverDelegate ResolverDelegate => context =>
         {
             var typeToBuild = context.BuildKey.Type.GetTypeInfo().GenericTypeArguments[0];
             var delegateType = typeof(ReturnDelegate<>).MakeGenericType(typeToBuild);
