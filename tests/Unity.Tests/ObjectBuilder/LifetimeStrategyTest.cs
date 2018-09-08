@@ -48,9 +48,9 @@ namespace Unity.Tests.v5.ObjectBuilder
 
             context.ExecuteBuildUp(key, null);
 
-            Assert.IsNotNull(context.RequiresRecovery);
+            Assert.IsNotNull(context.RequireRecovery);
 
-            context.RequiresRecovery.Recover();
+            context.RequireRecovery.Recover();
             Assert.IsTrue(recovery.WasRecovered);
         }
 
@@ -62,7 +62,7 @@ namespace Unity.Tests.v5.ObjectBuilder
             return context;
         }
 
-        private class RecoverableLifetime : ILifetimePolicy, IRequiresRecovery
+        private class RecoverableLifetime : ILifetimePolicy, IRequireRecovery
         {
             public bool WasRecovered = false;
 

@@ -1,5 +1,6 @@
 ﻿using System;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Unity.Build.Policy;
 using Unity.Builder;
 using Unity.Builder.Strategy;
 using Unity.Exceptions;
@@ -7,7 +8,7 @@ using Unity.Tests.v5.TestSupport;
 
 namespace Unity.Tests.v5.ObjectBuilder
 {
-    // Testing that the IRequiresRecovery interface is
+    // Testing that the IRequireRecovery interface is
     // properly handled in the buildup process.
     [TestClass]
     public class RecoveryFixture
@@ -17,7 +18,7 @@ namespace Unity.Tests.v5.ObjectBuilder
         {
             var recovery = new RecoveryObject();
             MockBuilderContext context = GetContext();
-            context.RequiresRecovery = recovery;
+            context.RequireRecovery = recovery;
 
             try
             {
@@ -39,7 +40,7 @@ namespace Unity.Tests.v5.ObjectBuilder
             return context;
         }
 
-        private class RecoveryObject : IRequiresRecovery
+        private class RecoveryObject : IRequireRecovery
         {
             public bool WasRecovered;
 

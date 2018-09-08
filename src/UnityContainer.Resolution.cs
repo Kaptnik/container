@@ -55,7 +55,7 @@ namespace Unity
             }
             catch (Exception ex)
             {
-                context.RequiresRecovery?.Recover();
+                context.RequireRecovery?.Recover();
                 throw new ResolutionFailedException(context.OriginalBuildKey.Type,
                                                     context.OriginalBuildKey.Name,
                                                     CreateMessage(context.OriginalBuildKey.Type,

@@ -68,8 +68,8 @@ namespace Unity.Strategies.Resolve
                 return;
             }
 
-            if (policy is IRequiresRecovery recoveryPolicy)
-                context.RequiresRecovery = recoveryPolicy;
+            if (policy is IRequireRecovery recoveryPolicy)
+                context.RequireRecovery = recoveryPolicy;
         }
 
         public override void PostBuildUp(IBuilderContext context)

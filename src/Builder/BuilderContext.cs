@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using Unity.Build.Delegates;
+using Unity.Build.Policy;
 using Unity.Builder.Strategy;
 using Unity.Container;
 using Unity.Exceptions;
@@ -120,7 +121,7 @@ namespace Unity.Builder
 
         public IPolicyList Policies { get; private set; }
 
-        public IRequiresRecovery RequiresRecovery { get; set; }
+        public IRequireRecovery RequireRecovery { get; set; }
 
         public bool BuildComplete { get; set; }
 
@@ -178,7 +179,7 @@ namespace Unity.Builder
             }
             catch (Exception)
             {
-                RequiresRecovery?.Recover();
+                RequireRecovery?.Recover();
                 throw;
             }
 
@@ -206,7 +207,7 @@ namespace Unity.Builder
             }
             catch (Exception)
             {
-                ChildContext.RequiresRecovery?.Recover();
+                ChildContext.RequireRecovery?.Recover();
                 throw;
             }
 
@@ -238,7 +239,7 @@ namespace Unity.Builder
             }
             catch (Exception)
             {
-                ChildContext.RequiresRecovery?.Recover();
+                ChildContext.RequireRecovery?.Recover();
                 throw;
             }
 

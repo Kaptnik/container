@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using Unity.Build.Policy;
 using Unity.Builder;
 using Unity.Builder.Strategy;
 using Unity.ObjectBuilder.BuildPlan.DynamicMethod;
@@ -102,7 +103,7 @@ namespace Unity.Strategies.Resolve
 
             // Require Re-Resolve if no injectors specified
             var buildRequired = registration.LifetimeManager is IRequireBuildUpPolicy ||
-                (injectionMembers?.Any(m => m.BuildRequired) ?? false);
+                (injectionMembers?.Any(m => m is IRequireBuildUpPolicy) ?? false);
 
             // Set mapping policy
             var policy = registration.RegisteredType.GetTypeInfo().IsGenericTypeDefinition &&

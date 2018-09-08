@@ -49,7 +49,7 @@ namespace Unity.Container
             }
             catch (Exception)
             {
-                context.RequiresRecovery?.Recover();
+                context.RequireRecovery?.Recover();
                 throw;
             }
         }

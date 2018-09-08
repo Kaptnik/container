@@ -94,7 +94,7 @@ namespace Unity.Tests.v5.TestSupport
             }
             catch (Exception)
             {
-                context.RequiresRecovery?.Recover();
+                context.RequireRecovery?.Recover();
                 throw;
             }
         }

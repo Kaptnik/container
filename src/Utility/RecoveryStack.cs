@@ -2,6 +2,7 @@
 
 using System;
 using System.Collections.Generic;
+using Unity.Build.Policy;
 using Unity.Exceptions;
 
 namespace Unity.Utility
@@ -11,15 +12,15 @@ namespace Unity.Utility
     /// </summary>
     public class RecoveryStack : IRecoveryStack
     {
-        private readonly Stack<IRequiresRecovery> _recoveries = new Stack<IRequiresRecovery>();
+        private readonly Stack<IRequireRecovery> _recoveries = new Stack<IRequireRecovery>();
         private readonly object _lockObj = new object();
 
         /// <summary>
-        /// Add a new <see cref="IRequiresRecovery"/> object to this
+        /// Add a new <see cref="IRequireRecovery"/> object to this
         /// list.
         /// </summary>
         /// <param name="recovery">Object to add.</param>
-        public void Add(IRequiresRecovery recovery)
+        public void Add(IRequireRecovery recovery)
         {
             lock (_lockObj)
             {
@@ -42,7 +43,7 @@ namespace Unity.Utility
         }
 
         /// <summary>
-        /// Execute the <see cref="IRequiresRecovery.Recover"/> method
+        /// Execute the <see cref="IRequireRecovery.Recover"/> method
         /// of everything in the recovery list. Recoveries will execute
         /// in the opposite order of add - it's a stack.
         /// </summary>
