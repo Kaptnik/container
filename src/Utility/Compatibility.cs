@@ -187,6 +187,12 @@ namespace Unity
             return new TypeInfo(type);
         }
 
+
+        public static MethodInfo GetMethodInfo(this Delegate method)
+        {
+            return method.Method;
+        }
+
         public static Delegate CreateDelegate(this MethodInfo method, Type delegateType)
         {
             return Delegate.CreateDelegate(delegateType, method);

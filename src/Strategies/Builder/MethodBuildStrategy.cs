@@ -10,9 +10,10 @@ using Unity.Builder;
 using Unity.Builder.Operation;
 using Unity.Builder.Strategy;
 using Unity.Exceptions;
+using Unity.Factory.Compiled;
 using Unity.ObjectBuilder.BuildPlan.DynamicMethod;
 
-namespace Unity.Strategies.Build
+namespace Unity.Strategies.Builder
 {
     /// <summary>
     /// A <see cref="BuilderStrategy"/> that generates IL to call

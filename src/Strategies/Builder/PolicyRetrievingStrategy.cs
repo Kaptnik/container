@@ -1,8 +1,9 @@
-﻿using System.Reflection;
+﻿using System;
+using System.Reflection;
 using Unity.Builder;
 using Unity.Storage;
 
-namespace Unity.Strategies.Build
+namespace Unity.Strategies.Builder
 {
     /// <summary>
     /// Extension methods on <see cref="IPolicyList"/> to provide convenience

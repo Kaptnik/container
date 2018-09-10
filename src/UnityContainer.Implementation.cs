@@ -21,6 +21,7 @@ using Unity.Policy.Factory;
 using Unity.Registration;
 using Unity.Storage;
 using Unity.Strategies.Build;
+using Unity.Strategies.Builder;
 using Unity.Strategies.Resolve;
 using Unity.Strategy;
 
@@ -200,8 +201,10 @@ namespace Unity
             var defaults = new InternalRegistration(null, null);
             var paramFactory = new DefaultParameterResolverPolicy();
 
-            defaults.Set(typeof(IBuildPlanCreatorPolicy),    new DynamicMethodBuildPlanCreatorPolicy(_buildPlanStrategies));
-            defaults.Set(typeof(SelectConstructorDelegate),  new DefaultConstructorSelectorPolicy(paramFactory).SelectDelegate);
+            defaults.Set(typeof(FactoryDelegate<IBuilderContext, ResolverDelegate>), CompiledBuildStrategy.FactoryDelegate);
+            defaults.Set(typeof(IBuildPlanCreatorPolicy), new DynamicMethodBuildPlanCreatorPolicy(_buildPlanStrategies));
+            defaults.Set(typeof(SelectConstructorDelegate), new DefaultConstructorSelectorPolicy(paramFactory).SelectConstructorDelegate);
+            defaults.Set(typeof(SelectCtorDelegate),        new DefaultConstructorSelectorPolicy(paramFactory).SelectDelegate);
             defaults.Set(typeof(SelectPropertiesDelegate),   new DefaultPropertySelectorPolicy().SelectDelegate);
             defaults.Set(typeof(SelectMethodsDelegate),      new DefaultMethodSelectorPolicy(paramFactory).SelectDelegate);
             defaults.Set(typeof(DefaultParameterResolverPolicy), paramFactory);

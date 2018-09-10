@@ -5,6 +5,7 @@ using System.Linq.Expressions;
 using System.Reflection;
 using Unity.Build.Delegates;
 using Unity.Builder;
+using Unity.Factory.Compiled;
 
 namespace Unity.ObjectBuilder.BuildPlan.DynamicMethod
 {
@@ -72,12 +73,12 @@ namespace Unity.ObjectBuilder.BuildPlan.DynamicMethod
                 new[] { savedOperationExpression, savedConstructedTypeExpression, resolvedObjectExpression },
 
                 Expression.Assign(savedOperationExpression,       Expressions.CurrentOperationProperty),
-                Expression.Assign(savedConstructedTypeExpression, Expressions.TypeBeingConstructedProperty),
+                Expression.Assign(savedConstructedTypeExpression, Expressions.TypeProperty),
                 
                 setOperationExpression,
                 Expression.Assign( resolvedObjectExpression, GetResolveDependencyExpression(parameterType, resolver)),
 
-                Expression.Assign(Expressions.TypeBeingConstructedProperty, savedConstructedTypeExpression),
+                Expression.Assign(Expressions.TypeProperty, savedConstructedTypeExpression),
                 Expression.Assign(Expressions.CurrentOperationProperty, savedOperationExpression), 
 
                 resolvedObjectExpression);

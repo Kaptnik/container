@@ -4,17 +4,18 @@ using System.Globalization;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
-using Unity.Build.Delegates;
 using Unity.Build.Policy;
 using Unity.Build.Selection;
 using Unity.Builder;
 using Unity.Builder.Operation;
 using Unity.Builder.Strategy;
 using Unity.Container.Lifetime;
+using Unity.Exceptions;
+using Unity.Factory.Compiled;
 using Unity.Lifetime;
 using Unity.ObjectBuilder.BuildPlan.DynamicMethod;
 
-namespace Unity.Strategies.Build
+namespace Unity.Strategies.Builder
 {
     /// <summary>
     /// A <see cref="BuilderStrategy"/> that emits IL to call constructors
@@ -84,7 +85,7 @@ namespace Unity.Strategies.Build
             if (targetTypeInfo.IsAbstract) return ThrowOnAbstractClassExpression;
             if (targetTypeInfo.IsSubclassOf(typeof(Delegate))) return ThrowOnDelegateExpression;
 
-            var selector = context.Policies.GetPolicy<SelectConstructorDelegate>(context.OriginalBuildKey);
+            var selector = context.Policies.GetPolicy<SelectCtorDelegate>(context.OriginalBuildKey);
             var selectedConstructor = (SelectedConstructor)selector(context);
 
             if (selectedConstructor == null) return ThrowForNullExistingObjectExpression;
@@ -142,7 +143,7 @@ namespace Unity.Strategies.Build
             int i = 0;
             var constructionParameters = selectedConstructor.Constructor.GetParameters();
 
-            foreach (ResolverDelegate parameterResolver in selectedConstructor.GetParameterResolvers())
+            foreach (Unity.Build.Delegates.ResolverDelegate parameterResolver in selectedConstructor.GetParameterResolvers())
             {
                 var target = parameterResolver.Target;
 
@@ -210,7 +211,7 @@ namespace Unity.Strategies.Build
         public static void SetCurrentOperationToInvokingConstructor(ConstructorInfo info, IBuilderContext context, Type type)
         {
             context.CurrentOperation = info;
-            context.TypeBeingConstructed = type;
+            context.Type = type;
         }
 
         /// <summary>
@@ -259,11 +260,6 @@ namespace Unity.Strategies.Build
                     CultureInfo.CurrentCulture, Constants.CannotConstructDelegate,
                     context.BuildKey.Type),
                 new InvalidRegistrationException());
-        }
-
-        public class InvalidRegistrationException : Exception
-        {
-
         }
 
         /// <summary>

@@ -81,7 +81,7 @@ namespace Unity.Tests.v5.TestSupport
         public bool BuildComplete { get; set; }
 
         public object CurrentOperation { get; set; }
-        public Type TypeBeingConstructed { get; set; }
+        public Type Type { get; set; }
 
         public IBuilderContext ChildContext { get; set; }
 

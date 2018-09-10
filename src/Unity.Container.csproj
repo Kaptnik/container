@@ -22,16 +22,23 @@
     <RootNamespace>Unity</RootNamespace>
     <PackageTags>Unity Container unitycontainer Microsoft.Practices.Unity IoC</PackageTags>
     <LangVersion>latest</LangVersion>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
 
   <ItemGroup Condition="'$(TargetFramework)' != '' AND '$(TargetFramework)' != 'netstandard1.0' ">
     <Compile Remove="Utility\ConcurrentDictionary.cs" />
   </ItemGroup>
 
-
   <PropertyGroup>
     <UnityAbstractions>..\..\Abstractions\src\Unity.Abstractions.csproj</UnityAbstractions>
   </PropertyGroup>
+
+  <ItemGroup Condition="'$(TargetFramework)' != '' AND '$(TargetFramework)' != 'net40' ">
+    <PackageReference Include="System.Runtime.CompilerServices.Unsafe">
+      <Version>4.5.1</Version>
+    </PackageReference>
+  </ItemGroup>
+
 
   <ItemGroup Condition="Exists('$(UnityAbstractions)')">
     <ProjectReference Include="$(UnityAbstractions)" />
@@ -47,6 +54,10 @@
     <None Remove="ResolverPolicy\**" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Factory\Activated\" />
+  </ItemGroup>
+
 
   <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
@@ -58,5 +69,6 @@
     <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
     <DebugType>Full</DebugType>
   </PropertyGroup>
+
 
 </Project>

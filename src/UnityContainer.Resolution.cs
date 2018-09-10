@@ -7,7 +7,6 @@ using Unity.Builder;
 using Unity.Exceptions;
 using Unity.Registration;
 using Unity.Storage;
-using Unity.Strategies.Build;
 
 namespace Unity
 {
@@ -138,7 +137,7 @@ namespace Unity
                 catch (Policy.Mapping.MakeGenericTypeFailedException) { /* Ignore */ }
                 catch (InvalidOperationException ex)
                 {
-                    if (!(ex.InnerException is ConstructorBuildStrategy.InvalidRegistrationException))
+                    if (!(ex.InnerException is InvalidRegistrationException))
                         throw;
                 }
             }
