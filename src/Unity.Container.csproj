@@ -49,14 +49,15 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Compile Remove="Build\**" />
+    <Compile Remove="Factory\**" />
     <Compile Remove="ResolverPolicy\**" />
+    <EmbeddedResource Remove="Build\**" />
+    <EmbeddedResource Remove="Factory\**" />
     <EmbeddedResource Remove="ResolverPolicy\**" />
+    <None Remove="Build\**" />
+    <None Remove="Factory\**" />
     <None Remove="ResolverPolicy\**" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="Build\" />
-    <Folder Include="Factory\Activated\" />
   </ItemGroup>
 
 

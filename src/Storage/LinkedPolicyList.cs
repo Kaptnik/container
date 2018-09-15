@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
 using Unity.Policy;
 
 namespace Unity.Storage
@@ -17,12 +15,7 @@ namespace Unity.Storage
             throw new NotImplementedException();
         }
 
-        public void ClearAll()
-        {
-            throw new NotImplementedException();
-        }
-
-        public object Get(Type type, string name, Type policyInterface, out IPolicyList list)
+        public object Get(Type type, string name, Type policyInterface)
         {
             throw new NotImplementedException();
         }

@@ -34,7 +34,7 @@ namespace Unity
     {
         #region Delegates
 
-        internal delegate object GetPolicyDelegate(Type type, string name, Type policyInterface, out IPolicyList list);
+        internal delegate object GetPolicyDelegate(Type type, string name, Type policyInterface);
         internal delegate void SetPolicyDelegate(Type type, string name, Type policyInterface, object policy);
         internal delegate void ClearPolicyDelegate(Type type, string name, Type policyInterface);
 
@@ -427,12 +427,11 @@ namespace Unity
 
             #region IPolicyList
 
-            public object Get(Type type, string name, Type policyInterface, out IPolicyList list)
+            public object Get(Type type, string name, Type policyInterface)
             {
                 if (_registration.Type != type || _registration.Name != name)
-                    return _container.GetPolicy(type, name, policyInterface, out list);
+                    return _container.GetPolicy(type, name, policyInterface);
 
-                list = this;
                 return _registration.Get(policyInterface);
             }
 

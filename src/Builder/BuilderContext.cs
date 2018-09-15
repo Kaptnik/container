@@ -8,6 +8,7 @@ using Unity.Lifetime;
 using Unity.Policy;
 using Unity.Registration;
 using Unity.Resolution;
+using Unity.Storage;
 using Unity.Strategy;
 
 namespace Unity.Builder
@@ -39,7 +40,7 @@ namespace Unity.Builder
             Registration = registration;
             OriginalBuildKey = registration;
             BuildKey = OriginalBuildKey;
-            Policies = new Storage.PolicyList(this);
+            Policies = new PolicyList(this);
 
             _ownsOverrides = true;
             if (null != resolverOverrides && 0 < resolverOverrides.Length)
@@ -248,15 +249,12 @@ namespace Unity.Builder
 
         #region  : Policies
 
-        object IPolicyList.Get(Type type, string name, Type policyInterface, out IPolicyList list)
+        object IPolicyList.Get(Type type, string name, Type policyInterface)
         {
-            list = null;
-
             if (!ReferenceEquals(type, OriginalBuildKey.Type) || name != OriginalBuildKey.Name)
-                return _container.GetPolicy(type, name, policyInterface, out list);
+                return _container.GetPolicy(type, name, policyInterface);
 
             var result = Registration.Get(policyInterface);
-            if (null != result) list = this;
 
             return result;
         }
@@ -274,10 +272,6 @@ namespace Unity.Builder
                 Registration.Clear(policyInterface);
         }
 
-        void IPolicyList.ClearAll()
-        {
-        }
-
         #endregion
 
 
@@ -288,7 +282,7 @@ namespace Unity.Builder
             list = null;
 
             if (!ReferenceEquals(type, OriginalBuildKey.Type) || name != OriginalBuildKey.Name)
-                return _container.GetPolicy(type, name, policyInterface, out list);
+                return _container.GetPolicy(type, name, policyInterface);
 
             var result = Registration.Get(policyInterface);
             if (null != result) list = this;
@@ -310,10 +304,6 @@ namespace Unity.Builder
                 _container.ClearPolicy(type, name, policyInterface);
             else
                 Registration.Clear(policyInterface);
-        }
-
-        void ClearAll()
-        {
         }
 
         #endregion

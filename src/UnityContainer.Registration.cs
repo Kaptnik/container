@@ -598,9 +598,8 @@ namespace Unity
 
         #region Local policy manipulation
 
-        private object Get(Type type, string name, Type policyInterface, out IPolicyList list)
+        private object Get(Type type, string name, Type policyInterface)
         {
-            list = null;
             object policy = null;
             var hashCode = (type?.GetHashCode() ?? 0) & 0x7FFFFFFF;
             var targetBucket = hashCode % _registrations.Buckets.Length;
@@ -616,13 +615,7 @@ namespace Unity
                 break;
             }
 
-            if (null != policy)
-            {
-                list = _context.Policies;
-                return policy;
-            }
-
-            return _parent?.GetPolicy(type, name, policyInterface, out list);
+            return policy ?? _parent?.GetPolicy(type, name, policyInterface);
         }
 
         private void Set(Type type, string name, Type policyInterface, object policy)
