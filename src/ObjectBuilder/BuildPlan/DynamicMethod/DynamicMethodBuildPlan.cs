@@ -1,6 +1,4 @@
-﻿
-
-using Unity.Builder;
+﻿using Unity.Builder;
 using Unity.Policy;
 
 namespace Unity.ObjectBuilder.BuildPlan.DynamicMethod
@@ -31,7 +29,7 @@ namespace Unity.ObjectBuilder.BuildPlan.DynamicMethod
         /// 
         /// </summary>
         /// <param name="context"></param>
-        public void BuildUp(IBuilderContext context)
+        public void BuildUp<T>(ref T context) where T : IBuilderContext
         {
             _buildMethod(context);
         }

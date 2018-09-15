@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Unity.Builder;
 using Unity.Builder.Strategy;
+using Unity.Exceptions;
 using Unity.Strategy;
 
 namespace Unity.Container
@@ -31,26 +32,25 @@ namespace Unity.Container
         /// </summary>
         /// <param name="builderContext">Context for the build processes.</param>
         /// <returns>The build up object</returns>
-        public void BuildUp(IBuilderContext builderContext)
+        public void BuildUp<T>(ref T builderContext) where T : IBuilderContext
         {
-            var context = builderContext ?? throw new ArgumentNullException(nameof(builderContext));
             var i = -1;
 
             try
             {
-                while (!context.BuildComplete && ++i < _strategies.Length)
+                while (!builderContext.BuildComplete && ++i < _strategies.Length)
                 {
-                    _strategies[i].PreBuildUp(context);
+                    _strategies[i].PreBuildUp(ref builderContext);
                 }
 
                 while (--i >= 0)
                 {
-                    _strategies[i].PostBuildUp(context);
+                    _strategies[i].PostBuildUp(ref builderContext);
                 }
             }
             catch (Exception)
             {
-                context.RequiresRecovery?.Recover();
+                builderContext.RequiresRecovery?.Recover();
                 throw;
             }
         }

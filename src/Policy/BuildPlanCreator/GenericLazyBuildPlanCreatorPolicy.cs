@@ -50,7 +50,7 @@ namespace Unity.Policy.BuildPlanCreator
         /// <returns>
         /// The build plan.
         /// </returns>
-        public IBuildPlanPolicy CreatePlan(IBuilderContext context, INamedType buildKey)
+        public IBuildPlanPolicy CreatePlan<T>(ref T context, INamedType buildKey) where T : IBuilderContext
         {
             var method = CreateBuildPlanMethod(buildKey.Type);
             var plan = new DynamicMethodBuildPlan(method);

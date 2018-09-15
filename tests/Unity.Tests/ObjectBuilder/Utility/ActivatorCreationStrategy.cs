@@ -1,5 +1,4 @@
 ﻿using System;
-using Unity.Builder;
 using Unity.Builder.Strategy;
 
 namespace Unity.Tests.v5.ObjectBuilder.Utility
@@ -12,7 +11,7 @@ namespace Unity.Tests.v5.ObjectBuilder.Utility
         /// forward direction.
         /// </summary>
         /// <param name="context">Context of the build operation.</param>
-        public override void PreBuildUp(IBuilderContext context)
+        public override void PreBuildUp<T>(ref T context)
         {
             if (context.Existing == null)
             {

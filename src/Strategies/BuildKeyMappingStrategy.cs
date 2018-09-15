@@ -22,7 +22,7 @@ namespace Unity.Strategies
         /// and if found maps the build key for the current operation.
         /// </summary>
         /// <param name="context">The context for the operation.</param>
-        public override void PreBuildUp(IBuilderContext context)
+        public override void PreBuildUp<T>(ref T context)
         {
             if (context.OriginalBuildKey is ContainerRegistration registration && 
                 registration.RegisteredType == registration.MappedToType)
@@ -39,14 +39,18 @@ namespace Unity.Strategies
 
             if (!policy.RequireBuild && ((UnityContainer)context.Container).RegistrationExists(context.BuildKey.Type, context.BuildKey.Name))
             {
+                var type = context.BuildKey.Type;
+                var name = context.BuildKey.Name;
+                var existing = context.Existing;
+
                 context.Registration.Set(typeof(IBuildPlanPolicy), 
                     new DynamicMethodBuildPlan(c => 
                     {
-                        ((BuilderContext)c).ChildContext = new BuilderContext(c, context.BuildKey.Type, context.BuildKey.Name);
+                        ((BuilderContext)c).ChildContext = new BuilderContext(c, type, name);
                         ((BuilderContext)c.ChildContext).BuildUp();
 
                         c.Existing = c.ChildContext.Existing;
-                        c.BuildComplete = null != context.Existing;
+                        c.BuildComplete = null != existing;
 
                         ((BuilderContext)c).ChildContext = null;
                     }));
@@ -54,7 +58,7 @@ namespace Unity.Strategies
         }
 
 
-        public override void PostBuildUp(IBuilderContext context)
+        public override void PostBuildUp<T>(ref T context)
         {
             if (context.Registration is InternalRegistration registration && 
                 null != registration.BuildChain &&

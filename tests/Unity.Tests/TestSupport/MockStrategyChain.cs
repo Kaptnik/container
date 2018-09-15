@@ -66,9 +66,8 @@ namespace Unity.Tests.v5.TestSupport
         /// </summary>
         /// <param name="context">Context for the build processes.</param>
         /// <returns>The build up object</returns>
-        public void BuildUp(IBuilderContext builderContext)
+        public void BuildUp<T>(ref T context) where T : IBuilderContext
         {
-            var context = builderContext ?? throw new ArgumentNullException(nameof(builderContext));
             int i = 0;
 
             try
@@ -79,7 +78,7 @@ namespace Unity.Tests.v5.TestSupport
                     {
                         break;
                     }
-                    _strategies[i].PreBuildUp(context);
+                    _strategies[i].PreBuildUp(ref context);
                 }
 
                 if (context.BuildComplete)
@@ -89,7 +88,7 @@ namespace Unity.Tests.v5.TestSupport
 
                 for (--i; i >= 0; --i)
                 {
-                    _strategies[i].PostBuildUp(context);
+                    _strategies[i].PostBuildUp(ref context);
                 }
             }
             catch (Exception)

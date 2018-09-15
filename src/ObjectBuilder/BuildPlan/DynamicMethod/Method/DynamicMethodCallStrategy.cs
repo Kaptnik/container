@@ -1,6 +1,4 @@
-﻿
-
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
@@ -42,9 +40,9 @@ namespace Unity.ObjectBuilder.BuildPlan.DynamicMethod.Method
         /// forward direction.
         /// </summary>
         /// <param name="context">Context of the build operation.</param>
-        public override void PreBuildUp(IBuilderContext context)
+        public override void PreBuildUp<T>(ref T context)
         {
-            var dynamicBuildContext = (DynamicBuildPlanGenerationContext)(context ?? throw new ArgumentNullException(nameof(context))).Existing;
+            var dynamicBuildContext = (DynamicBuildPlanGenerationContext)context.Existing;
 
             var selector = context.Policies.GetPolicy<IMethodSelectorPolicy>(context.OriginalBuildKey);
 

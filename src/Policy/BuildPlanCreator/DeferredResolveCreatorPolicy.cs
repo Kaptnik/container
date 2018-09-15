@@ -1,6 +1,4 @@
-﻿
-
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Reflection;
 using Unity.Builder;
@@ -14,9 +12,9 @@ namespace Unity.Policy.BuildPlanCreator
     /// </summary>
     internal class DeferredResolveCreatorPolicy : IBuildPlanPolicy
     {
-        public void BuildUp(IBuilderContext context)
+        public void BuildUp<T>(ref T context) where T : IBuilderContext
         {
-            if ((context ?? throw new ArgumentNullException(nameof(context))).Existing == null)
+            if (context.Existing == null)
             {
                 Type typeToBuild = GetTypeToBuild(context.BuildKey.Type);
                 string nameToBuild = context.BuildKey.Name;

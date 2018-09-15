@@ -38,7 +38,7 @@ namespace Unity.Strategies
 
         #region Build
 
-        public override void PreBuildUp(IBuilderContext context)
+        public override void PreBuildUp<T>(ref T context)
         {
             var plan = context.Registration.Get<IBuildPlanPolicy>();
             if (plan == null)
@@ -62,7 +62,7 @@ namespace Unity.Strategies
                 context.Registration.Set(typeof(IBuildPlanPolicy), plan);
             }
 
-            plan.BuildUp(context);
+            plan.BuildUp(ref context);
             context.BuildComplete = true;
         }
 

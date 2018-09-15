@@ -54,10 +54,10 @@ namespace Unity.ObjectBuilder.BuildPlan.DynamicMethod.Creation
         /// </summary>
         /// <remarks>Existing object is an instance of <see cref="DynamicBuildPlanGenerationContext"/>.</remarks>
         /// <param name="context">The context for the operation.</param>
-        public override void PreBuildUp(IBuilderContext context)
+        public override void PreBuildUp<T>(ref T context)
         {
             DynamicBuildPlanGenerationContext buildContext =
-                (DynamicBuildPlanGenerationContext)(context ?? throw new ArgumentNullException(nameof(context))).Existing;
+                (DynamicBuildPlanGenerationContext)context.Existing;
 
             GuardTypeIsNonPrimitive(context);
 

@@ -1,6 +1,4 @@
-﻿
-
-using System;
+﻿using System;
 using System.Globalization;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -35,9 +33,9 @@ namespace Unity.ObjectBuilder.BuildPlan.DynamicMethod.Property
         /// Called during the chain of responsibility for a build operation.
         /// </summary>
         /// <param name="context">The context for the operation.</param>
-        public override void PreBuildUp(IBuilderContext context)
+        public override void PreBuildUp<T>(ref T context)
         {
-            var dynamicBuildContext = (DynamicBuildPlanGenerationContext)(context ?? throw new ArgumentNullException(nameof(context))).Existing;
+            var dynamicBuildContext = (DynamicBuildPlanGenerationContext)context.Existing;
 
             var selector = context.Policies.GetPolicy<IPropertySelectorPolicy>( context.OriginalBuildKey);
 

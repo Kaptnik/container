@@ -38,12 +38,12 @@ namespace Unity
             {
                 while (!context.BuildComplete && ++i < chain.Count)
                 {
-                    chain[i].PreBuildUp(context);
+                    chain[i].PreBuildUp(ref context);
                 }
 
                 while (--i >= 0)
                 {
-                    chain[i].PostBuildUp(context);
+                    chain[i].PostBuildUp(ref context);
                 }
             }
             catch (Exception ex)
@@ -65,12 +65,12 @@ namespace Unity
             {
                 while (!context.BuildComplete && ++i < chain.Count)
                 {
-                    chain[i].PreBuildUp(context);
+                    chain[i].PreBuildUp(ref context);
                 }
 
                 while (--i >= 0)
                 {
-                    chain[i].PostBuildUp(context);
+                    chain[i].PostBuildUp(ref context);
                 }
             }
             catch (Exception)

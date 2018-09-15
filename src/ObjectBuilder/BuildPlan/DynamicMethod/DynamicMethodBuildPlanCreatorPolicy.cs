@@ -1,6 +1,4 @@
-﻿
-
-using System;
+﻿using System;
 using Unity.Builder;
 using Unity.Builder.Strategy;
 using Unity.Policy;
@@ -32,14 +30,14 @@ namespace Unity.ObjectBuilder.BuildPlan.DynamicMethod
         /// <param name="context">The current build context.</param>
         /// <param name="buildKey">The current build key.</param>
         /// <returns>The created build plan.</returns>
-        public IBuildPlanPolicy CreatePlan(IBuilderContext context, INamedType buildKey)
+        public IBuildPlanPolicy CreatePlan<T>(ref T context, INamedType buildKey) where T : IBuilderContext
         {
             var generatorContext =
                 new DynamicBuildPlanGenerationContext((buildKey ?? throw new ArgumentNullException(nameof(buildKey))).Type);
 
-            IBuilderContext planContext = new BuilderContext(context ?? throw new ArgumentNullException(nameof(context)), _strategies, generatorContext);
+            IBuilderContext planContext = new BuilderContext(context, _strategies, generatorContext);
 
-            planContext.Strategies.ExecuteBuildUp(planContext);
+            ((BuilderContext)planContext).Strategies.ExecuteBuildUp(ref planContext);
 
             return new DynamicMethodBuildPlan(generatorContext.GetBuildMethod());
         }

@@ -159,17 +159,18 @@ namespace Unity.Builder
         {
             var i = -1;
             var chain = ((InternalRegistration)Registration).BuildChain;
+            var enclosure = this;
 
             try
             {
                 while (!BuildComplete && ++i < chain.Count)
                 {
-                    chain[i].PreBuildUp(this);
+                    chain[i].PreBuildUp(ref enclosure);
                 }
 
                 while (--i >= 0)
                 {
-                    chain[i].PostBuildUp(this);
+                    chain[i].PostBuildUp(ref enclosure);
                 }
             }
             catch (Exception)
@@ -183,7 +184,8 @@ namespace Unity.Builder
 
         public object NewBuildUp(InternalRegistration registration)
         {
-            ChildContext = new BuilderContext(this, registration);
+            var enclosure = new BuilderContext(this, registration);
+            ChildContext = enclosure;
 
             var i = -1;
             var chain = registration.BuildChain;
@@ -192,12 +194,12 @@ namespace Unity.Builder
             {
                 while (!ChildContext.BuildComplete && ++i < chain.Count)
                 {
-                    chain[i].PreBuildUp(ChildContext);
+                    chain[i].PreBuildUp(ref enclosure);
                 }
 
                 while (--i >= 0)
                 {
-                    chain[i].PostBuildUp(ChildContext);
+                    chain[i].PostBuildUp(ref enclosure);
                 }
             }
             catch (Exception)
@@ -214,7 +216,9 @@ namespace Unity.Builder
 
         public object NewBuildUp(Type type, string name, Action<IBuilderContext> childCustomizationBlock = null)
         {
-            ChildContext = new BuilderContext(this, type, name);
+            var enclosure = new BuilderContext(this, type, name);
+            ChildContext = enclosure;
+
             childCustomizationBlock?.Invoke(ChildContext);
 
             var i = -1;
@@ -224,12 +228,12 @@ namespace Unity.Builder
             {
                 while (!ChildContext.BuildComplete && ++i < chain.Count)
                 {
-                    chain[i].PreBuildUp(ChildContext);
+                    chain[i].PreBuildUp(ref enclosure);
                 }
 
                 while (--i >= 0)
                 {
-                    chain[i].PostBuildUp(ChildContext);
+                    chain[i].PostBuildUp(ref enclosure);
                 }
             }
             catch (Exception)

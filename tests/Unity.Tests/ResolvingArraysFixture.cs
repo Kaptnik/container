@@ -184,7 +184,7 @@ namespace Unity.Tests.v5
             this.container = container;
         }
 
-        public override void PreBuildUp(IBuilderContext context)
+        public override void PreBuildUp<T>(ref T context)
         {
             if ((NamedTypeBuildKey)context.BuildKey == NamedTypeBuildKey.Make<IUnityContainer>())
             {
