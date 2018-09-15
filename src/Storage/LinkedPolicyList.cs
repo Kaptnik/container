@@ -5,9 +5,9 @@ using Unity.Policy;
 
 namespace Unity.Storage
 {
-    public class LinkedPolicyList : LinkedNode<Type, IBuilderPolicy>, IPolicyList
+    public class LinkedPolicyList : LinkedNode<Type, object>, IPolicyList
     {
-        public LinkedPolicyList(IUnityContainer container, LinkedNode<Type, IBuilderPolicy> parent)
+        public LinkedPolicyList(IUnityContainer container, LinkedNode<Type, object> parent)
         {
             Next = parent;
         }
@@ -22,12 +22,12 @@ namespace Unity.Storage
             throw new NotImplementedException();
         }
 
-        public IBuilderPolicy Get(Type type, string name, Type policyInterface, out IPolicyList list)
+        public object Get(Type type, string name, Type policyInterface, out IPolicyList list)
         {
             throw new NotImplementedException();
         }
 
-        public void Set(Type type, string name, Type policyInterface, IBuilderPolicy policy)
+        public void Set(Type type, string name, Type policyInterface, object policy)
         {
             throw new NotImplementedException();
         }

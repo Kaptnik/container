@@ -598,10 +598,10 @@ namespace Unity
 
         #region Local policy manipulation
 
-        private IBuilderPolicy Get(Type type, string name, Type policyInterface, out IPolicyList list)
+        private object Get(Type type, string name, Type policyInterface, out IPolicyList list)
         {
             list = null;
-            IBuilderPolicy policy = null;
+            object policy = null;
             var hashCode = (type?.GetHashCode() ?? 0) & 0x7FFFFFFF;
             var targetBucket = hashCode % _registrations.Buckets.Length;
             for (var i = _registrations.Buckets[targetBucket]; i >= 0; i = _registrations.Entries[i].Next)
@@ -625,7 +625,7 @@ namespace Unity
             return _parent?.GetPolicy(type, name, policyInterface, out list);
         }
 
-        private void Set(Type type, string name, Type policyInterface, IBuilderPolicy policy)
+        private void Set(Type type, string name, Type policyInterface, object policy)
         {
             var collisions = 0;
             var hashCode = (type?.GetHashCode() ?? 0) & 0x7FFFFFFF;

@@ -5,7 +5,7 @@ using Unity.Policy;
 namespace Unity.Storage
 {
     /// <summary>
-    /// A custom collection wrapper over <see cref="IBuilderPolicy"/> objects.
+    /// A custom collection wrapper over <see cref="object"/> objects.
     /// </summary>
     public class PolicyList : IPolicyList
     {
@@ -13,7 +13,7 @@ namespace Unity.Storage
 
         private readonly object _sync = new object();
         private readonly IPolicyList _innerPolicyList;
-        private IDictionary<PolicyKey, IBuilderPolicy> _policies = null;
+        private IDictionary<PolicyKey, object> _policies = null;
 
         #endregion
 
@@ -72,10 +72,10 @@ namespace Unity.Storage
         }
 
 
-        public IBuilderPolicy Get(Type type, string name, Type policyInterface, out IPolicyList list)
+        public object Get(Type type, string name, Type policyInterface, out IPolicyList list)
         {
             list = null;
-            IBuilderPolicy policy = null;
+            object policy = null;
 
             if (_policies?.TryGetValue(new PolicyKey(type, name, policyInterface), out policy) ?? false)
             {
@@ -87,10 +87,10 @@ namespace Unity.Storage
         }
 
 
-        public void Set(Type type, string name, Type policyInterface, IBuilderPolicy policy)
+        public void Set(Type type, string name, Type policyInterface, object policy)
         {
             if (null == _policies)
-                _policies = new Dictionary<PolicyKey, IBuilderPolicy>(PolicyKeyEqualityComparer.Default);
+                _policies = new Dictionary<PolicyKey, object>(PolicyKeyEqualityComparer.Default);
 
             _policies[new PolicyKey(type, name, policyInterface)] = policy;
         }
