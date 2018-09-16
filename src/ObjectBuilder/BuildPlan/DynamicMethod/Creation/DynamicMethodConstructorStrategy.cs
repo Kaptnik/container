@@ -9,7 +9,7 @@ using Unity.Builder.Operation;
 using Unity.Builder.Selection;
 using Unity.Builder.Strategy;
 using Unity.Container.Lifetime;
-using Unity.Lifetime;
+using Unity.Strategies.Build;
 using Unity.Policy;
 using Unity.Policy.Lifetime;
 using Unity.Storage;
@@ -95,7 +95,7 @@ namespace Unity.ObjectBuilder.BuildPlan.DynamicMethod.Creation
             }
 
             IConstructorSelectorPolicy selector =
-                context.Policies.GetPolicy<IConstructorSelectorPolicy>(context.OriginalBuildKey);
+                context.Policies.GetPolicy<IConstructorSelectorPolicy>(context.OriginalBuildKey.Type, context.OriginalBuildKey.Name);
 
             SelectedConstructor selectedConstructor = selector.SelectConstructor(context);
 

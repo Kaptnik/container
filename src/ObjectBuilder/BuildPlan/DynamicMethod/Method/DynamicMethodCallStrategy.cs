@@ -10,7 +10,7 @@ using Unity.Builder.Selection;
 using Unity.Builder.Strategy;
 using Unity.Exceptions;
 using Unity.Policy;
-using Unity.Storage;
+using Unity.Strategies.Build;
 
 namespace Unity.ObjectBuilder.BuildPlan.DynamicMethod.Method
 {
@@ -45,7 +45,7 @@ namespace Unity.ObjectBuilder.BuildPlan.DynamicMethod.Method
         {
             var dynamicBuildContext = (DynamicBuildPlanGenerationContext)context.Existing;
 
-            var selector = context.Policies.GetPolicy<IMethodSelectorPolicy>(context.OriginalBuildKey);
+            var selector = context.Policies.GetPolicy<IMethodSelectorPolicy>(context.OriginalBuildKey.Type, context.OriginalBuildKey.Name);
 
             bool shouldClearOperation = false;
 
