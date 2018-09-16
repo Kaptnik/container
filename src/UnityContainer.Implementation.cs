@@ -17,7 +17,6 @@ using Unity.ObjectBuilder.BuildPlan.DynamicMethod.Creation;
 using Unity.ObjectBuilder.BuildPlan.DynamicMethod.Method;
 using Unity.ObjectBuilder.BuildPlan.DynamicMethod.Property;
 using Unity.ObjectBuilder.BuildPlan.Selection;
-using Unity.ObjectBuilder.Policies;
 using Unity.Policy;
 using Unity.Policy.BuildPlanCreator;
 using Unity.Policy.Lifetime;

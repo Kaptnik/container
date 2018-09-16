@@ -57,6 +57,10 @@
     <None Remove="Factory\**" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Compile Remove="ObjectBuilder\BuildPlan\Selection\ConstructorSelectorPolicyBase.cs" />
+  </ItemGroup>
+
 
   <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>

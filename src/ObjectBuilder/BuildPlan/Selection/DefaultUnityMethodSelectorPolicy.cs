@@ -1,24 +1,41 @@
-﻿
-
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using Unity.Attributes;
 using Unity.Builder;
 using Unity.Policy;
+using Unity.ResolverPolicy;
 using Unity.Utility;
 
 namespace Unity.ObjectBuilder.BuildPlan.Selection
 {
     /// <summary>
-    /// Base class that provides an implementation of <see cref="IMethodSelectorPolicy"/>
-    /// which lets you override how the parameter resolvers are created.
+    /// An implementation of <see cref="IMethodSelectorPolicy"/> that is aware
+    /// of the build keys used by the Unity container.
     /// </summary>
-    /// <typeparam name="TMarkerAttribute">Attribute that marks methods that should
-    /// be called.</typeparam>
-    public abstract class MethodSelectorPolicyBase<TMarkerAttribute> : IMethodSelectorPolicy
-        where TMarkerAttribute : Attribute
+    public class DefaultUnityMethodSelectorPolicy : IMethodSelectorPolicy
     {
+        /// <summary>
+        /// Create a <see cref="IResolverPolicy"/> instance for the given
+        /// <see cref="ParameterInfo"/>.
+        /// </summary>
+        /// <param name="parameter">Parameter to create the resolver for.</param>
+        /// <returns>The resolver object.</returns>
+        protected virtual IResolverPolicy CreateResolver(ParameterInfo parameter)
+        {
+            var attributes = (parameter ?? throw new ArgumentNullException(nameof(parameter))).GetCustomAttributes(false)
+                .OfType<DependencyResolutionAttribute>()
+                .ToList();
+
+            if (attributes.Count > 0)
+            {
+                return attributes[0].CreateResolver(parameter.ParameterType);
+            }
+
+            return new NamedTypeDependencyResolverPolicy(parameter.ParameterType, null);
+        }
+
         /// <summary>
         /// Return the sequence of methods to call while building the target object.
         /// </summary>
@@ -32,7 +49,7 @@ namespace Unity.ObjectBuilder.BuildPlan.Selection
 
             foreach (MethodInfo method in candidateMethods)
             {
-                if (method.IsDefined(typeof(TMarkerAttribute), false))
+                if (method.IsDefined(typeof(InjectionMethodAttribute), false))
                 {
                     yield return CreateSelectedMethod(method);
                 }
@@ -44,18 +61,11 @@ namespace Unity.ObjectBuilder.BuildPlan.Selection
             var result = new Builder.Selection.SelectedMethod(method);
             foreach (ParameterInfo parameter in method.GetParameters())
             {
-                result.AddParameterResolver(this.CreateResolver(parameter));
+                result.AddParameterResolver(CreateResolver(parameter));
             }
 
             return result;
         }
-
-        /// <summary>
-        /// Create a <see cref="IResolverPolicy"/> instance for the given
-        /// <see cref="ParameterInfo"/>.
-        /// </summary>
-        /// <param name="parameter">Parameter to create the resolver for.</param>
-        /// <returns>The resolver object.</returns>
-        protected abstract IResolverPolicy CreateResolver(ParameterInfo parameter);
     }
+
 }
