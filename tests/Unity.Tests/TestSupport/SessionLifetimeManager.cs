@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Globalization;
 using Unity.Lifetime;
+using Unity.Policy.Lifetime;
 
 namespace Unity.Tests.v5.TestSupport
 {

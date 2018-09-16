@@ -1,6 +1,4 @@
-﻿
-
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
@@ -13,7 +11,7 @@ using Unity.Builder.Strategy;
 using Unity.Container.Lifetime;
 using Unity.Lifetime;
 using Unity.Policy;
-using Unity.Storage;
+using Unity.Policy.Lifetime;
 
 namespace Unity.ObjectBuilder.BuildPlan.DynamicMethod.Creation
 {

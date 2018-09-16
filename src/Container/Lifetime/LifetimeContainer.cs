@@ -1,10 +1,8 @@
-﻿
-
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using Unity.Lifetime;
+using Unity.Policy.Lifetime;
 
 namespace Unity.Container.Lifetime
 {
