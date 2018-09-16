@@ -12,6 +12,7 @@ using Unity.Container.Lifetime;
 using Unity.Lifetime;
 using Unity.Policy;
 using Unity.Policy.Lifetime;
+using Unity.Storage;
 
 namespace Unity.ObjectBuilder.BuildPlan.DynamicMethod.Creation
 {

@@ -8,6 +8,7 @@ using Unity.Policy.Lifetime;
 using Unity.Resolution;
 using Unity.ResolverPolicy;
 using Unity.Strategy;
+using Unity.Storage;
 
 namespace Unity.Tests.v5.Injection
 {

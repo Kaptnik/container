@@ -10,6 +10,7 @@ using Unity.Builder.Selection;
 using Unity.Builder.Strategy;
 using Unity.Exceptions;
 using Unity.Policy;
+using Unity.Storage;
 
 namespace Unity.ObjectBuilder.BuildPlan.DynamicMethod.Method
 {

@@ -6,6 +6,7 @@ using Unity.Builder;
 using Unity.Builder.Operation;
 using Unity.Builder.Strategy;
 using Unity.Policy;
+using Unity.Storage;
 
 namespace Unity.ObjectBuilder.BuildPlan.DynamicMethod.Property
 {
