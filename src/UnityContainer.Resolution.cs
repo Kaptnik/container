@@ -4,10 +4,10 @@ using System.Linq;
 using System.Reflection;
 using Unity.Builder;
 using Unity.Exceptions;
-using Unity.ObjectBuilder.BuildPlan.DynamicMethod.Creation;
 using Unity.Policy;
 using Unity.Registration;
 using Unity.Storage;
+using Unity.Strategies.Legacy.Creation;
 
 namespace Unity
 {

@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Reflection;
 using Unity.Builder;
-using Unity.ObjectBuilder.BuildPlan.DynamicMethod.Creation;
+using Unity.Strategies.Legacy.Creation;
 
 namespace Unity.Policy.BuildPlanCreator
 {

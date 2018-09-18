@@ -5,7 +5,6 @@ using Unity.Builder.Strategy;
 using Unity.Exceptions;
 using Unity.Policy;
 using Unity.Policy.Lifetime;
-using Unity.Resolution;
 using Unity.ResolverPolicy;
 using Unity.Strategy;
 using Unity.Storage;

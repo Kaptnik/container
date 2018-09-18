@@ -1,6 +1,4 @@
-﻿
-
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
@@ -8,7 +6,7 @@ using System.Reflection;
 using Unity.Builder;
 using Unity.Policy;
 
-namespace Unity.ObjectBuilder.BuildPlan.DynamicMethod
+namespace Unity.Strategies.Legacy
 {
     /// <summary>
     /// 
@@ -167,7 +165,7 @@ namespace Unity.ObjectBuilder.BuildPlan.DynamicMethod
         /// <returns>The found dependency resolver.</returns>
         public static IResolverPolicy GetResolver(IBuilderContext context, Type dependencyType, IResolverPolicy resolver)
         {
-            var overridden = (context ?? throw new ArgumentNullException(nameof(context))).GetOverriddenResolver(dependencyType);
+            var overridden = context.GetOverriddenResolver(dependencyType);
             return overridden ?? resolver;
         }
     }

@@ -7,7 +7,6 @@ using Unity.Exceptions;
 using Unity.Policy;
 using Unity.Policy.Lifetime;
 using Unity.Registration;
-using Unity.Resolution;
 using Unity.Storage;
 using Unity.Strategy;
 
@@ -22,8 +21,7 @@ namespace Unity.Builder
         #region Fields
 
         private readonly IStrategyChain _chain;
-        private CompositeResolverOverride _resolverOverrides;
-        private bool _ownsOverrides;
+        private ResolverOverride[] _resolverOverrides;
         UnityContainer _container;
 
         #endregion
@@ -42,10 +40,9 @@ namespace Unity.Builder
             BuildKey = OriginalBuildKey;
             Policies = new PolicyList(this);
 
-            _ownsOverrides = true;
             if (null != resolverOverrides && 0 < resolverOverrides.Length)
             {
-                _resolverOverrides = new CompositeResolverOverride(resolverOverrides);
+                _resolverOverrides = resolverOverrides;
             }
         }
 
@@ -59,7 +56,6 @@ namespace Unity.Builder
             Registration = original.Registration;
             Policies = original.Policies;
             Existing = existing;
-            _ownsOverrides = true;
         }
 
         internal BuilderContext(IBuilderContext original, InternalRegistration registration)
@@ -69,7 +65,6 @@ namespace Unity.Builder
             _container = parent._container;
             _chain = parent._chain;
             _resolverOverrides = parent._resolverOverrides;
-            _ownsOverrides = false;
             ParentContext = original;
             Existing = null;
             Policies = parent.Policies;
@@ -86,7 +81,6 @@ namespace Unity.Builder
             _container = parent._container;
             _chain = parent._chain;
             _resolverOverrides = parent._resolverOverrides;
-            _ownsOverrides = false;
             ParentContext = original;
             Existing = null;
             Policies = parent.Policies;
@@ -128,26 +122,22 @@ namespace Unity.Builder
 
         public IPolicyList PersistentPolicies => this;
 
-        public void AddResolverOverrides(IEnumerable<ResolverOverride> newOverrides)
-        {
-            if (null == _resolverOverrides)
-            {
-                _resolverOverrides = new CompositeResolverOverride();
-            }
-            else if (!_ownsOverrides)
-            {
-                var sharedOverrides = _resolverOverrides;
-                _resolverOverrides = new CompositeResolverOverride();
-                _resolverOverrides.AddRange(sharedOverrides);
-                _ownsOverrides = true;
-            }
-
-            _resolverOverrides.AddRange(newOverrides);
-        }
-
         public IResolverPolicy GetOverriddenResolver(Type dependencyType)
         {
-            return _resolverOverrides?.GetResolver(this, dependencyType);
+            if (null == _resolverOverrides) return null;
+
+            // Walk backwards over the resolvers, this way newer resolvers can replace
+            // older ones.
+            for (int index = _resolverOverrides.Length - 1; index >= 0; --index)
+            {
+                var resolver = _resolverOverrides[index].GetResolver(this, dependencyType);
+                if (resolver != null)
+                {
+                    return resolver;
+                }
+            }
+
+            return null;
         }
 
         #endregion
@@ -269,40 +259,6 @@ namespace Unity.Builder
         }
 
         void IPolicyList.Clear(Type type, string name, Type policyInterface)
-        {
-            if (!ReferenceEquals(type, OriginalBuildKey.Type) || name != OriginalBuildKey.Name)
-                _container.ClearPolicy(type, name, policyInterface);
-            else
-                Registration.Clear(policyInterface);
-        }
-
-        #endregion
-
-
-        #region Registration
-
-        object Get(Type type, string name, Type policyInterface, out IPolicyList list)
-        {
-            list = null;
-
-            if (!ReferenceEquals(type, OriginalBuildKey.Type) || name != OriginalBuildKey.Name)
-                return _container.GetPolicy(type, name, policyInterface);
-
-            var result = Registration.Get(policyInterface);
-            if (null != result) list = this;
-
-            return result;
-        }
-
-        void Set(Type type, string name, Type policyInterface, object policy)
-        {
-            if (type != OriginalBuildKey.Type || name != OriginalBuildKey.Name)
-                _container.SetPolicy(type, name, policyInterface, policy);
-            else
-                Registration.Set(policyInterface, policy);
-        }
-
-        void Clear(Type type, string name, Type policyInterface)
         {
             if (!ReferenceEquals(type, OriginalBuildKey.Type) || name != OriginalBuildKey.Name)
                 _container.ClearPolicy(type, name, policyInterface);

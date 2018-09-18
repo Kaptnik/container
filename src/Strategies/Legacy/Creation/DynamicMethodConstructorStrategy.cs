@@ -9,13 +9,11 @@ using Unity.Builder.Operation;
 using Unity.Builder.Selection;
 using Unity.Builder.Strategy;
 using Unity.Container.Lifetime;
-using Unity.Delegates;
-using Unity.Strategies.Build;
 using Unity.Policy;
 using Unity.Policy.Lifetime;
-using Unity.Storage;
+using Unity.Strategies.Build;
 
-namespace Unity.ObjectBuilder.BuildPlan.DynamicMethod.Creation
+namespace Unity.Strategies.Legacy.Creation
 {
     /// <summary>
     /// A <see cref="BuilderStrategy"/> that emits IL to call constructors
@@ -123,7 +121,7 @@ namespace Unity.ObjectBuilder.BuildPlan.DynamicMethod.Creation
 
         private static bool IsInvalidConstructor(TypeInfo target, IBuilderContext context, SelectedConstructor selectedConstructor)
         {
-            if (selectedConstructor.Constructor.GetParameters().Any(p => p.ParameterType.GetTypeInfo() == target))
+            if (selectedConstructor.Constructor.GetParameters().Any(p => Equals(p.ParameterType.GetTypeInfo(), target)))
             {
                 var policy = (ILifetimePolicy)context.Policies.Get(context.BuildKey.Type, 
                                                                    context.BuildKey.Name, 
@@ -164,7 +162,6 @@ namespace Unity.ObjectBuilder.BuildPlan.DynamicMethod.Creation
         private IEnumerable<Expression> CreateNewBuildupSequence(DynamicBuildPlanGenerationContext buildContext, SelectedConstructor selectedConstructor, string signature)
         {
             var parameterExpressions = BuildConstructionParameterExpressions(buildContext, selectedConstructor, signature);
-            var newItemExpression = Expression.Variable(selectedConstructor.Constructor.DeclaringType, "newItem");
 
             yield return Expression.Call(null,
                                         SetCurrentOperationToInvokingConstructorMethod,
@@ -337,7 +334,7 @@ namespace Unity.ObjectBuilder.BuildPlan.DynamicMethod.Creation
             throw new InvalidOperationException(
                 string.Format(CultureInfo.CurrentCulture,
                     Constants.NoConstructorFound,
-                    (context ?? throw new ArgumentNullException(nameof(context))).BuildKey.Type.GetTypeInfo().Name));
+                    context.BuildKey.Type.GetTypeInfo().Name));
         }
 
         /// <summary>
@@ -352,7 +349,7 @@ namespace Unity.ObjectBuilder.BuildPlan.DynamicMethod.Creation
             throw new InvalidOperationException(
                 string.Format(CultureInfo.CurrentCulture,
                     Constants.SelectedConstructorHasRefParameters,
-                    (context ?? throw new ArgumentNullException(nameof(context))).BuildKey.Type.GetTypeInfo().Name,
+                    context.BuildKey.Type.GetTypeInfo().Name,
                     signature));
         }
 
@@ -369,7 +366,7 @@ namespace Unity.ObjectBuilder.BuildPlan.DynamicMethod.Creation
             throw new InvalidOperationException(
                 string.Format(CultureInfo.CurrentCulture,
                     Constants.SelectedConstructorHasRefItself,
-                    (context ?? throw new ArgumentNullException(nameof(context))).BuildKey.Type.GetTypeInfo().Name,
+                    context.BuildKey.Type.GetTypeInfo().Name,
                     signature));
         }
     }

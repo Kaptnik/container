@@ -3,11 +3,11 @@ using System.Linq;
 using System.Reflection;
 using Unity.Builder;
 using Unity.Builder.Strategy;
-using Unity.ObjectBuilder.BuildPlan.DynamicMethod;
 using Unity.Policy;
 using Unity.Policy.Mapping;
 using Unity.Registration;
 using Unity.Storage;
+using Unity.Strategies.Legacy;
 
 namespace Unity.Strategies.Resolve
 {

@@ -4,7 +4,7 @@ using Unity.Builder.Strategy;
 using Unity.Policy;
 using Unity.Strategy;
 
-namespace Unity.ObjectBuilder.BuildPlan.DynamicMethod
+namespace Unity.Strategies.Legacy
 {
     /// <summary>
     /// An <see cref="IBuildPlanCreatorPolicy"/> implementation

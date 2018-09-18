@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Reflection;
 using Unity.Builder;
-using Unity.ObjectBuilder.BuildPlan.DynamicMethod;
+using Unity.Strategies.Legacy;
 
 namespace Unity.Policy.BuildPlanCreator
 {

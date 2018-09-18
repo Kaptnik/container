@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Linq.Expressions;
@@ -12,7 +11,7 @@ using Unity.Exceptions;
 using Unity.Policy;
 using Unity.Strategies.Build;
 
-namespace Unity.ObjectBuilder.BuildPlan.DynamicMethod.Method
+namespace Unity.Strategies.Legacy.Method
 {
     /// <summary>
     /// A <see cref="BuilderStrategy"/> that generates IL to call
@@ -134,7 +133,7 @@ namespace Unity.ObjectBuilder.BuildPlan.DynamicMethod.Method
         /// </summary>
         public static void SetCurrentOperationToResolvingParameter(string parameterName, string methodSignature, IBuilderContext context)
         {
-            (context ?? throw new ArgumentNullException(nameof(context))).CurrentOperation = new MethodArgumentResolveOperation(
+            context.CurrentOperation = new MethodArgumentResolveOperation(
                 context.BuildKey.Type,
                 methodSignature, parameterName);
         }
@@ -144,7 +143,7 @@ namespace Unity.ObjectBuilder.BuildPlan.DynamicMethod.Method
         /// </summary>
         public static void SetCurrentOperationToInvokingMethod(string methodSignature, IBuilderContext context)
         {
-            (context ?? throw new ArgumentNullException(nameof(context))).CurrentOperation = new InvokingMethodOperation(context.BuildKey.Type, methodSignature);
+            context.CurrentOperation = new InvokingMethodOperation(context.BuildKey.Type, methodSignature);
         }
 
         private static string GetMethodSignature(MethodBase method)

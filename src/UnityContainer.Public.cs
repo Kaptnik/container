@@ -6,7 +6,6 @@ using Unity.Builder;
 using Unity.Events;
 using Unity.Extension;
 using Unity.Registration;
-using Unity.Resolution;
 
 namespace Unity
 {

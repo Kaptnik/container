@@ -8,7 +8,7 @@ using Unity.Builder.Strategy;
 using Unity.Policy;
 using Unity.Strategies.Build;
 
-namespace Unity.ObjectBuilder.BuildPlan.DynamicMethod.Property
+namespace Unity.Strategies.Legacy.Property
 {
     /// <summary>
     /// A <see cref="BuilderStrategy"/> that generates IL to resolve properties
@@ -96,7 +96,7 @@ namespace Unity.ObjectBuilder.BuildPlan.DynamicMethod.Property
         /// </summary>
         public static void SetCurrentOperationToResolvingPropertyValue(string propertyName, IBuilderContext context)
         {
-            (context ?? throw new ArgumentNullException(nameof(context))).CurrentOperation = new ResolvingPropertyValueOperation(
+            context.CurrentOperation = new ResolvingPropertyValueOperation(
                 context.BuildKey.Type, propertyName);
         }
 
@@ -105,7 +105,7 @@ namespace Unity.ObjectBuilder.BuildPlan.DynamicMethod.Property
         /// </summary>
         public static void SetCurrentOperationToSettingProperty(string propertyName, IBuilderContext context)
         {
-            (context ?? throw new ArgumentNullException(nameof(context))).CurrentOperation = new SettingPropertyOperation(
+            context.CurrentOperation = new SettingPropertyOperation(
                 context.BuildKey.Type, propertyName);
         }
     }
