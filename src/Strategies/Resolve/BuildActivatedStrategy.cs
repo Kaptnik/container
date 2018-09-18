@@ -14,21 +14,21 @@ namespace Unity.Strategies.Resolve
     {
         #region Build
 
-        public override void PreBuildUp<T>(ref T context)
+        public override void PreBuildUp<TContext>(ref TContext context)
         {
-            var resolver = context.Registration.Get<ResolveDelegate<T>>() ?? (ResolveDelegate<T>)(
-                           context.Policies.Get(context.BuildKey.Type, string.Empty, typeof(ResolveDelegate<T>)) ??
-                           GetGeneric(context.Policies, typeof(ResolveDelegate<T>),
+            var resolver = context.Registration.Get<ResolveDelegate<TContext>>() ?? (ResolveDelegate<TContext>)(
+                           context.Policies.Get(context.BuildKey.Type, string.Empty, typeof(ResolveDelegate<TContext>)) ??
+                           GetGeneric(context.Policies, typeof(ResolveDelegate<TContext>),
                                context.OriginalBuildKey,
                                context.OriginalBuildKey.Type));
 
             if (null == resolver)
             {
-                var factory = context.Registration.Get<FactoryDelegate<T, ResolveDelegate<T>>>() ?? GetOpenGenericPolicy<T>(context.Registration) ??
-                              GetPolicy<FactoryDelegate<T, ResolveDelegate<T>>>(context.Policies, context.BuildKey);
+                var factory = context.Registration.Get<FactoryDelegate<TContext, ResolveDelegate<TContext>>>() ?? GetOpenGenericPolicy<TContext>(context.Registration) ??
+                              GetPolicy<FactoryDelegate<TContext, ResolveDelegate<TContext>>>(context.Policies, context.BuildKey);
 
                 resolver = factory?.Invoke(ref context);
-                if (null != resolver) context.Registration.Set(typeof(ResolveDelegate<T>), resolver);
+                if (null != resolver) context.Registration.Set(typeof(ResolveDelegate<TContext>), resolver);
             }
 
             context.Existing = resolver(ref context);

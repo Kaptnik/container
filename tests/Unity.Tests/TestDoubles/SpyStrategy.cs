@@ -15,7 +15,7 @@ namespace Unity.Tests.v5.TestDoubles
         private object existing = null;
         private bool buildUpWasCalled = false;
 
-        public override void PreBuildUp<T>(ref T context)
+        public override void PreBuildUp<TContext>(ref TContext context)
         {
             this.buildUpWasCalled = true;
             this.context = context;
@@ -25,7 +25,7 @@ namespace Unity.Tests.v5.TestDoubles
             this.UpdateSpyPolicy(context);
         }
 
-        public override void PostBuildUp<T>(ref T context)
+        public override void PostBuildUp<TContext>(ref TContext context)
         {
             this.existing = context.Existing;
         }

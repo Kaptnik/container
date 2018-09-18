@@ -51,7 +51,7 @@ namespace Unity.Strategies.Legacy.Creation
         /// </summary>
         /// <remarks>Existing object is an instance of <see cref="DynamicBuildPlanGenerationContext"/>.</remarks>
         /// <param name="context">The context for the operation.</param>
-        public override void PreBuildUp<T>(ref T context)
+        public override void PreBuildUp<TContext>(ref TContext context)
         {
             DynamicBuildPlanGenerationContext buildContext =
                 (DynamicBuildPlanGenerationContext)context.Existing;

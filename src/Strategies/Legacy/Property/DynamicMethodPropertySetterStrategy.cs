@@ -33,7 +33,7 @@ namespace Unity.Strategies.Legacy.Property
         /// Called during the chain of responsibility for a build operation.
         /// </summary>
         /// <param name="context">The context for the operation.</param>
-        public override void PreBuildUp<T>(ref T context)
+        public override void PreBuildUp<TContext>(ref TContext context)
         {
             var dynamicBuildContext = (DynamicBuildPlanGenerationContext)context.Existing;
 

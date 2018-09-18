@@ -22,7 +22,7 @@ namespace Unity.Strategies.Resolve
         /// and if found maps the build key for the current operation.
         /// </summary>
         /// <param name="context">The context for the operation.</param>
-        public override void PreBuildUp<T>(ref T context)
+        public override void PreBuildUp<TContext>(ref TContext context)
         {
             if (context.OriginalBuildKey is ContainerRegistration registration && 
                 registration.RegisteredType == registration.MappedToType)
@@ -58,7 +58,7 @@ namespace Unity.Strategies.Resolve
         }
 
 
-        public override void PostBuildUp<T>(ref T context)
+        public override void PostBuildUp<TContext>(ref TContext context)
         {
             if (context.Registration is InternalRegistration registration && 
                 null != registration.BuildChain &&

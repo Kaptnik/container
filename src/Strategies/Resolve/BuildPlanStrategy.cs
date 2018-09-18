@@ -23,7 +23,7 @@ namespace Unity.Strategies.Resolve
         /// Called during the chain of responsibility for a build operation.
         /// </summary>
         /// <param name="context">The context for the operation.</param>
-        public override void PreBuildUp<T>(ref T context)
+        public override void PreBuildUp<TContext>(ref TContext context)
         {
             var plan = context.Registration.Get<IBuildPlanPolicy>() ?? (IBuildPlanPolicy)(
                            context.Policies.Get(context.BuildKey.Type, string.Empty, typeof(IBuildPlanPolicy)) ??

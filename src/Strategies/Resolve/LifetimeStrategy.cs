@@ -24,7 +24,7 @@ namespace Unity.Strategies.Resolve
 
         #region Build
 
-        public override void PreBuildUp<T>(ref T context)
+        public override void PreBuildUp<TContext>(ref TContext context)
         {
             ILifetimePolicy policy = (ILifetimePolicy)context.Policies.Get(context.OriginalBuildKey.Type, 
                                                                   context.OriginalBuildKey.Name, 
@@ -70,7 +70,7 @@ namespace Unity.Strategies.Resolve
                 context.RequiresRecovery = recoveryPolicy;
         }
 
-        public override void PostBuildUp<T>(ref T context)
+        public override void PostBuildUp<TContext>(ref TContext context)
         {
             var lifetimePolicy = (ILifetimePolicy)context.Policies.Get(context.OriginalBuildKey.Type, 
                                                                        context.OriginalBuildKey.Name, 

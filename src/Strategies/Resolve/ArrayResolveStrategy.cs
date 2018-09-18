@@ -36,7 +36,7 @@ namespace Unity.Strategies.Resolve
 
         #region Build
 
-        public override void PreBuildUp<T>(ref T context)
+        public override void PreBuildUp<TContext>(ref TContext context)
         {
             var plan = context.Registration.Get<IBuildPlanPolicy>();
             if (plan == null)
