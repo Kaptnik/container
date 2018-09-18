@@ -56,31 +56,6 @@ namespace Unity
             return context.Existing;
         }
 
-        private static object NotThrowingBuildUp(IBuilderContext context)
-        {
-            var i = -1;
-            var chain = ((InternalRegistration)context.Registration).BuildChain;
-
-            try
-            {
-                while (!context.BuildComplete && ++i < chain.Count)
-                {
-                    chain[i].PreBuildUp(ref context);
-                }
-
-                while (--i >= 0)
-                {
-                    chain[i].PostBuildUp(ref context);
-                }
-            }
-            catch (Exception)
-            {
-                return null;
-            }
-
-            return context.Existing;
-        }
-
         private IPolicySet CreateRegistration(Type type, string name)
         {
             var registration = new InternalRegistration(type, name);
