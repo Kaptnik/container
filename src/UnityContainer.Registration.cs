@@ -5,13 +5,13 @@ using System.Globalization;
 using System.Linq;
 using System.Reflection;
 using Unity.Builder;
-using Unity.Builder.Strategy;
 using Unity.Events;
 using Unity.Lifetime;
 using Unity.Policy;
 using Unity.Policy.Lifetime;
 using Unity.Registration;
 using Unity.Storage;
+using Unity.Strategies;
 
 namespace Unity
 {

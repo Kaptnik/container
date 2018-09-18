@@ -2,7 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using Unity.Builder;
-using Unity.Builder.Strategy;
+using Unity.Strategies;
 using Unity.Strategy;
 
 namespace Unity.Tests.v5.TestSupport
@@ -66,7 +66,7 @@ namespace Unity.Tests.v5.TestSupport
         /// </summary>
         /// <param name="context">Context for the build processes.</param>
         /// <returns>The build up object</returns>
-        public void BuildUp<T>(ref T context) where T : IBuilderContext
+        public void BuildUp<TContext>(ref TContext context) where TContext : IBuilderContext
         {
             int i = 0;
 

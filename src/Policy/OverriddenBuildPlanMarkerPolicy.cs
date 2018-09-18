@@ -10,7 +10,7 @@ namespace Unity.Policy
         /// in the existing type if passed in.
         /// </summary>
         /// <param name="context">Context used to build up the object.</param>
-        public void BuildUp<T>(ref T context) where T : IBuilderContext
+        public void BuildUp<TContext>(ref TContext context) where TContext : IBuilderContext
         {
             throw new InvalidOperationException(Constants.MarkerBuildPlanInvoked);
         }

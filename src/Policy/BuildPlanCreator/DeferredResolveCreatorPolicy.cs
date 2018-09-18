@@ -12,7 +12,7 @@ namespace Unity.Policy.BuildPlanCreator
     /// </summary>
     internal class DeferredResolveCreatorPolicy : IBuildPlanPolicy
     {
-        public void BuildUp<T>(ref T context) where T : IBuilderContext
+        public void BuildUp<TContext>(ref TContext context) where TContext : IBuilderContext
         {
             if (context.Existing == null)
             {

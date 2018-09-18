@@ -1,13 +1,13 @@
 ﻿using System;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Unity.Builder;
-using Unity.Builder.Strategy;
 using Unity.Exceptions;
 using Unity.Policy;
 using Unity.Policy.Lifetime;
 using Unity.ResolverPolicy;
 using Unity.Strategy;
 using Unity.Storage;
+using Unity.Strategies;
 
 namespace Unity.Tests.v5.Injection
 {

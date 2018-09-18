@@ -1,6 +1,6 @@
 ﻿using Unity.Builder;
-using Unity.Builder.Strategy;
 using Unity.Storage;
+using Unity.Strategies;
 
 namespace Unity.Tests.v5.TestDoubles
 {

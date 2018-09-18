@@ -1,6 +1,6 @@
-﻿using Unity.Registration;
+﻿using Unity.Builder;
 
-namespace Unity.Builder.Strategy
+namespace Unity.Strategies
 {
     /// <summary>
     /// Represents a strategy in the chain of responsibility.
@@ -18,7 +18,8 @@ namespace Unity.Builder.Strategy
         /// </summary>
         /// <param name="context">Context of the build operation.</param>
         /// <returns>Returns intermediate value or policy</returns>
-        public virtual void PreBuildUp<T>(ref T context) where T : IBuilderContext
+        public virtual void PreBuildUp<TContext>(ref TContext context) 
+            where TContext : IBuilderContext
         {
         }
 
@@ -28,7 +29,8 @@ namespace Unity.Builder.Strategy
         /// phase and executes in reverse order from the PreBuildUp calls.
         /// </summary>
         /// <param name="context">Context of the build operation.</param>
-        public virtual void PostBuildUp<T>(ref T context) where T : IBuilderContext
+        public virtual void PostBuildUp<TContext>(ref TContext context) 
+            where TContext : IBuilderContext
         {
         }
 
@@ -42,6 +44,7 @@ namespace Unity.Builder.Strategy
         /// </summary>
         /// <param name="container">Reference to hositng container</param>
         /// <param name="registration">Reference to registration</param>
+        /// <param name="injectionMembers"></param>
         /// <returns>Returns true if this strategy will participate in building of registered type</returns>
         public virtual bool RequiredToBuildType(IUnityContainer container, INamedType registration, params InjectionMember[] injectionMembers)
         {

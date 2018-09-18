@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Reflection;
 using Unity.Builder;
-using Unity.Builder.Strategy;
 using Unity.Exceptions;
 using Unity.Policy.Lifetime;
 using Unity.Registration;

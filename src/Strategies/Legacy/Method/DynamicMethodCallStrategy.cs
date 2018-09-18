@@ -6,7 +6,6 @@ using System.Reflection;
 using Unity.Builder;
 using Unity.Builder.Operation;
 using Unity.Builder.Selection;
-using Unity.Builder.Strategy;
 using Unity.Exceptions;
 using Unity.Policy;
 using Unity.Strategies.Build;

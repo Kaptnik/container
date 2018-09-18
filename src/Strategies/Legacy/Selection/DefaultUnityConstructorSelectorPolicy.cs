@@ -53,7 +53,7 @@ namespace Unity.Strategies.Legacy.Selection
         /// </summary>
         /// <param name="context">Current build context</param>
         /// <returns>The chosen constructor.</returns>
-        public SelectedConstructor SelectConstructor<T>(ref T context) where T : IBuilderContext
+        public SelectedConstructor SelectConstructor<TContext>(ref TContext context) where TContext : IBuilderContext
         {
             Type typeToConstruct = context.BuildKey.Type;
 

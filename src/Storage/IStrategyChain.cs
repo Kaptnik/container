@@ -1,8 +1,8 @@
 ﻿
 
 using System.Collections.Generic;
-using Unity.Builder.Strategy;
 using Unity.Policy;
+using Unity.Strategies;
 
 namespace Unity.Strategy
 {

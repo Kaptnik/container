@@ -1,8 +1,8 @@
 ﻿using System.Collections.Generic;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Unity.Builder.Strategy;
 using Unity.Container;
 using Unity.Storage;
+using Unity.Strategies;
 using Unity.Strategy;
 using Unity.Tests.v5.TestSupport;
 

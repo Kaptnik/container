@@ -7,7 +7,6 @@ using System.Reflection;
 using Unity.Builder;
 using Unity.Builder.Operation;
 using Unity.Builder.Selection;
-using Unity.Builder.Strategy;
 using Unity.Container.Lifetime;
 using Unity.Policy;
 using Unity.Policy.Lifetime;

@@ -4,7 +4,6 @@ using System.Linq.Expressions;
 using System.Reflection;
 using Unity.Builder;
 using Unity.Builder.Operation;
-using Unity.Builder.Strategy;
 using Unity.Policy;
 using Unity.Strategies.Build;
 

@@ -3,7 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using Unity.Builder.Strategy;
+using Unity.Strategies;
 using Unity.Strategy;
 
 namespace Unity.Tests.v5.TestSupport

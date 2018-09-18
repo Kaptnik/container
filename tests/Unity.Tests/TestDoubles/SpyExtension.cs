@@ -1,7 +1,7 @@
 ﻿using System;
 using Unity.Builder;
-using Unity.Builder.Strategy;
 using Unity.Extension;
+using Unity.Strategies;
 
 namespace Unity.Tests.v5.TestDoubles
 {

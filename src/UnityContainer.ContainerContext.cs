@@ -1,11 +1,11 @@
 ﻿using System;
 using Unity.Builder;
-using Unity.Builder.Strategy;
 using Unity.Events;
 using Unity.Extension;
 using Unity.Policy;
 using Unity.Policy.Lifetime;
 using Unity.Storage;
+using Unity.Strategies;
 using Unity.Strategy;
 
 namespace Unity

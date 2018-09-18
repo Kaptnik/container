@@ -29,7 +29,7 @@ namespace Unity.Strategies.Legacy
         /// 
         /// </summary>
         /// <param name="context"></param>
-        public void BuildUp<T>(ref T context) where T : IBuilderContext
+        public void BuildUp<TContext>(ref TContext context) where TContext : IBuilderContext
         {
             _buildMethod(context);
         }
