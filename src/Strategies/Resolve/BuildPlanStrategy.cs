@@ -3,12 +3,13 @@ using System.Globalization;
 using System.Reflection;
 using Unity.Builder;
 using Unity.Builder.Strategy;
+using Unity.Delegates;
 using Unity.Exceptions;
 using Unity.Policy;
 using Unity.Registration;
 using Unity.Storage;
 
-namespace Unity.Strategies
+namespace Unity.Strategies.Resolve
 {
     /// <summary>
     /// A <see cref="BuilderStrategy"/> that will look for a build plan
@@ -26,15 +27,15 @@ namespace Unity.Strategies
         public override void PreBuildUp<T>(ref T context)
         {
             var plan = context.Registration.Get<IBuildPlanPolicy>() ?? (IBuildPlanPolicy)(
-                       context.Policies.Get(context.BuildKey.Type, string.Empty, typeof(IBuildPlanPolicy)) ?? 
-                       GetGeneric(context.Policies, typeof(IBuildPlanPolicy), 
-                                                    context.OriginalBuildKey, 
-                                                    context.OriginalBuildKey.Type));
+                           context.Policies.Get(context.BuildKey.Type, string.Empty, typeof(IBuildPlanPolicy)) ??
+                           GetGeneric(context.Policies, typeof(IBuildPlanPolicy),
+                               context.OriginalBuildKey,
+                               context.OriginalBuildKey.Type));
 
             if (plan == null || plan is OverriddenBuildPlanMarkerPolicy)
             {
-                var planCreator = context.Registration.Get<IBuildPlanCreatorPolicy>() ?? CheckIfOpenGeneric(context.Registration) ??
-                    GetPolicy<IBuildPlanCreatorPolicy>(context.Policies, context.BuildKey);
+                var planCreator = context.Registration.Get<IBuildPlanCreatorPolicy>() ?? GetOpenGenericPolicy(context.Registration) ??
+                                  GetPolicy<IBuildPlanCreatorPolicy>(context.Policies, context.BuildKey);
                 if (planCreator != null)
                 {
                     plan = planCreator.CreatePlan(ref context, context.BuildKey);
@@ -71,12 +72,14 @@ namespace Unity.Strategies
             return null;
         }
 
-        private static IBuildPlanCreatorPolicy CheckIfOpenGeneric(IPolicySet namedType)
+
+        // TODO: Optimize
+        private static IBuildPlanCreatorPolicy GetOpenGenericPolicy(IPolicySet namedType)
         {
-            if (namedType is InternalRegistration registration && !(namedType is ContainerRegistration) && 
+            if (namedType is InternalRegistration registration && !(namedType is ContainerRegistration) &&
                 null != registration.Type && registration.Type.GetTypeInfo().IsGenericTypeDefinition)
             {
-                throw new ArgumentException(string.Format(CultureInfo.CurrentCulture, 
+                throw new ArgumentException(string.Format(CultureInfo.CurrentCulture,
                     Constants.CannotResolveOpenGenericType, registration.Type.FullName));
             }
 

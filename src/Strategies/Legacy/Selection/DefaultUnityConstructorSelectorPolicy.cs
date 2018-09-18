@@ -6,8 +6,10 @@ using System.Reflection;
 using Unity.Attributes;
 using Unity.Builder;
 using Unity.Builder.Selection;
+using Unity.Delegates;
 using Unity.Policy;
 using Unity.ResolverPolicy;
+using Unity.Strategies.Build;
 
 namespace Unity.ObjectBuilder.BuildPlan.Selection
 {
@@ -17,6 +19,8 @@ namespace Unity.ObjectBuilder.BuildPlan.Selection
     /// </summary>
     public class DefaultUnityConstructorSelectorPolicy : IConstructorSelectorPolicy
     {
+        private static readonly ConstructorLengthComparer Comparer = new ConstructorLengthComparer();
+
         /// <summary>
         /// Create a <see cref="IResolverPolicy"/> instance for the given
         /// <see cref="ParameterInfo"/>.
@@ -51,13 +55,11 @@ namespace Unity.ObjectBuilder.BuildPlan.Selection
         /// <returns>The chosen constructor.</returns>
         public SelectedConstructor SelectConstructor(IBuilderContext context)
         {
-            Type typeToConstruct = (context ?? throw new ArgumentNullException(nameof(context))).BuildKey.Type;
-            ConstructorInfo ctor = FindInjectionConstructor(typeToConstruct) ?? FindLongestConstructor(typeToConstruct);
-            if (ctor != null)
-            {
-                return CreateSelectedConstructor(ctor);
-            }
-            return null;
+            Type typeToConstruct = context.BuildKey.Type;
+
+            return GetInjectionConstructor(context) ?? 
+                   FindAttributedConstructor(typeToConstruct) ?? 
+                   FindLongestConstructor(typeToConstruct);
         }
 
         private SelectedConstructor CreateSelectedConstructor(ConstructorInfo ctor)
@@ -72,7 +74,16 @@ namespace Unity.ObjectBuilder.BuildPlan.Selection
             return result;
         }
 
-        private static ConstructorInfo FindInjectionConstructor(Type typeToConstruct)
+        private SelectedConstructor GetInjectionConstructor(IBuilderContext context)
+        {
+            var selectorDelegate =
+                context.Policies.GetPolicy<SelectConstructorDelegate<IBuilderContext, SelectedConstructor>>(
+                    context.OriginalBuildKey.Type, context.OriginalBuildKey.Name);
+
+            return selectorDelegate?.Invoke(ref context);
+        }
+
+        private SelectedConstructor FindAttributedConstructor(Type typeToConstruct)
         {
             var constructors = typeToConstruct.GetTypeInfo()
                                               .DeclaredConstructors
@@ -86,7 +97,7 @@ namespace Unity.ObjectBuilder.BuildPlan.Selection
                     return null;
 
                 case 1:
-                    return constructors[0];
+                    return CreateSelectedConstructor(constructors[0]);
 
                 default:
                     throw new InvalidOperationException(
@@ -97,13 +108,13 @@ namespace Unity.ObjectBuilder.BuildPlan.Selection
             }
         }
 
-        private static ConstructorInfo FindLongestConstructor(Type typeToConstruct)
+        private SelectedConstructor FindLongestConstructor(Type typeToConstruct)
         {
             ConstructorInfo[] constructors = typeToConstruct.GetTypeInfo()
                                                             .DeclaredConstructors
                                                             .Where(c => c.IsStatic == false && c.IsPublic)
                                                             .ToArray();
-            Array.Sort(constructors, new ConstructorLengthComparer());
+            Array.Sort(constructors, Comparer);
 
             switch (constructors.Length)
             {
@@ -111,7 +122,7 @@ namespace Unity.ObjectBuilder.BuildPlan.Selection
                     return null;
 
                 case 1:
-                    return constructors[0];
+                    return CreateSelectedConstructor(constructors[0]);
 
                 default:
                     int paramLength = constructors[0].GetParameters().Length;
@@ -124,7 +135,7 @@ namespace Unity.ObjectBuilder.BuildPlan.Selection
                                 typeToConstruct.GetTypeInfo().Name,
                                 paramLength));
                     }
-                    return constructors[0];
+                    return CreateSelectedConstructor(constructors[0]);
             }
         }
 

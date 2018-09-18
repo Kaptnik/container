@@ -9,6 +9,7 @@ using Unity.Builder.Operation;
 using Unity.Builder.Selection;
 using Unity.Builder.Strategy;
 using Unity.Container.Lifetime;
+using Unity.Delegates;
 using Unity.Strategies.Build;
 using Unity.Policy;
 using Unity.Policy.Lifetime;
@@ -94,10 +95,10 @@ namespace Unity.ObjectBuilder.BuildPlan.DynamicMethod.Creation
                 return CreateThrowWithContext(buildContext, ThrowForAttemptingToConstructDelegateMethod);
             }
 
-            IConstructorSelectorPolicy selector =
-                context.Policies.GetPolicy<IConstructorSelectorPolicy>(context.OriginalBuildKey.Type, context.OriginalBuildKey.Name);
+            var selector = context.Policies.GetPolicy<IConstructorSelectorPolicy>(
+                context.OriginalBuildKey.Type, context.OriginalBuildKey.Name);
 
-            SelectedConstructor selectedConstructor = selector.SelectConstructor(context);
+            var selectedConstructor = selector?.SelectConstructor(context);
 
             if (selectedConstructor == null)
             {

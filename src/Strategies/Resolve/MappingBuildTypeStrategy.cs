@@ -9,12 +9,12 @@ using Unity.Policy.Mapping;
 using Unity.Registration;
 using Unity.Storage;
 
-namespace Unity.Strategies
+namespace Unity.Strategies.Resolve
 {
     /// <summary>
     /// Represents a strategy for mapping build keys in the build up operation.
     /// </summary>
-    public class BuildKeyMappingStrategy : BuilderStrategy
+    public class MappingBuildTypeStrategy : BuilderStrategy
     {
         #region Build
 
@@ -71,7 +71,7 @@ namespace Unity.Strategies
                 for (var i = 0; i < strategies.Count; i++)
                 {
                     var strategy = strategies[i];
-                    if (!(strategy is BuildKeyMappingStrategy))
+                    if (!(strategy is MappingBuildTypeStrategy))
                         chain.Add(strategy);
                 }
 

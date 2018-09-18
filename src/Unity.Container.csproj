@@ -58,11 +58,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Compile Remove="ObjectBuilder\BuildPlan\Selection\ConstructorSelectorPolicyBase.cs" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="Strategies\Build\" />
+    <Compile Remove="Strategies\Legacy\Selection\ConstructorSelectorPolicyBase.cs" />
   </ItemGroup>
 
 

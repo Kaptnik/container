@@ -11,7 +11,6 @@ using Unity.Container;
 using Unity.Container.Lifetime;
 using Unity.Events;
 using Unity.Extension;
-using Unity.Lifetime;
 using Unity.ObjectBuilder.BuildPlan.DynamicMethod;
 using Unity.ObjectBuilder.BuildPlan.DynamicMethod.Creation;
 using Unity.ObjectBuilder.BuildPlan.DynamicMethod.Method;
@@ -22,7 +21,7 @@ using Unity.Policy.BuildPlanCreator;
 using Unity.Policy.Lifetime;
 using Unity.Registration;
 using Unity.Storage;
-using Unity.Strategies;
+using Unity.Strategies.Resolve;
 using Unity.Strategy;
 
 namespace Unity
@@ -117,7 +116,6 @@ namespace Unity
             SetPolicy = Set;
             ClearPolicy = Clear;
 
-            // TODO: Initialize disposables 
             _lifetimeContainer.Add(_strategies);
             _lifetimeContainer.Add(_buildPlanStrategies);
 
@@ -126,8 +124,10 @@ namespace Unity
                                                      typeof(UnityContainer).GetTypeInfo().GetDeclaredMethod(nameof(ResolveGenericArray))), UnityBuildStage.Enumerable);
             _strategies.Add(new EnumerableResolveStrategy(typeof(UnityContainer).GetTypeInfo().GetDeclaredMethod(nameof(ResolveEnumerable)),
                                                           typeof(UnityContainer).GetTypeInfo().GetDeclaredMethod(nameof(ResolveGenericEnumerable))), UnityBuildStage.Enumerable);
-            _strategies.Add(new BuildKeyMappingStrategy(), UnityBuildStage.TypeMapping);
             _strategies.Add(new LifetimeStrategy(), UnityBuildStage.Lifetime);
+            _strategies.Add(new MappingBuildTypeStrategy(), UnityBuildStage.TypeMapping);
+            _strategies.Add(new BuildActivatedStrategy(), UnityBuildStage.Creation);
+            _strategies.Add(new BuildCompiledStrategy(), UnityBuildStage.Creation);
             _strategies.Add(new BuildPlanStrategy(), UnityBuildStage.Creation);
 
             // Build plan strategy chain

@@ -3,12 +3,10 @@ using System.Reflection;
 using Unity.Builder;
 using Unity.Builder.Strategy;
 using Unity.Exceptions;
-using Unity.Lifetime;
-using Unity.Policy;
 using Unity.Policy.Lifetime;
 using Unity.Registration;
 
-namespace Unity.Strategies
+namespace Unity.Strategies.Resolve
 {
     /// <summary>
     /// An <see cref="BuilderStrategy"/> implementation that uses

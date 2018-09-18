@@ -3,10 +3,9 @@ using Unity.Builder;
 using Unity.Builder.Strategy;
 using Unity.Events;
 using Unity.Extension;
-using Unity.Lifetime;
 using Unity.Policy.Lifetime;
 using Unity.Storage;
-using Unity.Strategies;
+using Unity.Strategies.Resolve;
 using Unity.Strategy;
 
 namespace Unity.Tests.v5.TestDoubles
