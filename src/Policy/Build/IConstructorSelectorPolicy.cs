@@ -14,6 +14,6 @@ namespace Unity.Policy
         /// </summary>
         /// <param name="context">Current build context</param>
         /// <returns>The chosen constructor.</returns>
-        SelectedConstructor SelectConstructor(IBuilderContext context);
+        SelectedConstructor SelectConstructor<T>(ref T context) where T : IBuilderContext;
     }
 }

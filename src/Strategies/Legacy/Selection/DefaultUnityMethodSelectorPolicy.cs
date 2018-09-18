@@ -8,7 +8,7 @@ using Unity.Policy;
 using Unity.ResolverPolicy;
 using Unity.Utility;
 
-namespace Unity.ObjectBuilder.BuildPlan.Selection
+namespace Unity.Strategies.Legacy.Selection
 {
     /// <summary>
     /// An implementation of <see cref="IMethodSelectorPolicy"/> that is aware

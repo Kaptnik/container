@@ -9,7 +9,7 @@ using Unity.Builder.Selection;
 using Unity.Policy;
 using Unity.Utility;
 
-namespace Unity.ObjectBuilder.BuildPlan.Selection
+namespace Unity.Strategies.Legacy.Selection
 {
     /// <summary>
     /// An implementation of <see cref="IPropertySelectorPolicy"/> that is aware of

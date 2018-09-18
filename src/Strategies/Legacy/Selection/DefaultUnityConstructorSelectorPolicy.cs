@@ -11,7 +11,7 @@ using Unity.Policy;
 using Unity.ResolverPolicy;
 using Unity.Strategies.Build;
 
-namespace Unity.ObjectBuilder.BuildPlan.Selection
+namespace Unity.Strategies.Legacy.Selection
 {
     /// <summary>
     /// An implementation of <see cref="IConstructorSelectorPolicy"/> that is
@@ -53,7 +53,7 @@ namespace Unity.ObjectBuilder.BuildPlan.Selection
         /// </summary>
         /// <param name="context">Current build context</param>
         /// <returns>The chosen constructor.</returns>
-        public SelectedConstructor SelectConstructor(IBuilderContext context)
+        public SelectedConstructor SelectConstructor<T>(ref T context) where T : IBuilderContext
         {
             Type typeToConstruct = context.BuildKey.Type;
 

@@ -15,12 +15,12 @@ using Unity.ObjectBuilder.BuildPlan.DynamicMethod;
 using Unity.ObjectBuilder.BuildPlan.DynamicMethod.Creation;
 using Unity.ObjectBuilder.BuildPlan.DynamicMethod.Method;
 using Unity.ObjectBuilder.BuildPlan.DynamicMethod.Property;
-using Unity.ObjectBuilder.BuildPlan.Selection;
 using Unity.Policy;
 using Unity.Policy.BuildPlanCreator;
 using Unity.Policy.Lifetime;
 using Unity.Registration;
 using Unity.Storage;
+using Unity.Strategies.Legacy.Selection;
 using Unity.Strategies.Resolve;
 using Unity.Strategy;
 
