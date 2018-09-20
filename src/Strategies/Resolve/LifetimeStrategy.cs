@@ -26,9 +26,9 @@ namespace Unity.Strategies.Resolve
 
         public override void PreBuildUp<TContext>(ref TContext context)
         {
-            ILifetimePolicy policy = (ILifetimePolicy)context.Policies.Get(context.OriginalBuildKey.Type, 
-                                                                  context.OriginalBuildKey.Name, 
-                                                                  typeof(ILifetimePolicy));
+            var policy = (ILifetimePolicy)context.Policies.Get(context.OriginalBuildKey.Type, 
+                                                               context.OriginalBuildKey.Name, 
+                                                               typeof(ILifetimePolicy));
             if (null == policy)
             {
                 if (context.OriginalBuildKey.Type.GetTypeInfo().IsGenericType)

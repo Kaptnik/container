@@ -32,7 +32,7 @@ namespace Unity.Policy.BuildPlanCreator
 
                 context.Existing = resolveMethod;
 
-                DynamicMethodConstructorStrategy.SetPerBuildSingleton(context);
+                DynamicMethodConstructorStrategy.SetPerBuildSingleton(ref context);
             }
         }
 

@@ -57,7 +57,7 @@ namespace Unity.Strategies.Legacy.Selection
         {
             Type typeToConstruct = context.BuildKey.Type;
 
-            return GetInjectionConstructor(context) ?? 
+            return GetInjectionConstructor(ref context) ?? 
                    FindAttributedConstructor(typeToConstruct) ?? 
                    FindLongestConstructor(typeToConstruct);
         }
@@ -74,10 +74,10 @@ namespace Unity.Strategies.Legacy.Selection
             return result;
         }
 
-        private SelectedConstructor GetInjectionConstructor(IBuilderContext context)
+        private SelectedConstructor GetInjectionConstructor<TContext>(ref TContext context) where TContext : IBuilderContext
         {
             var selectorDelegate =
-                context.Policies.GetPolicy<SelectConstructorDelegate<IBuilderContext, SelectedConstructor>>(
+                context.Policies.GetPolicy<SelectConstructorDelegate<TContext, SelectedConstructor>>(
                     context.OriginalBuildKey.Type, context.OriginalBuildKey.Name);
 
             return selectorDelegate?.Invoke(ref context);

@@ -50,11 +50,8 @@
 
   <ItemGroup>
     <Compile Remove="Build\**" />
-    <Compile Remove="Factory\**" />
     <EmbeddedResource Remove="Build\**" />
-    <EmbeddedResource Remove="Factory\**" />
     <None Remove="Build\**" />
-    <None Remove="Factory\**" />
   </ItemGroup>
 
   <ItemGroup>

@@ -7,9 +7,9 @@ namespace Unity.Tests.v5.TestDoubles
     {
         public object CurrentOperation;
 
-        public object Resolve(IBuilderContext context)
+        public object Resolve<TContext>(ref TContext context) where TContext : IBuilderContext
         {
-            this.CurrentOperation = context.CurrentOperation;
+            CurrentOperation = context.CurrentOperation;
 
             return default(T);
         }

@@ -2,7 +2,6 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using Unity.Builder;
 using Unity.Policy;
 
 // ReSharper disable once CheckNamespace
@@ -40,13 +39,13 @@ namespace Unity
         /// <param name="context">Current build context.</param>
         /// <param name="dependencyType">Type of dependency desired.</param>
         /// <returns>a <see cref="IResolverPolicy"/> object if this override applies, null if not.</returns>
-        public override IResolverPolicy GetResolver(IBuilderContext context, Type dependencyType)
+        public override IResolverPolicy GetResolver<TContext>(ref TContext context, Type dependencyType)
         {
             // Walk backwards over the resolvers, this way newer resolvers can replace
             // older ones.
             for (int index = _overrides.Count() - 1; index >= 0; --index)
             {
-                var resolver = _overrides[index].GetResolver(context, dependencyType);
+                var resolver = _overrides[index].GetResolver(ref context, dependencyType);
                 if (resolver != null)
                 {
                     return resolver;

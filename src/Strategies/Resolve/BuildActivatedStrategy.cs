@@ -24,8 +24,8 @@ namespace Unity.Strategies.Resolve
 
             if (null == resolver)
             {
-                var factory = context.Registration.Get<FactoryDelegate<TContext, ResolveDelegate<TContext>>>() ?? GetOpenGenericPolicy<TContext>(context.Registration) ??
-                              GetPolicy<FactoryDelegate<TContext, ResolveDelegate<TContext>>>(context.Policies, context.BuildKey);
+                var factory = context.Registration.Get<ResolverFactoryDelegate<TContext>>() ?? GetOpenGenericPolicy<TContext>(context.Registration) ??
+                              GetPolicy<ResolverFactoryDelegate<TContext>>(context.Policies, context.BuildKey);
 
                 resolver = factory?.Invoke(ref context);
                 if (null != resolver) context.Registration.Set(typeof(ResolveDelegate<TContext>), resolver);
@@ -52,7 +52,7 @@ namespace Unity.Strategies.Resolve
         // TODO: Optimize
         #region Implementation
 
-        private FactoryDelegate<T, ResolveDelegate<T>> GetOpenGenericPolicy<T>(IPolicySet set) where T : IBuilderContext
+        private ResolverFactoryDelegate<TContext> GetOpenGenericPolicy<TContext>(IPolicySet set) where TContext : IBuilderContext
         {
             if (set is InternalRegistration registration && !(set is ContainerRegistration) &&
                 null != registration.Type && registration.Type.GetTypeInfo().IsGenericTypeDefinition)

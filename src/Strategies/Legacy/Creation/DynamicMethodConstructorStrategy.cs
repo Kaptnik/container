@@ -34,15 +34,24 @@ namespace Unity.Strategies.Legacy.Creation
         {
             var info = typeof(DynamicMethodConstructorStrategy).GetTypeInfo();
 
-            ThrowForNullExistingObjectMethod = info.GetDeclaredMethod(nameof(ThrowForNullExistingObject));
-            ThrowForNullExistingObjectWithInvalidConstructorMethod = info.GetDeclaredMethod(nameof(ThrowForNullExistingObjectWithInvalidConstructor));
-            ThrowForAttemptingToConstructInterfaceMethod = info.GetDeclaredMethod(nameof(ThrowForAttemptingToConstructInterface));
-            ThrowForAttemptingToConstructAbstractClassMethod = info.GetDeclaredMethod(nameof(ThrowForAttemptingToConstructAbstractClass));
-            ThrowForAttemptingToConstructDelegateMethod = info.GetDeclaredMethod(nameof(ThrowForAttemptingToConstructDelegate));
-            SetCurrentOperationToResolvingParameterMethod = info.GetDeclaredMethod(nameof(SetCurrentOperationToResolvingParameter));
-            SetCurrentOperationToInvokingConstructorMethod = info.GetDeclaredMethod(nameof(SetCurrentOperationToInvokingConstructor));
-            SetPerBuildSingletonMethod = info.GetDeclaredMethod(nameof(SetPerBuildSingleton));
-            ThrowForReferenceItselfConstructorMethod = info.GetDeclaredMethod(nameof(ThrowForReferenceItselfConstructor));
+            ThrowForNullExistingObjectMethod = info.GetDeclaredMethod(nameof(ThrowForNullExistingObject))
+                                                   .MakeGenericMethod(typeof(IBuilderContext));
+            ThrowForNullExistingObjectWithInvalidConstructorMethod = info.GetDeclaredMethod(nameof(ThrowForNullExistingObjectWithInvalidConstructor))
+                                                                         .MakeGenericMethod(typeof(IBuilderContext));
+            ThrowForAttemptingToConstructInterfaceMethod = info.GetDeclaredMethod(nameof(ThrowForAttemptingToConstructInterface))
+                                                               .MakeGenericMethod(typeof(IBuilderContext));
+            ThrowForAttemptingToConstructAbstractClassMethod = info.GetDeclaredMethod(nameof(ThrowForAttemptingToConstructAbstractClass))
+                                                                   .MakeGenericMethod(typeof(IBuilderContext));
+            ThrowForAttemptingToConstructDelegateMethod = info.GetDeclaredMethod(nameof(ThrowForAttemptingToConstructDelegate))
+                                                              .MakeGenericMethod(typeof(IBuilderContext));
+            ThrowForReferenceItselfConstructorMethod = info.GetDeclaredMethod(nameof(ThrowForReferenceItselfConstructor))
+                                                           .MakeGenericMethod(typeof(IBuilderContext));
+            SetCurrentOperationToResolvingParameterMethod = info.GetDeclaredMethod(nameof(SetCurrentOperationToResolvingParameter))
+                                                                .MakeGenericMethod(typeof(IBuilderContext));
+            SetCurrentOperationToInvokingConstructorMethod = info.GetDeclaredMethod(nameof(SetCurrentOperationToInvokingConstructor))
+                                                                 .MakeGenericMethod(typeof(IBuilderContext));
+            SetPerBuildSingletonMethod = info.GetDeclaredMethod(nameof(SetPerBuildSingleton))
+                                             .MakeGenericMethod(typeof(IBuilderContext));
 
         }
 
@@ -56,14 +65,14 @@ namespace Unity.Strategies.Legacy.Creation
             DynamicBuildPlanGenerationContext buildContext =
                 (DynamicBuildPlanGenerationContext)context.Existing;
 
-            GuardTypeIsNonPrimitive(context);
+            GuardTypeIsNonPrimitive(ref context);
 
             buildContext.AddToBuildPlan(
                  Expression.IfThen(
                         Expression.Equal(
                             buildContext.GetExistingObjectExpression(),
                             Expression.Constant(null)),
-                            CreateInstanceBuildupExpression(buildContext, context)));
+                            CreateInstanceBuildupExpression(buildContext, ref context)));
 
             var policy = context.Policies.Get(context.OriginalBuildKey.Type, context.OriginalBuildKey.Name, typeof(ILifetimePolicy));
             if (policy is PerResolveLifetimeManager)
@@ -73,7 +82,8 @@ namespace Unity.Strategies.Legacy.Creation
             }
         }
 
-        internal Expression CreateInstanceBuildupExpression(DynamicBuildPlanGenerationContext buildContext, IBuilderContext context)
+        internal Expression CreateInstanceBuildupExpression<TContext>(DynamicBuildPlanGenerationContext buildContext, ref TContext context) 
+            where TContext : IBuilderContext
         {
             var targetTypeInfo = context.BuildKey.Type.GetTypeInfo();
 
@@ -109,7 +119,7 @@ namespace Unity.Strategies.Legacy.Creation
                 return CreateThrowForNullExistingObjectWithInvalidConstructor(buildContext, signature);
             }
 
-            if (IsInvalidConstructor(targetTypeInfo, context, selectedConstructor))
+            if (IsInvalidConstructor(targetTypeInfo, ref context, selectedConstructor))
             {
                 return CreateThrowForReferenceItselfMethodConstructor(buildContext, signature);
             }
@@ -118,7 +128,8 @@ namespace Unity.Strategies.Legacy.Creation
         }
 
 
-        private static bool IsInvalidConstructor(TypeInfo target, IBuilderContext context, SelectedConstructor selectedConstructor)
+        private static bool IsInvalidConstructor<TContext>(TypeInfo target, ref TContext context, SelectedConstructor selectedConstructor)
+            where TContext : IBuilderContext
         {
             if (selectedConstructor.Constructor.GetParameters().Any(p => Equals(p.ParameterType.GetTypeInfo(), target)))
             {
@@ -202,7 +213,8 @@ namespace Unity.Strategies.Legacy.Creation
         /// if the current object is such.
         /// </summary>
         /// <param name="context">Current build context.</param>
-        public static void SetPerBuildSingleton(IBuilderContext context)
+        public static void SetPerBuildSingleton<TContext>(ref TContext context) 
+            where TContext : IBuilderContext
         {
             var perBuildLifetime = new InternalPerResolveLifetimeManager(context.Existing);
             context.Policies.Set(context.OriginalBuildKey.Type,
@@ -237,7 +249,8 @@ namespace Unity.Strategies.Legacy.Creation
 
         // Verify the type we're trying to build is actually constructable -
         // CLR primitive types like string and int aren't.
-        private static void GuardTypeIsNonPrimitive(IBuilderContext context)
+        private static void GuardTypeIsNonPrimitive<TContext>(ref TContext context) 
+            where TContext : IBuilderContext
         {
             var typeToBuild = context.BuildKey.Type;
             if (!typeToBuild.GetTypeInfo().IsInterface)
@@ -256,7 +269,8 @@ namespace Unity.Strategies.Legacy.Creation
         /// <summary>
         /// A helper method used by the generated IL to store the current operation in the build context.
         /// </summary>
-        public static void SetCurrentOperationToResolvingParameter(string parameterName, string constructorSignature, IBuilderContext context, Type type)
+        public static void SetCurrentOperationToResolvingParameter<TContext>(string parameterName, string constructorSignature, ref TContext context, Type type) 
+            where TContext : IBuilderContext
         {
             context.CurrentOperation = new ConstructorArgumentResolveOperation(type, constructorSignature, parameterName);
         }
@@ -264,7 +278,8 @@ namespace Unity.Strategies.Legacy.Creation
         /// <summary>
         /// A helper method used by the generated IL to store the current operation in the build context.
         /// </summary>
-        public static void SetCurrentOperationToInvokingConstructor(string constructorSignature, IBuilderContext context, Type type)
+        public static void SetCurrentOperationToInvokingConstructor<TContext>(string constructorSignature, ref TContext context, Type type) 
+            where TContext : IBuilderContext
         {
             context.CurrentOperation = new InvokingConstructorOperation(type, constructorSignature);
         }
@@ -276,7 +291,7 @@ namespace Unity.Strategies.Legacy.Creation
         /// </summary>
         /// <param name="context">The <see cref="IBuilderContext"/> currently being
         /// used for the build of this object.</param>
-        public static void ThrowForAttemptingToConstructInterface(IBuilderContext context)
+        public static void ThrowForAttemptingToConstructInterface<TContext>(ref TContext context) where TContext : IBuilderContext
         {
             throw new InvalidOperationException(
                 string.Format(CultureInfo.CurrentCulture,
@@ -292,7 +307,8 @@ namespace Unity.Strategies.Legacy.Creation
         /// </summary>
         /// <param name="context">The <see cref="IBuilderContext"/> currently being
         /// used for the build of this object.</param>
-        public static void ThrowForAttemptingToConstructAbstractClass(IBuilderContext context)
+        public static void ThrowForAttemptingToConstructAbstractClass<TContext>(ref TContext context) 
+            where TContext : IBuilderContext
         {
             throw new InvalidOperationException(
                 string.Format(CultureInfo.CurrentCulture,
@@ -308,7 +324,8 @@ namespace Unity.Strategies.Legacy.Creation
         /// </summary>
         /// <param name="context">The <see cref="IBuilderContext"/> currently being
         /// used for the build of this object.</param>
-        public static void ThrowForAttemptingToConstructDelegate(IBuilderContext context)
+        public static void ThrowForAttemptingToConstructDelegate<TContext>(ref TContext context) 
+            where TContext : IBuilderContext
         {
             throw new InvalidOperationException(
                 string.Format(
@@ -328,7 +345,8 @@ namespace Unity.Strategies.Legacy.Creation
         /// </summary>
         /// <param name="context">The <see cref="IBuilderContext"/> currently being
         /// used for the build of this object.</param>
-        public static void ThrowForNullExistingObject(IBuilderContext context)
+        public static void ThrowForNullExistingObject<TContext>(ref TContext context) 
+            where TContext : IBuilderContext
         {
             throw new InvalidOperationException(
                 string.Format(CultureInfo.CurrentCulture,
@@ -343,7 +361,8 @@ namespace Unity.Strategies.Legacy.Creation
         /// <param name="context">The <see cref="IBuilderContext"/> currently being
         /// used for the build of this object.</param>
         /// <param name="signature">The signature of the invalid constructor.</param>
-        public static void ThrowForNullExistingObjectWithInvalidConstructor(IBuilderContext context, string signature)
+        public static void ThrowForNullExistingObjectWithInvalidConstructor<TContext>(ref TContext context, string signature)
+            where TContext : IBuilderContext
         {
             throw new InvalidOperationException(
                 string.Format(CultureInfo.CurrentCulture,
@@ -360,7 +379,8 @@ namespace Unity.Strategies.Legacy.Creation
         /// <param name="context">The <see cref="IBuilderContext"/> currently being
         /// used for the build of this object.</param>
         /// <param name="signature">The signature of the invalid constructor.</param>
-        public static void ThrowForReferenceItselfConstructor(IBuilderContext context, string signature)
+        public static void ThrowForReferenceItselfConstructor<TContext>(ref TContext context, string signature)
+            where TContext : IBuilderContext
         {
             throw new InvalidOperationException(
                 string.Format(CultureInfo.CurrentCulture,

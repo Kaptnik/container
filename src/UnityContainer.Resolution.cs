@@ -29,7 +29,8 @@ namespace Unity
                 : GetOrAddGeneric(type, name, info.GetGenericTypeDefinition());
         }
 
-        private static object ThrowingBuildUp(IBuilderContext context)
+        private static object ThrowingBuildUp<TContext>(ref TContext context) 
+            where TContext : IBuilderContext
         {
             var i = -1;
             var chain = ((InternalRegistration)context.Registration).BuildChain;

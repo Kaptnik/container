@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Linq;
@@ -8,8 +7,10 @@ using System.Reflection;
 using Unity.Builder;
 using Unity.Container;
 using Unity.Container.Lifetime;
+using Unity.Delegates;
 using Unity.Events;
 using Unity.Extension;
+using Unity.Factory;
 using Unity.Policy;
 using Unity.Policy.BuildPlanCreator;
 using Unity.Policy.Lifetime;
@@ -27,7 +28,6 @@ using Unity.Strategy;
 namespace Unity
 {
     [CLSCompliant(true)]
-    [DebuggerDisplay("{DebugName()}")]
     public partial class UnityContainer
     {
         #region Delegates
@@ -44,19 +44,19 @@ namespace Unity
         // Container specific
         internal readonly LifetimeContainer _lifetimeContainer;
         private List<IUnityContainerExtensionConfigurator> _extensions;
-        [DebuggerBrowsable(DebuggerBrowsableState.Never)] private readonly UnityContainer _parent; 
-        [DebuggerBrowsable(DebuggerBrowsableState.Never)] private UnityContainer _root;
+        private readonly UnityContainer _parent; 
+        private UnityContainer _root;
 
         // Policies
-        [DebuggerBrowsable(DebuggerBrowsableState.Never)] private readonly ContainerContext _context;
+        private readonly ContainerContext _context;
 
         // Strategies
-        [DebuggerBrowsable(DebuggerBrowsableState.Never)] private StagedStrategyChain<BuilderStrategy, UnityBuildStage> _strategies;
-        [DebuggerBrowsable(DebuggerBrowsableState.Never)] private StagedStrategyChain<BuilderStrategy, BuilderStage> _buildPlanStrategies;
+        private StagedStrategyChain<BuilderStrategy, UnityBuildStage> _strategies;
+        private StagedStrategyChain<BuilderStrategy, BuilderStage> _buildPlanStrategies;
 
         // Registrations
-        [DebuggerBrowsable(DebuggerBrowsableState.Never)] private readonly object _syncRoot = new object();
-        [DebuggerBrowsable(DebuggerBrowsableState.Never)] private HashRegistry<Type, IRegistry<string, IPolicySet>> _registrations;
+        private readonly object _syncRoot = new object();
+        private HashRegistry<Type, IRegistry<string, IPolicySet>> _registrations;
 
         // Events
         private event EventHandler<RegisterEventArgs> Registering;
@@ -68,17 +68,16 @@ namespace Unity
         internal BuilderStrategy[] _buildChain;
 
         // Methods
-        [DebuggerBrowsable(DebuggerBrowsableState.Never)] internal Func<Type, string, IPolicySet> GetRegistration;
-        [DebuggerBrowsable(DebuggerBrowsableState.Never)] internal Func<IBuilderContext, object> BuildUpPipeline;
-        [DebuggerBrowsable(DebuggerBrowsableState.Never)] internal Func<INamedType, IPolicySet> Register;
-        [DebuggerBrowsable(DebuggerBrowsableState.Never)] internal GetPolicyDelegate GetPolicy;
-        [DebuggerBrowsable(DebuggerBrowsableState.Never)] internal SetPolicyDelegate SetPolicy;
-        [DebuggerBrowsable(DebuggerBrowsableState.Never)] internal ClearPolicyDelegate ClearPolicy;
+        internal Func<Type, string, IPolicySet> GetRegistration;
+        internal Func<INamedType, IPolicySet> Register;
+        internal GetPolicyDelegate GetPolicy;
+        internal SetPolicyDelegate SetPolicy;
+        internal ClearPolicyDelegate ClearPolicy;
 
-        [DebuggerBrowsable(DebuggerBrowsableState.Never)] private Func<Type, string, IPolicySet> _get;
-        [DebuggerBrowsable(DebuggerBrowsableState.Never)] private Func<Type, string, Type, IPolicySet> _getGenericRegistration;
-        [DebuggerBrowsable(DebuggerBrowsableState.Never)] private Func<Type, bool> _isTypeExplicitlyRegistered;
-        [DebuggerBrowsable(DebuggerBrowsableState.Never)] private Func<Type, string, bool> _isExplicitlyRegistered;
+        private Func<Type, string, IPolicySet> _get;
+        private Func<Type, string, Type, IPolicySet> _getGenericRegistration;
+        private Func<Type, bool> _isTypeExplicitlyRegistered;
+        private Func<Type, string, bool> _isExplicitlyRegistered;
 
         #endregion
 
@@ -109,7 +108,6 @@ namespace Unity
             _isExplicitlyRegistered = IsExplicitlyRegisteredLocally;
             _isTypeExplicitlyRegistered = IsTypeTypeExplicitlyRegisteredLocally;
 
-            BuildUpPipeline = ThrowingBuildUp;
             GetRegistration = GetOrAdd;
             Register = AddOrUpdate;
             GetPolicy = Get;
@@ -144,7 +142,8 @@ namespace Unity
             Set(null, null, GetDefaultPolicies());
             Set(typeof(Func<>), string.Empty, typeof(ILifetimePolicy), new PerResolveLifetimeManager());
             Set(typeof(Func<>), string.Empty, typeof(IBuildPlanPolicy), new DeferredResolveCreatorPolicy());
-            Set(typeof(Lazy<>), string.Empty, typeof(IBuildPlanCreatorPolicy), new GenericLazyBuildPlanCreatorPolicy(_context.Policies));
+            Set(typeof(Lazy<>), string.Empty, typeof(ResolverFactoryDelegate<BuilderContext>), 
+                                              LazyResolverDelegateFactory.CreateResolverFactoryDelegate<BuilderContext>(_context.Policies));
 
             // Register this instance
             RegisterInstance(typeof(IUnityContainer), null, this, new ContainerLifetimeManager());
@@ -174,7 +173,6 @@ namespace Unity
             _isExplicitlyRegistered = _parent._isExplicitlyRegistered;
             _isTypeExplicitlyRegistered = _parent._isTypeExplicitlyRegistered;
 
-            BuildUpPipeline = _parent.BuildUpPipeline;
             GetRegistration = _parent.GetRegistration;
             Register = CreateAndSetOrUpdate;
             GetPolicy = parent.GetPolicy;
@@ -212,18 +210,6 @@ namespace Unity
 
 
         #region Implementation
-
-        private string DebugName()
-        {
-            var types = (_registrations?.Keys ?? Enumerable.Empty<Type>())
-                .SelectMany(t => _registrations[t].Values)
-                .OfType<IContainerRegistration>()
-                .Count();
-
-            if (null == _parent) return $"Container[{types}]";
-
-            return _parent.DebugName() + $".Child[{types}]"; ;
-        }
 
         private void CreateAndSetPolicy(Type type, string name, Type policyInterface, object policy)
         {

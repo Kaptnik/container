@@ -43,10 +43,14 @@ namespace Unity.Strategies.Legacy.Selection
         /// <param name="context">Current build context.</param>
         /// <returns>Sequence of <see cref="PropertyInfo"/> objects
         /// that contain the properties to set.</returns>
-        public virtual IEnumerable<SelectedProperty> SelectProperties(IBuilderContext context)
+        public IEnumerable<SelectedProperty> SelectProperties<TContext>(ref TContext context) 
+            where TContext : IBuilderContext
         {
-            Type t = context.BuildKey.Type;
+            return GetEnumerator(context.BuildKey.Type);
+        }
 
+        private IEnumerable<SelectedProperty> GetEnumerator(Type t)
+        {
             foreach (PropertyInfo prop in t.GetPropertiesHierarchical().Where(p => p.CanWrite))
             {
                 var propertyMethod = prop.GetSetMethod(true) ?? prop.GetGetMethod(true);
@@ -58,7 +62,7 @@ namespace Unity.Strategies.Legacy.Selection
 
                 // Ignore indexers and return properties marked with the attribute
                 if (prop.GetIndexParameters().Length == 0 &&
-                   prop.IsDefined(typeof(DependencyResolutionAttribute), false))
+                    prop.IsDefined(typeof(DependencyResolutionAttribute), false))
                 {
                     yield return CreateSelectedProperty(prop);
                 }

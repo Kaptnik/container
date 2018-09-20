@@ -16,11 +16,14 @@ namespace Unity.Strategies.Legacy
         private readonly Queue<Expression> _buildPlanExpressions;
 
         private static readonly MethodInfo ResolveDependencyMethod =
-            typeof(IResolverPolicy).GetTypeInfo().GetDeclaredMethod(nameof(IResolverPolicy.Resolve));
+            typeof(IResolverPolicy).GetTypeInfo().GetDeclaredMethod(nameof(IResolverPolicy.Resolve))
+                                                 .MakeGenericMethod(typeof(IBuilderContext));
 
         private static readonly MethodInfo GetResolverMethod =
             typeof(DynamicBuildPlanGenerationContext).GetTypeInfo()
-                                                     .GetDeclaredMethod(nameof(GetResolver));
+                                                     .GetDeclaredMethod(nameof(GetResolver))
+                                                     .MakeGenericMethod(typeof(IBuilderContext));
+
         private static readonly MemberInfo GetBuildContextExistingObjectProperty =
             typeof(IBuilderContext).GetTypeInfo()
                                    .DeclaredMembers
@@ -163,7 +166,8 @@ namespace Unity.Strategies.Legacy
         /// <param name="dependencyType">Type of the dependency being resolved.</param>
         /// <param name="resolver">The configured resolver.</param>
         /// <returns>The found dependency resolver.</returns>
-        public static IResolverPolicy GetResolver(IBuilderContext context, Type dependencyType, IResolverPolicy resolver)
+        public static IResolverPolicy GetResolver<TContext>(ref TContext context, Type dependencyType, IResolverPolicy resolver) 
+            where TContext : IBuilderContext
         {
             var overridden = context.GetOverriddenResolver(dependencyType);
             return overridden ?? resolver;

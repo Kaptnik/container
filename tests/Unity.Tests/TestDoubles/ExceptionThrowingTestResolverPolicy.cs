@@ -13,7 +13,7 @@ namespace Unity.Tests.v5.TestDoubles
             this.exceptionToThrow = exceptionToThrow;
         }
 
-        public object Resolve(IBuilderContext context)
+        public object Resolve<TContext>(ref TContext context) where TContext : IBuilderContext
         {
             throw this.exceptionToThrow;
         }

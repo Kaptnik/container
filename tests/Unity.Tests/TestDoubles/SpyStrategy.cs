@@ -22,7 +22,7 @@ namespace Unity.Tests.v5.TestDoubles
             this.buildKey = context.BuildKey;
             this.existing = context.Existing;
 
-            this.UpdateSpyPolicy(context);
+            this.UpdateSpyPolicy(ref context);
         }
 
         public override void PostBuildUp<TContext>(ref TContext context)
@@ -50,7 +50,8 @@ namespace Unity.Tests.v5.TestDoubles
             get { return this.buildUpWasCalled; }
         }
 
-        private void UpdateSpyPolicy(IBuilderContext context)
+        private void UpdateSpyPolicy<TContext>(ref TContext context) 
+            where TContext : IBuilderContext
         {
             SpyPolicy policy = (SpyPolicy)context.Policies
                                                  .GetOrDefault(typeof(SpyPolicy), 

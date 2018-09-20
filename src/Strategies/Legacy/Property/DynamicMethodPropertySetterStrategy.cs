@@ -23,10 +23,12 @@ namespace Unity.Strategies.Legacy.Property
             var info = typeof(DynamicMethodPropertySetterStrategy).GetTypeInfo();
 
             SetCurrentOperationToResolvingPropertyValueMethod =
-                info.GetDeclaredMethod(nameof(SetCurrentOperationToResolvingPropertyValue));
+                info.GetDeclaredMethod(nameof(SetCurrentOperationToResolvingPropertyValue))
+                    .MakeGenericMethod(typeof(IBuilderContext));
 
             SetCurrentOperationToSettingPropertyMethod =
-                info.GetDeclaredMethod(nameof(SetCurrentOperationToSettingProperty));
+                info.GetDeclaredMethod(nameof(SetCurrentOperationToSettingProperty))
+                    .MakeGenericMethod(typeof(IBuilderContext));
         }
 
         /// <summary>
@@ -41,7 +43,7 @@ namespace Unity.Strategies.Legacy.Property
 
             bool shouldClearOperation = false;
 
-            foreach (var property in selector.SelectProperties(context))
+            foreach (var property in selector.SelectProperties(ref context))
             {
                 shouldClearOperation = true;
 
@@ -93,7 +95,8 @@ namespace Unity.Strategies.Legacy.Property
         /// <summary>
         /// A helper method used by the generated IL to store the current operation in the build context.
         /// </summary>
-        public static void SetCurrentOperationToResolvingPropertyValue(string propertyName, IBuilderContext context)
+        public static void SetCurrentOperationToResolvingPropertyValue<TContext>(string propertyName, ref TContext context) 
+            where TContext : IBuilderContext
         {
             context.CurrentOperation = new ResolvingPropertyValueOperation(
                 context.BuildKey.Type, propertyName);
@@ -102,7 +105,8 @@ namespace Unity.Strategies.Legacy.Property
         /// <summary>
         /// A helper method used by the generated IL to store the current operation in the build context.
         /// </summary>
-        public static void SetCurrentOperationToSettingProperty(string propertyName, IBuilderContext context)
+        public static void SetCurrentOperationToSettingProperty<TContext>(string propertyName, ref TContext context) 
+            where TContext : IBuilderContext
         {
             context.CurrentOperation = new SettingPropertyOperation(
                 context.BuildKey.Type, propertyName);

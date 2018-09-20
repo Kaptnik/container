@@ -27,10 +27,12 @@ namespace Unity.Strategies.Legacy.Method
             var info = typeof(DynamicMethodCallStrategy).GetTypeInfo();
 
             SetCurrentOperationToResolvingParameterMethod =
-                info.GetDeclaredMethod(nameof(SetCurrentOperationToResolvingParameter));
+                info.GetDeclaredMethod(nameof(SetCurrentOperationToResolvingParameter))
+                    .MakeGenericMethod(typeof(IBuilderContext));
 
             SetCurrentOperationToInvokingMethodInfo =
-                info.GetDeclaredMethod(nameof(SetCurrentOperationToInvokingMethod));
+                info.GetDeclaredMethod(nameof(SetCurrentOperationToInvokingMethod))
+                    .MakeGenericMethod(typeof(IBuilderContext));
         }
 
         /// <summary>
@@ -47,7 +49,7 @@ namespace Unity.Strategies.Legacy.Method
 
             bool shouldClearOperation = false;
 
-            foreach (SelectedMethod method in selector.SelectMethods(context))
+            foreach (SelectedMethod method in selector.SelectMethods(ref context))
             {
                 shouldClearOperation = true;
 
@@ -130,7 +132,8 @@ namespace Unity.Strategies.Legacy.Method
         /// <summary>
         /// A helper method used by the generated IL to store the current operation in the build context.
         /// </summary>
-        public static void SetCurrentOperationToResolvingParameter(string parameterName, string methodSignature, IBuilderContext context)
+        public static void SetCurrentOperationToResolvingParameter<TContext>(string parameterName, string methodSignature, ref TContext context)
+            where TContext : IBuilderContext
         {
             context.CurrentOperation = new MethodArgumentResolveOperation(
                 context.BuildKey.Type,
@@ -140,7 +143,8 @@ namespace Unity.Strategies.Legacy.Method
         /// <summary>
         /// A helper method used by the generated IL to store the current operation in the build context.
         /// </summary>
-        public static void SetCurrentOperationToInvokingMethod(string methodSignature, IBuilderContext context)
+        public static void SetCurrentOperationToInvokingMethod<TContext>(string methodSignature, ref TContext context)
+            where TContext : IBuilderContext
         {
             context.CurrentOperation = new InvokingMethodOperation(context.BuildKey.Type, methodSignature);
         }

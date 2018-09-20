@@ -39,7 +39,7 @@ namespace Unity.Tests.v5.Injection
             IBuilderContext context = GetMockContextThatThrows();
             var resolver = new OptionalDependencyResolverPolicy(typeof(object));
 
-            object result = resolver.Resolve(context);
+            object result = resolver.Resolve(ref context);
 
             Assert.IsNull(result);
         }
@@ -51,7 +51,7 @@ namespace Unity.Tests.v5.Injection
             IBuilderContext context = GetMockContextThatResolvesUnnamedStrings(expected);
             var resolver = new OptionalDependencyResolverPolicy(typeof(string));
 
-            object result = resolver.Resolve(context);
+            object result = resolver.Resolve(ref context);
 
             Assert.AreSame(expected, result);
         }
@@ -81,7 +81,7 @@ namespace Unity.Tests.v5.Injection
 
             var resolver = new OptionalDependencyResolverPolicy(typeof(string), "expected");
 
-            object result = resolver.Resolve(mainContext);
+            object result = resolver.Resolve(ref mainContext);
 
             Assert.AreSame(expected, result);
         }

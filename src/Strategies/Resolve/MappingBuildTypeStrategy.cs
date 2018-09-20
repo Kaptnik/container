@@ -35,7 +35,7 @@ namespace Unity.Strategies.Resolve
                                           : null);
             if (null == policy) return;
 
-            context.BuildKey = policy.Map(context.BuildKey, context);
+            context.BuildKey = policy.Map(context.BuildKey, ref context);
 
             if (!policy.RequireBuild && ((UnityContainer)context.Container).RegistrationExists(context.BuildKey.Type, context.BuildKey.Name))
             {

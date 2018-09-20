@@ -130,7 +130,8 @@ namespace Unity.Builder
             // older ones.
             for (int index = _resolverOverrides.Length - 1; index >= 0; --index)
             {
-                var resolver = _resolverOverrides[index].GetResolver(this, dependencyType);
+                var context = this;
+                var resolver = _resolverOverrides[index].GetResolver(ref context, dependencyType);
                 if (resolver != null)
                 {
                     return resolver;

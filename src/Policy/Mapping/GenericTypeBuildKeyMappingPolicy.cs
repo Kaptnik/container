@@ -47,7 +47,8 @@ namespace Unity.Policy.Mapping
         /// <param name="context">Current build context. Used for contextual information
         /// if writing a more sophisticated mapping.</param>
         /// <returns>The new build key.</returns>
-        public INamedType Map(INamedType buildKey, IBuilderContext context)
+        public INamedType Map<TContext>(INamedType buildKey, ref TContext context) 
+            where TContext : IBuilderContext
         {
             var targetTypeInfo = buildKey.Type.GetTypeInfo();
             if (targetTypeInfo.IsGenericTypeDefinition)

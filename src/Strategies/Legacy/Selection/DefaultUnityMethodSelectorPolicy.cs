@@ -41,11 +41,16 @@ namespace Unity.Strategies.Legacy.Selection
         /// </summary>
         /// <param name="context">Current build context.</param>
         /// <returns>Sequence of methods to call.</returns>
-        public virtual IEnumerable<Builder.Selection.SelectedMethod> SelectMethods(IBuilderContext context)
+        public IEnumerable<Builder.Selection.SelectedMethod> SelectMethods<TContext>(ref TContext context)
+            where TContext : IBuilderContext
         {
-            Type t = context.BuildKey.Type;
+            return GetEnumerator(context.BuildKey.Type);
+        }
+
+        private IEnumerable<Builder.Selection.SelectedMethod> GetEnumerator(Type t)
+        {
             var candidateMethods = t.GetMethodsHierarchical()
-                                    .Where(m => m.IsStatic == false && m.IsPublic);
+                .Where(m => m.IsStatic == false && m.IsPublic);
 
             foreach (MethodInfo method in candidateMethods)
             {
