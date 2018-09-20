@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
 using System.Reflection;
+using Unity.Build.Policy;
 using Unity.Builder;
 using Unity.Events;
 using Unity.Lifetime;
@@ -74,10 +75,10 @@ namespace Unity
             if (null != injectionMembers && injectionMembers.Length > 0)
             {
                 var context = new RegistrationContext(this, registration);
-                foreach (var member in injectionMembers)
+                foreach (var injectionMember in injectionMembers.Where(m => m is IRegisterPolicies))
                 {
-                    member.AddPolicies(registration.RegisteredType, registration.MappedToType, 
-                                       registration.Name, ref context);
+                    ((IRegisterPolicies)injectionMember)
+                        .AddPolicies(registration.RegisteredType, registration.MappedToType, registration.Name, ref context);
                 }
             }
 

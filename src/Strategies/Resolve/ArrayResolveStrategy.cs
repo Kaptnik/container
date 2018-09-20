@@ -2,6 +2,7 @@ using System;
 using System.Linq;
 using System.Reflection;
 using Unity.Build;
+using Unity.Build.Delegates;
 using Unity.Builder;
 using Unity.Delegates;
 using Unity.Injection;
