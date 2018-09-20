@@ -2,10 +2,10 @@ using System;
 using System.Linq;
 using System.Reflection;
 using Unity.Builder;
+using Unity.Delegates;
 using Unity.Injection;
 using Unity.Policy;
 using Unity.Registration;
-using Unity.Strategies.Legacy;
 
 namespace Unity.Strategies.Resolve
 {
@@ -18,7 +18,6 @@ namespace Unity.Strategies.Resolve
 
         private readonly MethodInfo _resolveMethod;
         private readonly MethodInfo _resolveGenericMethod;
-        delegate void ResolveGenericArray(IBuilderContext context, Type type);
 
         #endregion
 
@@ -29,40 +28,6 @@ namespace Unity.Strategies.Resolve
         {
             _resolveMethod = method;
             _resolveGenericMethod = generic;
-        }
-
-        #endregion
-
-
-        #region Build
-
-        public override void PreBuildUp<TContext>(ref TContext context)
-        {
-            var plan = context.Registration.Get<IBuildPlanPolicy>();
-            if (plan == null)
-            {
-                var typeArgument = context.OriginalBuildKey.Type.GetElementType();
-                var type = ((UnityContainer)context.Container).GetFinalType(typeArgument);
-                if (type != typeArgument)
-                {
-                    var method = _resolveGenericMethod.MakeGenericMethod(typeArgument)
-                        .CreateDelegate(typeof(ResolveGenericArray));
-
-                    plan = new DynamicMethodBuildPlan(c => method.DynamicInvoke(c, type));
-                }
-                else
-                {
-                    plan = new DynamicMethodBuildPlan((DynamicBuildPlanMethod)
-                        _resolveMethod.MakeGenericMethod(typeArgument)
-                            .CreateDelegate(typeof(DynamicBuildPlanMethod)));
-                }
-
-                context.Registration.Set(typeof(IBuildPlanPolicy), plan);
-
-            }
-
-            plan?.BuildUp(ref context);
-            context.BuildComplete = true;
         }
 
         #endregion
@@ -79,10 +44,51 @@ namespace Unity.Strategies.Resolve
                     return false;
             }
 
-            return  namedType is InternalRegistration registration && null != registration.Type &&
-                    registration.Type.IsArray && registration.Type.GetArrayRank() == 1
-                ? true : false;
+            return namedType is InternalRegistration registration && null != registration.Type &&
+                   registration.Type.IsArray && registration.Type.GetArrayRank() == 1;
         }
+
+        #endregion
+
+
+        #region Build
+
+        public override void PreBuildUp<TContext>(ref TContext context)
+        {
+            var plan = context.Registration.Get<ResolveDelegate<TContext>>();
+            if (plan == null)
+            {
+                var typeArgument = context.OriginalBuildKey.Type.GetElementType();
+                var type = ((UnityContainer)context.Container).GetFinalType(typeArgument);
+
+                if (type != typeArgument)
+                {
+                    var method = (ResolveArrayDelegate<TContext>)_resolveGenericMethod
+                        .MakeGenericMethod(typeof(TContext), typeArgument)
+                        .CreateDelegate(typeof(ResolveArrayDelegate<TContext>));
+                    plan = (ref TContext c) => method(ref c, type);
+                }
+                else
+                {
+                    plan = (ResolveDelegate<TContext>)_resolveMethod
+                        .MakeGenericMethod(typeof(TContext), typeArgument)
+                        .CreateDelegate(typeof(ResolveDelegate<TContext>));
+                }
+
+                context.Registration.Set(typeof(ResolveDelegate<TContext>), plan);
+            }
+
+            context.Existing = plan(ref context);
+            context.BuildComplete = true;
+        }
+
+        #endregion
+
+
+        #region Nested Types
+
+        private delegate object ResolveArrayDelegate<TContext>(ref TContext context, Type type)
+            where TContext : IBuilderContext;
 
         #endregion
     }

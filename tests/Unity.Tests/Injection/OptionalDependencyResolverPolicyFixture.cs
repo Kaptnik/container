@@ -216,6 +216,11 @@ namespace Unity.Tests.v5.Injection
             {
                 return NewBuildupCallback(new NamedTypeBuildKey(type, name));
             }
+
+            public object NewBuildUp(INamedType set)
+            {
+                throw new NotImplementedException();
+            }
         }
 
         #endregion

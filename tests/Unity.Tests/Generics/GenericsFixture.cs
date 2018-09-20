@@ -255,6 +255,26 @@ namespace Unity.Tests.v5.Generics
             Assert.IsTrue(constrainedResult.Any(svc => svc is ServiceB<string>));
         }
 
+        [TestMethod]
+        public void CanResolveStructConstraintsArray()
+        {
+            var container = new UnityContainer()
+                .RegisterType(typeof(IService<>), typeof(ServiceA<>), "A")
+                .RegisterType(typeof(IService<>), typeof(ServiceB<>), "B")
+                .RegisterType(typeof(IService<>), typeof(ServiceStruct<>), "Struct");
+
+            var result = container.Resolve<IService<int>[]>();
+            Assert.AreEqual(3, result.Length);
+            Assert.IsTrue(result.Any(svc => svc is ServiceA<int>));
+            Assert.IsTrue(result.Any(svc => svc is ServiceB<int>));
+            Assert.IsTrue(result.Any(svc => svc is ServiceStruct<int>));
+
+            List<IService<string>> constrainedResult = container.Resolve<IEnumerable<IService<string>>>().ToList();
+            Assert.AreEqual(2, constrainedResult.Count);
+            Assert.IsTrue(constrainedResult.Any(svc => svc is ServiceA<string>));
+            Assert.IsTrue(constrainedResult.Any(svc => svc is ServiceB<string>));
+        }
+
         public class ServiceClass<T> : IService<T> where T : class { }
 
         [TestMethod]
@@ -267,6 +287,27 @@ namespace Unity.Tests.v5.Generics
 
             List<IService<string>> result = container.Resolve<IEnumerable<IService<string>>>().ToList();
             Assert.AreEqual(3, result.Count);
+            Assert.IsTrue(result.Any(svc => svc is ServiceA<string>));
+            Assert.IsTrue(result.Any(svc => svc is ServiceB<string>));
+            Assert.IsTrue(result.Any(svc => svc is ServiceClass<string>));
+
+            List<IService<int>> constrainedResult = container.Resolve<IEnumerable<IService<int>>>().ToList();
+            Assert.AreEqual(2, constrainedResult.Count);
+            Assert.IsTrue(constrainedResult.Any(svc => svc is ServiceA<int>));
+            Assert.IsTrue(constrainedResult.Any(svc => svc is ServiceB<int>));
+        }
+
+
+        [TestMethod]
+        public void CanResolveClassConstraintsArray()
+        {
+            IUnityContainer container = new UnityContainer()
+                .RegisterType(typeof(IService<>), typeof(ServiceA<>), "A")
+                .RegisterType(typeof(IService<>), typeof(ServiceB<>), "B")
+                .RegisterType(typeof(IService<>), typeof(ServiceClass<>), "Class");
+
+            var result = container.Resolve<IService<string>[]>();
+            Assert.AreEqual(3, result.Length);
             Assert.IsTrue(result.Any(svc => svc is ServiceA<string>));
             Assert.IsTrue(result.Any(svc => svc is ServiceB<string>));
             Assert.IsTrue(result.Any(svc => svc is ServiceClass<string>));

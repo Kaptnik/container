@@ -173,8 +173,9 @@ namespace Unity.Builder
             return Existing;
         }
 
-        public object NewBuildUp(InternalRegistration registration)
+        public object NewBuildUp(INamedType set)
         {
+            var registration = (InternalRegistration) set;
             var enclosure = new BuilderContext(this, registration);
             ChildContext = enclosure;
 
