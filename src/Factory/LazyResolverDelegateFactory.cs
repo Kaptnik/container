@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Reflection;
+using Unity.Build;
 using Unity.Builder;
 using Unity.Container.Lifetime;
 using Unity.Delegates;

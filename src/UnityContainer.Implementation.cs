@@ -4,6 +4,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Linq;
 using System.Reflection;
+using Unity.Build;
 using Unity.Builder;
 using Unity.Container;
 using Unity.Container.Lifetime;
