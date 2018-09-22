@@ -5,9 +5,9 @@ using System.Linq.Expressions;
 using System.Reflection;
 using Unity.Builder;
 using Unity.Builder.Operation;
-using Unity.Builder.Selection;
 using Unity.Exceptions;
 using Unity.Policy;
+using Unity.Policy.Selection;
 using Unity.Strategies.Build;
 
 namespace Unity.Strategies.Legacy.Method
@@ -49,7 +49,7 @@ namespace Unity.Strategies.Legacy.Method
 
             bool shouldClearOperation = false;
 
-            foreach (SelectedMethod method in selector.SelectMethods(ref context))
+            foreach (var method in selector.SelectMethods(ref context))
             {
                 shouldClearOperation = true;
 
@@ -59,15 +59,15 @@ namespace Unity.Strategies.Legacy.Method
                 GuardMethodHasNoOutParams(method.Method);
                 GuardMethodHasNoRefParams(method.Method);
 
-                dynamicBuildContext.AddToBuildPlan(
-                    Expression.Block(
-                        Expression.Call(null, SetCurrentOperationToInvokingMethodInfo, Expression.Constant(signatureString), dynamicBuildContext.ContextParameter),
-                        Expression.Call(
-                            Expression.Convert(
-                                dynamicBuildContext.GetExistingObjectExpression(),
-                                dynamicBuildContext.TypeToBuild),
-                            method.Method,
-                            BuildMethodParameterExpressions(dynamicBuildContext, method, signatureString))));
+                //dynamicBuildContext.AddToBuildPlan(
+                //    Expression.Block(
+                //        Expression.Call(null, SetCurrentOperationToInvokingMethodInfo, Expression.Constant(signatureString), dynamicBuildContext.ContextParameter),
+                //        Expression.Call(
+                //            Expression.Convert(
+                //                dynamicBuildContext.GetExistingObjectExpression(),
+                //                dynamicBuildContext.TypeToBuild),
+                //            method.Method,
+                //            BuildMethodParameterExpressions(dynamicBuildContext, method, signatureString))));
             }
 
             // Clear the current operation
@@ -77,24 +77,24 @@ namespace Unity.Strategies.Legacy.Method
             }
         }
 
-        private IEnumerable<Expression> BuildMethodParameterExpressions(DynamicBuildPlanGenerationContext context, SelectedMethod method, string methodSignature)
-        {
-            int i = 0;
-            var methodParameters = method.Method.GetParameters();
+        //private IEnumerable<Expression> BuildMethodParameterExpressions(DynamicBuildPlanGenerationContext context, SelectedMethod method, string methodSignature)
+        //{
+        //    int i = 0;
+        //    var methodParameters = method.Method.GetParameters();
 
-            foreach (IResolverPolicy parameterResolver in method.GetParameterResolvers())
-            {
-                yield return context.CreateParameterExpression(
-                                parameterResolver,
-                                methodParameters[i].ParameterType,
-                                Expression.Call(null,
-                                    SetCurrentOperationToResolvingParameterMethod,
-                                    Expression.Constant(methodParameters[i].Name, typeof(string)),
-                                    Expression.Constant(methodSignature),
-                                    context.ContextParameter));
-                i++;
-            }
-        }
+        //    foreach (IResolverPolicy parameterResolver in method.GetParameterResolvers())
+        //    {
+        //        yield return context.CreateParameterExpression(
+        //                        parameterResolver,
+        //                        methodParameters[i].ParameterType,
+        //                        Expression.Call(null,
+        //                            SetCurrentOperationToResolvingParameterMethod,
+        //                            Expression.Constant(methodParameters[i].Name, typeof(string)),
+        //                            Expression.Constant(methodSignature),
+        //                            context.ContextParameter));
+        //        i++;
+        //    }
+        //}
 
         private static void GuardMethodIsNotOpenGeneric(MethodInfo method)
         {

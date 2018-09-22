@@ -32,27 +32,28 @@ namespace Unity
             _overrides.Add(MakeOverride(key, value));
         }
 
-        /// <summary>
-        /// Return a <see cref="IResolverPolicy"/> that can be used to give a value
-        /// for the given desired dependency.
-        /// </summary>
-        /// <param name="context">Current build context.</param>
-        /// <param name="dependencyType">Type of dependency desired.</param>
-        /// <returns>a <see cref="IResolverPolicy"/> object if this override applies, null if not.</returns>
-        public override IResolverPolicy GetResolver<TContext>(ref TContext context, Type dependencyType)
-        {
-            // Walk backwards over the resolvers, this way newer resolvers can replace
-            // older ones.
-            for (int index = _overrides.Count() - 1; index >= 0; --index)
-            {
-                var resolver = _overrides[index].GetResolver(ref context, dependencyType);
-                if (resolver != null)
-                {
-                    return resolver;
-                }
-            }
-            return null;
-        }
+        // TODO: GetResolver
+        ///// <summary>
+        ///// Return a <see cref="IResolverPolicy"/> that can be used to give a value
+        ///// for the given desired dependency.
+        ///// </summary>
+        ///// <param name="context">Current build context.</param>
+        ///// <param name="dependencyType">Type of dependency desired.</param>
+        ///// <returns>a <see cref="IResolverPolicy"/> object if this override applies, null if not.</returns>
+        //public override IResolverPolicy GetResolver<TContext>(ref TContext context, Type dependencyType)
+        //{
+        //    // Walk backwards over the resolvers, this way newer resolvers can replace
+        //    // older ones.
+        //    for (int index = _overrides.Count() - 1; index >= 0; --index)
+        //    {
+        //        var resolver = _overrides[index].GetResolver(ref context, dependencyType);
+        //        if (resolver != null)
+        //        {
+        //            return resolver;
+        //        }
+        //    }
+        //    return null;
+        //}
 
         /// <summary>
         /// Returns an enumerator that iterates through a collection.

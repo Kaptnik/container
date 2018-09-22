@@ -1,11 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using Unity.Attributes;
-using Unity.Builder;
-using Unity.Policy;
-using Unity.ResolverPolicy;
+using Unity.Build.Context;
+using Unity.Build.Delegates;
+using Unity.Policy.Selection;
 using Unity.Utility;
 
 namespace Unity.Strategies.Legacy.Selection
@@ -17,60 +16,55 @@ namespace Unity.Strategies.Legacy.Selection
     public class DefaultUnityMethodSelectorPolicy : IMethodSelectorPolicy
     {
         /// <summary>
-        /// Create a <see cref="IResolverPolicy"/> instance for the given
-        /// <see cref="ParameterInfo"/>.
-        /// </summary>
-        /// <param name="parameter">Parameter to create the resolver for.</param>
-        /// <returns>The resolver object.</returns>
-        protected virtual IResolverPolicy CreateResolver(ParameterInfo parameter)
-        {
-            var attributes = (parameter ?? throw new ArgumentNullException(nameof(parameter))).GetCustomAttributes(false)
-                .OfType<DependencyResolutionAttribute>()
-                .ToList();
-
-            if (attributes.Count > 0)
-            {
-                return attributes[0].CreateResolver(parameter.ParameterType);
-            }
-
-            return new NamedTypeDependencyResolverPolicy(parameter.ParameterType, null);
-        }
-
-        /// <summary>
         /// Return the sequence of methods to call while building the target object.
         /// </summary>
         /// <param name="context">Current build context.</param>
         /// <returns>Sequence of methods to call.</returns>
-        public IEnumerable<Builder.Selection.SelectedMethod> SelectMethods<TContext>(ref TContext context)
-            where TContext : IBuilderContext
+        public IEnumerable<SelectedMethod<TContext>> SelectMethods<TContext>(ref TContext context) where TContext : IBuildContext
         {
-            return GetEnumerator(context.BuildKey.Type);
-        }
-
-        private IEnumerable<Builder.Selection.SelectedMethod> GetEnumerator(Type t)
-        {
-            var candidateMethods = t.GetMethodsHierarchical()
+            var list = new List<SelectedMethod<TContext>>();
+            var candidateMethods = context.Type
+                .GetMethodsHierarchical()
                 .Where(m => m.IsStatic == false && m.IsPublic);
 
-            foreach (MethodInfo method in candidateMethods)
+            foreach (var method in candidateMethods)
             {
-                if (method.IsDefined(typeof(InjectionMethodAttribute), false))
+                if (!method.IsDefined(typeof(InjectionMethodAttribute), false)) continue;
+
+                var result = new SelectedMethod<TContext>(method);
+                foreach (var parameter in method.GetParameters())
                 {
-                    yield return CreateSelectedMethod(method);
+                    var attribute = parameter.GetCustomAttributes(false)
+                                             .OfType<DependencyResolutionAttribute>()
+                                             .FirstOrDefault();
+
+                    ResolveDelegate<TContext> resolver;
+                    if (attribute is OptionalDependencyAttribute)
+                    {
+                        resolver = (ref TContext c) =>
+                        {
+                            try
+                            {
+                                return c.Resolve(parameter.ParameterType, attribute.Name);
+                            }
+                            catch
+                            {
+                                return null;
+                            }
+                        };
+                    }
+                    else
+                    {
+                        resolver = (ref TContext c) => c.Resolve(parameter.ParameterType, attribute?.Name);
+                    }
+
+                    result.AddParameterResolver(resolver);
                 }
-            }
-        }
 
-        private Builder.Selection.SelectedMethod CreateSelectedMethod(MethodInfo method)
-        {
-            var result = new Builder.Selection.SelectedMethod(method);
-            foreach (ParameterInfo parameter in method.GetParameters())
-            {
-                result.AddParameterResolver(CreateResolver(parameter));
+                list.Add(result);
             }
 
-            return result;
+            return list;
         }
     }
-
 }

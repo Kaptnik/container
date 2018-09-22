@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
+using Unity.Build;
+using Unity.Build.Context;
 using Unity.Builder;
 using Unity.Policy;
 
@@ -100,7 +102,7 @@ namespace Unity.Strategies.Legacy
         internal Expression GetClearCurrentOperationExpression()
         {
             return Expression.Assign(
-                               Expression.Property(ContextParameter, typeof(IBuilderContext).GetTypeInfo().GetDeclaredProperty("CurrentOperation")),
+                               Expression.Property(ContextParameter, typeof(IBuildContext).GetTypeInfo().GetDeclaredProperty("CurrentOperation")),
                                Expression.Constant(null));
         }
 
@@ -146,7 +148,7 @@ namespace Unity.Strategies.Legacy
             return Expression.Assign(
                 Expression.MakeMemberAccess(
                     ContextParameter,
-                    typeof(IBuilderContext).GetTypeInfo().GetDeclaredProperty("CurrentOperation")),
+                    typeof(IBuildContext).GetTypeInfo().GetDeclaredProperty("CurrentOperation")),
                     savedOperationExpression);
         }
 
@@ -156,7 +158,7 @@ namespace Unity.Strategies.Legacy
                 saveExpression,
                 Expression.MakeMemberAccess(
                     ContextParameter,
-                    typeof(IBuilderContext).GetTypeInfo().GetDeclaredProperty("CurrentOperation")));
+                    typeof(IBuildContext).GetTypeInfo().GetDeclaredProperty("CurrentOperation")));
         }
 
         /// <summary>

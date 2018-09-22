@@ -1,6 +1,10 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq.Expressions;
+using System.Reflection;
+using Unity.Build.Context;
+using Unity.Build.Delegates;
 using Unity.Container;
 using Unity.Exceptions;
 using Unity.Policy;
@@ -26,6 +30,7 @@ namespace Unity.Builder
 
         #endregion
 
+
         #region Constructors
 
         public BuilderContext(UnityContainer container, InternalRegistration registration,
@@ -39,6 +44,7 @@ namespace Unity.Builder
             OriginalBuildKey = registration;
             BuildKey = OriginalBuildKey;
             Policies = new PolicyList(this);
+            TypeInfo = BuildKey.Type.GetTypeInfo();
 
             if (null != resolverOverrides && 0 < resolverOverrides.Length)
             {
@@ -50,12 +56,13 @@ namespace Unity.Builder
         {
             _container = ((BuilderContext)original)._container;
             _chain = new StrategyChain(chain);
+            Existing = existing;
             ParentContext = original;
             OriginalBuildKey = original.OriginalBuildKey;
-            BuildKey = original.BuildKey;
-            Registration = original.Registration;
             Policies = original.Policies;
-            Existing = existing;
+            Registration = original.Registration;
+            BuildKey = original.BuildKey;
+            TypeInfo = original.TypeInfo;
         }
 
         internal BuilderContext(IBuilderContext original, InternalRegistration registration)
@@ -71,6 +78,7 @@ namespace Unity.Builder
             Registration = registration;
             OriginalBuildKey = (INamedType)Registration;
             BuildKey = OriginalBuildKey;
+            TypeInfo = BuildKey.Type.GetTypeInfo();
         }
 
         internal BuilderContext(IBuilderContext original, Type type, string name)
@@ -87,7 +95,33 @@ namespace Unity.Builder
             Registration = registration;
             OriginalBuildKey = registration;
             BuildKey = OriginalBuildKey;
+            TypeInfo = BuildKey.Type.GetTypeInfo();
         }
+
+        #endregion
+
+
+        #region IBuildContext
+
+        public Type Type => BuildKey.Type;
+
+        public TypeInfo TypeInfo { get; }
+
+        public string Name => BuildKey.Name;
+
+        public object Resolve(Type type, string name) => NewBuildUp(type, name);
+
+        public ResolveDelegate<TContext> CreateResolver<TContext>(object value) 
+            where TContext : IBuildContext
+        {
+            throw new NotImplementedException();
+        }
+
+        public Expression CreateExpression(object value) 
+        {
+            throw new NotImplementedException();
+        }
+
 
         #endregion
 
@@ -124,19 +158,19 @@ namespace Unity.Builder
 
         public IResolverPolicy GetOverriddenResolver(Type dependencyType)
         {
-            if (null == _resolverOverrides) return null;
+            //if (null == _resolverOverrides) return null;
 
-            // Walk backwards over the resolvers, this way newer resolvers can replace
-            // older ones.
-            for (int index = _resolverOverrides.Length - 1; index >= 0; --index)
-            {
-                var context = this;
-                var resolver = _resolverOverrides[index].GetResolver(ref context, dependencyType);
-                if (resolver != null)
-                {
-                    return resolver;
-                }
-            }
+            //// Walk backwards over the resolvers, this way newer resolvers can replace
+            //// older ones.
+            //for (int index = _resolverOverrides.Length - 1; index >= 0; --index)
+            //{
+            //    var context = this;
+            //    var resolver = _resolverOverrides[index].GetResolver(ref context, dependencyType);
+            //    if (resolver != null)
+            //    {
+            //        return resolver;
+            //    }
+            //}
 
             return null;
         }

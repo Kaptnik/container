@@ -2,9 +2,11 @@
 using System.Globalization;
 using System.Linq.Expressions;
 using System.Reflection;
+using Unity.Build.Policy;
 using Unity.Builder;
 using Unity.Builder.Operation;
 using Unity.Policy;
+using Unity.Policy.Selection;
 using Unity.Strategies.Build;
 
 namespace Unity.Strategies.Legacy.Property
@@ -49,26 +51,26 @@ namespace Unity.Strategies.Legacy.Property
 
                 var resolvedObjectParameter = Expression.Parameter(property.Property.PropertyType);
 
-                dynamicBuildContext.AddToBuildPlan(
-                    Expression.Block(
-                        new[] { resolvedObjectParameter },
-                        Expression.Call(
-                                    null,
-                                    SetCurrentOperationToResolvingPropertyValueMethod,
-                                    Expression.Constant(property.Property.Name),
-                                    dynamicBuildContext.ContextParameter),
-                        Expression.Assign(
-                                resolvedObjectParameter,
-                                dynamicBuildContext.GetResolveDependencyExpression(property.Property.PropertyType, property.Resolver)),
-                        Expression.Call(
-                                    null,
-                                    SetCurrentOperationToSettingPropertyMethod,
-                                    Expression.Constant(property.Property.Name),
-                                    dynamicBuildContext.ContextParameter),
-                        Expression.Call(
-                            Expression.Convert(dynamicBuildContext.GetExistingObjectExpression(), dynamicBuildContext.TypeToBuild),
-                            GetValidatedPropertySetter(property.Property),
-                            resolvedObjectParameter)));
+                //dynamicBuildContext.AddToBuildPlan(
+                //    Expression.Block(
+                //        new[] { resolvedObjectParameter },
+                //        Expression.Call(
+                //                    null,
+                //                    SetCurrentOperationToResolvingPropertyValueMethod,
+                //                    Expression.Constant(property.Property.Name),
+                //                    dynamicBuildContext.ContextParameter),
+                //        Expression.Assign(
+                //                resolvedObjectParameter,
+                //                dynamicBuildContext.GetResolveDependencyExpression(property.Property.PropertyType, property.Resolver)),
+                //        Expression.Call(
+                //                    null,
+                //                    SetCurrentOperationToSettingPropertyMethod,
+                //                    Expression.Constant(property.Property.Name),
+                //                    dynamicBuildContext.ContextParameter),
+                //        Expression.Call(
+                //            Expression.Convert(dynamicBuildContext.GetExistingObjectExpression(), dynamicBuildContext.TypeToBuild),
+                //            GetValidatedPropertySetter(property.Property),
+                //            resolvedObjectParameter)));
             }
 
             // Clear the current operation

@@ -1,95 +1,46 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.Linq;
 using System.Reflection;
 using Unity.Attributes;
-using Unity.Builder;
-using Unity.Builder.Selection;
-using Unity.Delegates;
-using Unity.Policy;
-using Unity.ResolverPolicy;
-using Unity.Strategies.Build;
+using Unity.Build.Context;
+using Unity.Build.Policy;
 
 namespace Unity.Strategies.Legacy.Selection
 {
     /// <summary>
-    /// An implementation of <see cref="IConstructorSelectorPolicy"/> that is
+    /// An implementation of <see cref="ISelectConstructor"/> that is
     /// aware of the build keys used by the Unity container.
     /// </summary>
-    public class DefaultUnityConstructorSelectorPolicy : IConstructorSelectorPolicy
+    public class DefaultUnityConstructorSelectorPolicy : ISelectConstructor
     {
+        #region Fields
+
+        // TODO: Requires optimization
         private static readonly ConstructorLengthComparer Comparer = new ConstructorLengthComparer();
 
-        /// <summary>
-        /// Create a <see cref="IResolverPolicy"/> instance for the given
-        /// <see cref="ParameterInfo"/>.
-        /// </summary>
-        /// <remarks>
-        /// This implementation looks for the Unity <see cref="DependencyAttribute"/> on the
-        /// parameter and uses it to create an instance of <see cref="NamedTypeDependencyResolverPolicy"/>
-        /// for this parameter.</remarks>
-        /// <param name="parameter">Parameter to create the resolver for.</param>
-        /// <returns>The resolver object.</returns>
-        protected virtual IResolverPolicy CreateResolver(ParameterInfo parameter)
-        {
-            // Resolve all DependencyAttributes on this parameter, if any
-            var attrs = (parameter ?? throw new ArgumentNullException(nameof(parameter))).GetCustomAttributes(false)
-                                                                                         .OfType<DependencyResolutionAttribute>()
-                                                                                         .ToArray();
-            if (attrs.Length > 0)
-            {
-                // Since this attribute is defined with MultipleUse = false, the compiler will
-                // enforce at most one. So we don't need to check for more.
-                return attrs[0].CreateResolver(parameter.ParameterType);
-            }
+        #endregion
 
-            // No attribute, just go back to the container for the default for that type.
-            return new NamedTypeDependencyResolverPolicy(parameter.ParameterType, null);
+
+        #region ISelectConstructor
+
+        public object Select<TContext>(ref TContext context) where TContext : IBuildContext
+        {
+            return FindAttributedConstructor(ref context) ??
+                   FindLongestConstructor(ref context);
         }
 
-        /// <summary>
-        /// Choose the constructor to call for the given type.
-        /// </summary>
-        /// <param name="context">Current build context</param>
-        /// <returns>The chosen constructor.</returns>
-        public SelectedConstructor SelectConstructor<TContext>(ref TContext context) where TContext : IBuilderContext
+        #endregion
+
+
+        #region Implementation
+
+
+        private ConstructorInfo FindAttributedConstructor<TContext>(ref TContext context) where TContext : IBuildContext
         {
-            Type typeToConstruct = context.BuildKey.Type;
-
-            return GetInjectionConstructor(ref context) ?? 
-                   FindAttributedConstructor(typeToConstruct) ?? 
-                   FindLongestConstructor(typeToConstruct);
-        }
-
-        private SelectedConstructor CreateSelectedConstructor(ConstructorInfo ctor)
-        {
-            var result = new SelectedConstructor(ctor);
-
-            foreach (ParameterInfo param in ctor.GetParameters())
-            {
-                result.AddParameterResolver(CreateResolver(param));
-            }
-
-            return result;
-        }
-
-        private SelectedConstructor GetInjectionConstructor<TContext>(ref TContext context) where TContext : IBuilderContext
-        {
-            var selectorDelegate =
-                context.Policies.GetPolicy<SelectConstructorDelegate<TContext, SelectedConstructor>>(
-                    context.OriginalBuildKey.Type, context.OriginalBuildKey.Name);
-
-            return selectorDelegate?.Invoke(ref context);
-        }
-
-        private SelectedConstructor FindAttributedConstructor(Type typeToConstruct)
-        {
-            var constructors = typeToConstruct.GetTypeInfo()
-                                              .DeclaredConstructors
-                                              .Where(c => c.IsStatic == false && c.IsPublic &&
-                                                          c.IsDefined(typeof(InjectionConstructorAttribute),
-                                                                      true))
+            var constructors = context.TypeInfo.DeclaredConstructors
+                                               .Where(c => c.IsStatic == false && c.IsPublic &&
+                                                           c.IsDefined(typeof(InjectionConstructorAttribute),true))
                                               .ToArray();
             switch (constructors.Length)
             {
@@ -97,23 +48,21 @@ namespace Unity.Strategies.Legacy.Selection
                     return null;
 
                 case 1:
-                    return CreateSelectedConstructor(constructors[0]);
+                    return constructors[0];
 
                 default:
                     throw new InvalidOperationException(
-                        string.Format(
-                            CultureInfo.CurrentCulture,
-                            Constants.MultipleInjectionConstructors,
-                            typeToConstruct.GetTypeInfo().Name));
+                        $"The type {context.TypeInfo.Name} has multiple constructors marked with the InjectionConstructor attribute. Unable to disambiguate.");
             }
         }
 
-        private SelectedConstructor FindLongestConstructor(Type typeToConstruct)
+        private ConstructorInfo FindLongestConstructor<TContext>(ref TContext context) where TContext : IBuildContext
         {
-            ConstructorInfo[] constructors = typeToConstruct.GetTypeInfo()
-                                                            .DeclaredConstructors
-                                                            .Where(c => c.IsStatic == false && c.IsPublic)
-                                                            .ToArray();
+            var constructors = context.TypeInfo
+                                      .DeclaredConstructors
+                                      .Where(c => c.IsStatic == false && c.IsPublic)
+                                      .ToArray();
+
             Array.Sort(constructors, Comparer);
 
             switch (constructors.Length)
@@ -122,22 +71,21 @@ namespace Unity.Strategies.Legacy.Selection
                     return null;
 
                 case 1:
-                    return CreateSelectedConstructor(constructors[0]);
+                    return constructors[0];
 
                 default:
-                    int paramLength = constructors[0].GetParameters().Length;
+                    var paramLength = constructors[0].GetParameters().Length;
                     if (constructors[1].GetParameters().Length == paramLength)
                     {
                         throw new InvalidOperationException(
-                            string.Format(
-                                CultureInfo.CurrentCulture,
-                                Constants.AmbiguousInjectionConstructor,
-                                typeToConstruct.GetTypeInfo().Name,
-                                paramLength));
+                            $"The type {context.TypeInfo.Name} has multiple constructors of length {paramLength}. Unable to disambiguate.");
                     }
-                    return CreateSelectedConstructor(constructors[0]);
+                    return constructors[0];
             }
         }
+
+        #endregion
+
 
         private class ConstructorLengthComparer : IComparer<ConstructorInfo>
         {

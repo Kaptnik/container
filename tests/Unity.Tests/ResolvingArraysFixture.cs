@@ -1,7 +1,6 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.Collections.Generic;
 using Unity.Builder;
-using Unity.Builder.Selection;
 using Unity.Extension;
 using Unity.Policy;
 using Unity.ResolverPolicy;

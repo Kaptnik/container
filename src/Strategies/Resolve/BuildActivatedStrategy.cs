@@ -1,10 +1,8 @@
 ﻿using System;
 using System.Globalization;
 using System.Reflection;
-using Unity.Build;
 using Unity.Build.Delegates;
 using Unity.Builder;
-using Unity.Delegates;
 using Unity.Policy;
 using Unity.Policy.Lifetime;
 using Unity.Registration;
@@ -14,6 +12,17 @@ namespace Unity.Strategies.Resolve
 {
     public class BuildActivatedStrategy : BuilderStrategy
     {
+        #region Analysis
+
+        public override bool RequiredToBuildType(IUnityContainer container, INamedType registration, params InjectionMember[] injectionMembers)
+        {
+            return registration is ContainerRegistration containerRegistration && containerRegistration.LifetimeManager is ISingletonLifetimePolicy ||
+                   registration is InternalRegistration internalRegistration && internalRegistration.Get(typeof(ILifetimePolicy)) is ISingletonLifetimePolicy;
+        }
+
+        #endregion
+
+        
         #region Build
 
         public override void PreBuildUp<TContext>(ref TContext context)
@@ -35,17 +44,6 @@ namespace Unity.Strategies.Resolve
 
             context.Existing = resolver(ref context);
             context.BuildComplete = true;
-        }
-
-        #endregion
-
-
-        #region Analisys
-
-        public override bool RequiredToBuildType(IUnityContainer container, INamedType registration, params InjectionMember[] injectionMembers)
-        {
-            return registration is ContainerRegistration containerRegistration && containerRegistration.LifetimeManager is ISingletonLifetimePolicy ||
-                   registration is InternalRegistration internalRegistration && internalRegistration.Get(typeof(ILifetimePolicy)) is ISingletonLifetimePolicy;
         }
 
         #endregion

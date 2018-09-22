@@ -4,9 +4,10 @@ using System.Globalization;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
+using Unity.Build.Factory;
+using Unity.Build.Policy;
 using Unity.Builder;
 using Unity.Builder.Operation;
-using Unity.Builder.Selection;
 using Unity.Container.Lifetime;
 using Unity.Policy;
 using Unity.Policy.Lifetime;
@@ -102,36 +103,39 @@ namespace Unity.Strategies.Legacy.Creation
                 return CreateThrowWithContext(buildContext, ThrowForAttemptingToConstructDelegateMethod);
             }
 
-            var selector = context.Policies.GetPolicy<IConstructorSelectorPolicy>(
+            var selector = context.Policies.GetPolicy<ISelectConstructor>(
                 context.OriginalBuildKey.Type, context.OriginalBuildKey.Name);
 
-            var selectedConstructor = selector?.SelectConstructor(ref context);
+            var selection = selector?.Select(ref context);
+            var ctor = (ConstructorInfo) selection;
 
-            if (selectedConstructor == null)
-            {
+            if (null == selection)
                 return CreateThrowWithContext(buildContext, ThrowForNullExistingObjectMethod);
-            }
 
-            string signature = CreateSignatureString(selectedConstructor.Constructor);
+            if (selection is IExpressionFactory<ConstructorInfo> factory)
+                return factory.CreateExpression(ref context, ctor);
 
-            if (selectedConstructor.Constructor.GetParameters().Any(pi => pi.ParameterType.IsByRef))
+
+            string signature = CreateSignatureString(ctor);
+
+            if (ctor.GetParameters().Any(pi => pi.ParameterType.IsByRef))
             {
                 return CreateThrowForNullExistingObjectWithInvalidConstructor(buildContext, signature);
             }
 
-            if (IsInvalidConstructor(targetTypeInfo, ref context, selectedConstructor))
+            if (IsInvalidConstructor(targetTypeInfo, ref context, ctor))
             {
                 return CreateThrowForReferenceItselfMethodConstructor(buildContext, signature);
             }
 
-            return Expression.Block(CreateNewBuildupSequence(buildContext, selectedConstructor, signature));
+            return Expression.Block(CreateNewBuildupSequence(buildContext, ctor, signature));
         }
 
 
-        private static bool IsInvalidConstructor<TContext>(TypeInfo target, ref TContext context, SelectedConstructor selectedConstructor)
+        private static bool IsInvalidConstructor<TContext>(TypeInfo target, ref TContext context, ConstructorInfo constructor)
             where TContext : IBuilderContext
         {
-            if (selectedConstructor.Constructor.GetParameters().Any(p => Equals(p.ParameterType.GetTypeInfo(), target)))
+            if (constructor.GetParameters().Any(p => Equals(p.ParameterType.GetTypeInfo(), target)))
             {
                 var policy = (ILifetimePolicy)context.Policies.Get(context.BuildKey.Type, 
                                                                    context.BuildKey.Name, 
@@ -169,41 +173,44 @@ namespace Unity.Strategies.Legacy.Creation
                                 Expression.Constant(signature, typeof(string)));
         }
 
-        private IEnumerable<Expression> CreateNewBuildupSequence(DynamicBuildPlanGenerationContext buildContext, SelectedConstructor selectedConstructor, string signature)
+        private IEnumerable<Expression> CreateNewBuildupSequence(DynamicBuildPlanGenerationContext buildContext, ConstructorInfo constructor, string signature)
         {
-            var parameterExpressions = BuildConstructionParameterExpressions(buildContext, selectedConstructor, signature);
+            var parameterExpressions = BuildConstructionParameterExpressions(buildContext, constructor, signature);
 
             yield return Expression.Call(null,
                                         SetCurrentOperationToInvokingConstructorMethod,
                                         Expression.Constant(signature),
                                         buildContext.ContextParameter,
-                                        Expression.Constant(selectedConstructor.Constructor.DeclaringType));
+                                        Expression.Constant(constructor.DeclaringType));
 
             yield return Expression.Assign(
                             buildContext.GetExistingObjectExpression(),
                             Expression.Convert(
-                                Expression.New(selectedConstructor.Constructor, parameterExpressions),
+                                Expression.New(constructor, parameterExpressions),
                                 typeof(object)));
 
             yield return buildContext.GetClearCurrentOperationExpression();
         }
 
-        private IEnumerable<Expression> BuildConstructionParameterExpressions(DynamicBuildPlanGenerationContext buildContext, SelectedConstructor selectedConstructor, string constructorSignature)
+        private IEnumerable<Expression> BuildConstructionParameterExpressions(DynamicBuildPlanGenerationContext buildContext, ConstructorInfo constructor, string constructorSignature)
         {
             int i = 0;
-            var constructionParameters = selectedConstructor.Constructor.GetParameters();
+            var constructionParameters = constructor.GetParameters();
 
-            foreach (IResolverPolicy parameterResolver in selectedConstructor.GetParameterResolvers())
+IResolverPolicy parameterResolver = null;
+
+            foreach (var parameter in constructor.GetParameters())
             {
+
                 yield return buildContext.CreateParameterExpression(
-                                parameterResolver,
-                                constructionParameters[i].ParameterType,
-                                Expression.Call(null,
-                                                SetCurrentOperationToResolvingParameterMethod,
-                                                Expression.Constant(constructionParameters[i].Name, typeof(string)),
-                                                Expression.Constant(constructorSignature),
-                                                buildContext.ContextParameter,
-                                                Expression.Constant(selectedConstructor.Constructor.DeclaringType)));
+                    parameterResolver,
+                    constructionParameters[i].ParameterType,
+                    Expression.Call(null,
+                        SetCurrentOperationToResolvingParameterMethod,
+                        Expression.Constant(constructionParameters[i].Name, typeof(string)),
+                        Expression.Constant(constructorSignature),
+                        buildContext.ContextParameter,
+                        Expression.Constant(constructor.DeclaringType)));
                 i++;
             }
         }

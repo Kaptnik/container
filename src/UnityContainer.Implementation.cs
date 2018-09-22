@@ -4,18 +4,18 @@ using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Linq;
 using System.Reflection;
-using Unity.Build;
 using Unity.Build.Delegates;
+using Unity.Build.Policy;
 using Unity.Builder;
 using Unity.Container;
 using Unity.Container.Lifetime;
-using Unity.Delegates;
 using Unity.Events;
 using Unity.Extension;
 using Unity.Factory;
 using Unity.Policy;
 using Unity.Policy.BuildPlanCreator;
 using Unity.Policy.Lifetime;
+using Unity.Policy.Selection;
 using Unity.Registration;
 using Unity.Storage;
 using Unity.Strategies;
@@ -201,9 +201,9 @@ namespace Unity
             var defaults = new InternalRegistration(null, null);
 
             defaults.Set(typeof(IBuildPlanCreatorPolicy), new DynamicMethodBuildPlanCreatorPolicy(_buildPlanStrategies));
-            defaults.Set(typeof(IConstructorSelectorPolicy), new DefaultUnityConstructorSelectorPolicy());
-            defaults.Set(typeof(IPropertySelectorPolicy), new DefaultUnityPropertySelectorPolicy());
-            defaults.Set(typeof(IMethodSelectorPolicy), new DefaultUnityMethodSelectorPolicy());
+            defaults.Set(typeof(ISelectConstructor),      new DefaultUnityConstructorSelectorPolicy());
+            defaults.Set(typeof(IPropertySelectorPolicy), new DefaultUnitySelectProperties());
+            defaults.Set(typeof(IMethodSelectorPolicy),   new DefaultUnityMethodSelectorPolicy());
 
             return defaults;
         }

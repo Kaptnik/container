@@ -70,8 +70,6 @@ namespace Unity.Strategies.Resolve
             return null;
         }
 
-
-        // TODO: Optimize
         private static IBuildPlanCreatorPolicy GetOpenGenericPolicy(IPolicySet namedType)
         {
             if (namedType is InternalRegistration registration && !(namedType is ContainerRegistration) &&

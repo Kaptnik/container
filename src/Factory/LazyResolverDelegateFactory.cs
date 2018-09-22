@@ -1,10 +1,8 @@
 ﻿using System;
 using System.Reflection;
-using Unity.Build;
 using Unity.Build.Delegates;
 using Unity.Builder;
 using Unity.Container.Lifetime;
-using Unity.Delegates;
 using Unity.Policy.Lifetime;
 using Unity.Storage;
 
@@ -24,7 +22,7 @@ namespace Unity.Factory
         {
             return (ref TContext context) =>
             {
-                var itemType = context.BuildKey.Type.GetTypeInfo().GenericTypeArguments[0];
+                var itemType = context.Type.GetTypeInfo().GenericTypeArguments[0];
                 var lazyMethod = BuildResolveLazyMethod.MakeGenericMethod(typeof(TContext), itemType);
 
                 return (ResolveDelegate<TContext>)lazyMethod.CreateDelegate(typeof(ResolveDelegate<TContext>));
@@ -35,7 +33,7 @@ namespace Unity.Factory
             where TContext : IBuilderContext
         {
             var container = context.Container;
-            var name = context.BuildKey.Name;
+            var name = context.Name;
             var value = new Lazy<T>(() => container.Resolve<T>(name));
 
             var lifetime = context.Policies.GetOrDefault(typeof(ILifetimePolicy), context.OriginalBuildKey);
