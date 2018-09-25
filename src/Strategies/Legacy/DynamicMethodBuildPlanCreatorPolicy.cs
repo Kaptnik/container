@@ -64,36 +64,10 @@ namespace Unity.Strategies.Legacy
                 throw new ResolutionFailedException(context.OriginalBuildKey.Type,
                     context.OriginalBuildKey.Name, ex, context);
             }
+
             return CreatePlanLambda(ref context, generatorContext.Constructor, 
                                                  generatorContext.Properties, 
                                                  generatorContext.Methods);
-
-            //return new DynamicMethodBuildPlan<TContext>(generatorContext.GetBuildMethod());
-
-
-            //internal DynamicBuildPlanMethod GetBuildMethod()
-            //{
-            //    var planDelegate = (Func<IBuilderContext, object>)
-            //        Expression.Lambda(
-            //                Expression.Block(
-            //                    _buildPlanExpressions.Concat(new[] { GetExistingObjectExpression() })),
-            //                ContextParameter)
-            //            .Compile();
-
-            //    return context =>
-            //    {
-            //        try
-            //        {
-            //            context.Existing = planDelegate(context);
-            //        }
-            //        catch (TargetInvocationException e)
-            //        {
-            //            if (e.InnerException != null) throw e.InnerException;
-            //            throw;
-            //        }
-            //    };
-            //}
-
         }
 
         public ResolveDelegate<TContext> CreatePlanLambda<TContext>(ref TContext context, Expression ctor,
@@ -104,13 +78,13 @@ namespace Unity.Strategies.Legacy
             var ctorExpression =
                 Expression.IfThen(
                     Expression.Equal(
-                        BuildContextExpression.Existing,
+                        BuildContextExpression<TContext>.Existing,
                         Expression.Constant(null)),
-                    Expression.Assign(BuildContextExpression.Existing, Expression.Convert(ctor, typeof(object))));
+                    Expression.Assign(BuildContextExpression<TContext>.Existing, Expression.Convert(ctor, typeof(object))));
 
-            var block = Expression.Block(ctorExpression, BuildContextExpression.Existing);
+            var block = Expression.Block(ctorExpression, BuildContextExpression<TContext>.Existing);
 
-            var lambda = Expression.Lambda<ResolveDelegate<TContext>>(block, BuildContextExpression.Context);
+            var lambda = Expression.Lambda<ResolveDelegate<TContext>>(block, BuildContextExpression<TContext>.Context);
 
             return lambda.Compile();
         }

@@ -1,10 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq.Expressions;
 using System.Reflection;
-using Unity.Build.Context;
-using Unity.Build.Delegates;
 using Unity.Container;
 using Unity.Exceptions;
 using Unity.Policy;
@@ -12,7 +9,6 @@ using Unity.Policy.Lifetime;
 using Unity.Registration;
 using Unity.Storage;
 using Unity.Strategies;
-using Unity.Strategy;
 
 namespace Unity.Builder
 {

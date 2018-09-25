@@ -25,14 +25,10 @@ namespace Unity
             // Verify arguments
             var name = string.IsNullOrEmpty(nameToBuild) ? null : nameToBuild;
             var type = typeToBuild ?? throw new ArgumentNullException(nameof(typeToBuild));
-            //var registration = GetRegistration(type, name);
-            //var builderContext = new BuilderContext(this, (InternalRegistration)registration, null, resolverOverrides);
+            var registration = GetRegistration(type, name);
+            var builderContext = new BuilderContext(this, (InternalRegistration)registration, null, resolverOverrides);
 
-            var context = new BuildContext(this, typeToBuild, nameToBuild, null, resolverOverrides);
-
-            return context.BuildUp();
-
-            //return ThrowingBuildUp(ref builderContext);
+            return ThrowingBuildUp(ref builderContext);
         }
 
         #endregion

@@ -23,71 +23,7 @@ namespace Unity.Strategies.Legacy.Creation
 
         private static readonly TypeInfo TypeInfo = typeof(DynamicMethodConstructorStrategy).GetTypeInfo();
         private static readonly MethodInfo SetPerBuildSingletonMethod = TypeInfo.GetDeclaredMethod(nameof(SetPerBuildSingleton));
-
-        #endregion
-
-
-        #region Exception Expressions
-
-        private static readonly Expression ThrowOnConstructingInterfaceExpression = 
-            Expression.Throw(Expression.New(ExceptionExpressions.InvalidOperationExceptionCtor,
-                Expression.Call(MethodExpressions.StringFormat,
-                    Expression.Constant(Constants.CannotConstructInterface),
-                    BuildContextExpression.Type),
-                Expression.New(typeof(InvalidRegistrationException))));
-
-        private static readonly Expression ThrowOnNotConstructableTypeExpression = 
-            Expression.Throw(Expression.New(ExceptionExpressions.InvalidOperationExceptionCtor,
-                Expression.Call(MethodExpressions.StringFormat,
-                    Expression.Constant(Constants.TypeIsNotConstructable),
-                    BuildContextExpression.Type),
-                Expression.New(typeof(InvalidRegistrationException))));
-
-        private static readonly Expression ThrowOnConstructingAbstractClassExpression = 
-            Expression.Throw(
-                Expression.New(ExceptionExpressions.InvalidOperationExceptionCtor,
-                    Expression.Call(MethodExpressions.StringFormat,
-                        Expression.Constant(Constants.CannotConstructAbstractClass),
-                        BuildContextExpression.Type),
-                    Expression.New(typeof(InvalidRegistrationException))));
-
-        private static readonly Expression ThrowOnConstructingDelegateExpression = 
-            Expression.Throw(
-                Expression.New(ExceptionExpressions.InvalidOperationExceptionCtor,
-                    Expression.Call(MethodExpressions.StringFormat,
-                        Expression.Constant(Constants.CannotConstructDelegate),
-                        BuildContextExpression.Type),
-                    Expression.New(typeof(InvalidRegistrationException))));
-
-        private static readonly Expression ThrowOnNoSelectorExpression =
-            Expression.Throw(
-                Expression.New(ExceptionExpressions.InvalidOperationExceptionCtor,
-                    Expression.Call(MethodExpressions.StringFormat,
-                        Expression.Constant(Constants.NoSelectorFound),
-                        BuildContextExpression.Type),
-                    Expression.New(typeof(InvalidRegistrationException))));
-
-        private static readonly Expression ThrowOnNoConstructorExpression =
-            Expression.Throw(
-                Expression.New(ExceptionExpressions.InvalidOperationExceptionCtor,
-                    Expression.Call(MethodExpressions.StringFormat,
-                        Expression.Constant(Constants.NoConstructorFound),
-                        BuildContextExpression.Type),
-                    Expression.New(typeof(InvalidRegistrationException))));
-
-
-        public static readonly Expression IfExistingIsNull =
-            Expression.Equal(BuildContextExpression.Existing, Expression.Constant(null));
-
-
-        #endregion
-
-
-        #region Constructors
-
-        static DynamicMethodConstructorStrategy()
-        {
-        }
+        private static readonly Expression InvalidRegistrationExpression = Expression.New(typeof(InvalidRegistrationException));
 
         #endregion
 
@@ -139,15 +75,43 @@ namespace Unity.Strategies.Legacy.Creation
             where TContext : IBuilderContext
         {
             // Validate type can be constructed
-            if (context.TypeInfo.IsInterface) return ThrowOnConstructingInterfaceExpression;
-            if (context.TypeInfo.IsAbstract) return ThrowOnConstructingAbstractClassExpression;
-            if (context.TypeInfo.IsSubclassOf(typeof(Delegate))) return ThrowOnConstructingDelegateExpression;
-            if (context.Type == typeof(string)) return ThrowOnNotConstructableTypeExpression;
+            if (context.TypeInfo.IsInterface) return Expression.Throw(
+                Expression.New(ExceptionExpressions.InvalidOperationExceptionCtor,
+                    Expression.Call(MethodExpressions.StringFormat,
+                        Expression.Constant(Constants.CannotConstructInterface),
+                        BuildContextExpression<TContext>.Type),
+                    InvalidRegistrationExpression));
+
+            if (context.TypeInfo.IsAbstract) return Expression.Throw(
+                Expression.New(ExceptionExpressions.InvalidOperationExceptionCtor,
+                    Expression.Call(MethodExpressions.StringFormat,
+                        Expression.Constant(Constants.CannotConstructAbstractClass),
+                        BuildContextExpression<TContext>.Type),
+                    InvalidRegistrationExpression));
+
+            if (context.TypeInfo.IsSubclassOf(typeof(Delegate))) return Expression.Throw(
+                Expression.New(ExceptionExpressions.InvalidOperationExceptionCtor,
+                    Expression.Call(MethodExpressions.StringFormat,
+                        Expression.Constant(Constants.CannotConstructDelegate),
+                        BuildContextExpression<TContext>.Type),
+                    InvalidRegistrationExpression));
+
+            if (context.Type == typeof(string)) return Expression.Throw(
+                Expression.New(ExceptionExpressions.InvalidOperationExceptionCtor,
+                    Expression.Call(MethodExpressions.StringFormat,
+                        Expression.Constant(Constants.TypeIsNotConstructable),
+                        BuildContextExpression<TContext>.Type),
+                    InvalidRegistrationExpression));
 
             // Find selector
             var selector = context.Policies.GetPolicy<ISelectConstructor>(context.Type, context.Name);
-            if (null == selector) return ThrowOnNoSelectorExpression;
-            
+            if (null == selector) return Expression.Throw(
+                Expression.New(ExceptionExpressions.InvalidOperationExceptionCtor,
+                    Expression.Call(MethodExpressions.StringFormat,
+                        Expression.Constant(Constants.NoSelectorFound),
+                        BuildContextExpression<TContext>.Type),
+                    InvalidRegistrationExpression));
+
             // Select constructor
             var selection = selector.SelectConstructor(ref context);
             if (selection is IExpressionFactory<ConstructorInfo> resolverFactory) // TODO: Injection ??
@@ -156,25 +120,30 @@ namespace Unity.Strategies.Legacy.Creation
             }
 
             var ctor = (ConstructorInfo)selection;
-            if (null == ctor) return ThrowOnNoConstructorExpression;
+            if (null == ctor) return Expression.Throw(
+                Expression.New(ExceptionExpressions.InvalidOperationExceptionCtor,
+                    Expression.Call(MethodExpressions.StringFormat,
+                        Expression.Constant(Constants.NoConstructorFound),
+                        BuildContextExpression<TContext>.Type),
+                    InvalidRegistrationExpression));
 
             // Check if any parameters are by reference
             var parameters = ctor.GetParameters();
             if (parameters.Any(pi => pi.ParameterType.IsByRef))
             {
-                return Expression.IfThen(IfExistingIsNull,
+                return Expression.IfThen(Expression.Equal(BuildContextExpression<TContext>.Existing, Expression.Constant(null)),
                     Expression.Throw(Expression.New(ExceptionExpressions.InvalidOperationExceptionCtor,
                         Expression.Constant(CreateErrorMessage(Constants.SelectedConstructorHasRefParameters, context.Type, ctor)),
-                        Expression.New(typeof(InvalidRegistrationException)))));
+                        InvalidRegistrationExpression)));
             }
 
             // Check if references self in parameters
             if (IsInvalidConstructor(ref context, ctor))
             {
-                return Expression.IfThen(IfExistingIsNull,
+                return Expression.IfThen(Expression.Equal(BuildContextExpression<TContext>.Existing, Expression.Constant(null)),
                     Expression.Throw(Expression.New(ExceptionExpressions.InvalidOperationExceptionCtor,
                         Expression.Constant(CreateErrorMessage(Constants.SelectedConstructorHasRefItself, context.Type, ctor)),
-                        Expression.New(typeof(InvalidRegistrationException)))));
+                        InvalidRegistrationExpression)));
             }
 
             bool IsInvalidConstructor(ref TContext c, MethodBase constructor)
@@ -190,7 +159,7 @@ namespace Unity.Strategies.Legacy.Creation
             }
 
             // Build parameter expressions
-            var factory = selection as IExpressionFactory<ParameterInfo> ?? 
+            var factory = selection as IExpressionFactory<ParameterInfo> ??
                           context.Policies.Get<IExpressionFactory<ParameterInfo>>();
 
             var expressions = new Expression[parameters.Length];

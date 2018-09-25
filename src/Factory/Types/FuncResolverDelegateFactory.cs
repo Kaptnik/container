@@ -1,14 +1,14 @@
 ﻿using System;
 using System.Reflection;
 using Unity.Build.Delegates;
-using Unity.Builder;
+using Unity.Build.Context;
 
 namespace Unity.Factory.Types
 {
     /// <summary>
     /// A factory implementation that constructs a builds plan for creating
     /// <see cref="Func{T}"/> objects. </summary>
-    public class FuncResolverDelegateFactory<TContext> where TContext : IBuilderContext
+    public class FuncResolverDelegateFactory<TContext> where TContext : IBuildContext
     {
         private delegate Func<T> ReturnDelegate<out T>(ref TContext context);
 
@@ -28,7 +28,7 @@ namespace Unity.Factory.Types
 
         private static Func<T> DeferredResolve<T>(ref TContext context)
         {
-            var nameToBuild = context.BuildKey.Name;
+            var nameToBuild = context.Name;
             var container = context.Container;
 
             return () => (T)container.Resolve<T>(nameToBuild);
