@@ -1,12 +1,11 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using Unity.Build.Delegates;
 using Unity.Builder;
 using Unity.Policy;
 using Unity.Policy.Mapping;
 using Unity.Registration;
-using Unity.Storage;
-using Unity.Strategies.Legacy;
 
 namespace Unity.Strategies.Resolve
 {
@@ -43,17 +42,23 @@ namespace Unity.Strategies.Resolve
                 var name = context.BuildKey.Name;
                 var existing = context.Existing;
 
-                context.Registration.Set(typeof(IBuildPlanPolicy), 
-                    new DynamicMethodBuildPlan(c => 
-                    {
-                        ((BuilderContext)c).ChildContext = new BuilderContext(c, type, name);
-                        ((BuilderContext)c.ChildContext).BuildUp();
+                // TODO: Implement
+                //ResolveDelegate<TContext> remapping = (ref TContext c) =>
+                //{
 
-                        c.Existing = c.ChildContext.Existing;
-                        c.BuildComplete = null != existing;
+                //};
 
-                        ((BuilderContext)c).ChildContext = null;
-                    }));
+                //context.Registration.Set(typeof(IBuildPlanPolicy<TContext>), 
+                //    new DynamicMethodBuildPlan<TContext>(c => 
+                //    {
+                //        ((BuilderContext)c).ChildContext = new BuilderContext(c, type, name);
+                //        ((BuilderContext)c.ChildContext).BuildUp();
+
+                //        c.Existing = c.ChildContext.Existing;
+                //        c.BuildComplete = null != existing;
+
+                //        ((BuilderContext)c).ChildContext = null;
+                //    }));
             }
         }
 
@@ -62,7 +67,7 @@ namespace Unity.Strategies.Resolve
         {
             if (context.Registration is InternalRegistration registration && 
                 null != registration.BuildChain &&
-                null != context.Registration.Get<IBuildPlanPolicy>())
+                null != context.Registration.Get<ResolveDelegate<TContext>>())
             {
                 var chain = new List<BuilderStrategy>();
                 var strategies = registration.BuildChain;

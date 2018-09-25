@@ -6,10 +6,10 @@ using Unity.Container.Lifetime;
 using Unity.Policy.Lifetime;
 using Unity.Storage;
 
-namespace Unity.Factory
+namespace Unity.Factory.Types
 {
     /// <summary>
-    /// A factory implementation that constructs a build plan for creating
+    /// A factory implementation that constructs a builds plan for creating
     /// <see cref="Lazy{T}"/> objects. </summary>
     public class LazyResolverDelegateFactory
     {
@@ -17,7 +17,7 @@ namespace Unity.Factory
                 typeof(LazyResolverDelegateFactory).GetTypeInfo()
                                                    .GetDeclaredMethod(nameof(BuildResolveLazy));
 
-        public static ResolverFactoryDelegate<TContext> CreateResolverFactoryDelegate<TContext>(IPolicyList policies) 
+        public static ResolverFactoryDelegate<TContext> ResolverFactoryDelegate<TContext>(IPolicyList policies) 
             where TContext : IBuilderContext
         {
             return (ref TContext context) =>

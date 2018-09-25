@@ -2,12 +2,12 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using Unity.Build.Context;
 using Unity.Builder;
 using Unity.Exceptions;
 using Unity.Policy;
 using Unity.Registration;
 using Unity.Storage;
-using Unity.Strategies.Legacy.Creation;
 
 namespace Unity
 {
@@ -130,7 +130,7 @@ namespace Unity
                 catch (Policy.Mapping.MakeGenericTypeFailedException) { /* Ignore */ }
                 catch (InvalidOperationException ex)
                 {
-                    if (!(ex.InnerException is DynamicMethodConstructorStrategy.InvalidRegistrationException))
+                    if (!(ex.InnerException is InvalidRegistrationException))
                         throw;
                 }
             }

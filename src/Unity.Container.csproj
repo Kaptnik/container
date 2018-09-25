@@ -29,6 +29,14 @@
     <Compile Remove="Utility\ConcurrentDictionary.cs" />
   </ItemGroup>
 
+  <ItemGroup Condition="'$(TargetFramework)' != '' AND $(TargetFramework.StartsWith('netcoreapp'))">
+    <Compile Remove="Exceptions\IllegalInjectionMethodException.Desktop.cs" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(TargetFramework)' != '' AND $(TargetFramework.StartsWith('netstandard'))">
+    <Compile Remove="Exceptions\IllegalInjectionMethodException.Desktop.cs" />
+  </ItemGroup>
+
   <PropertyGroup>
     <UnityAbstractions>..\..\Abstractions\src\Unity.Abstractions.csproj</UnityAbstractions>
   </PropertyGroup>
@@ -52,10 +60,6 @@
     <Compile Remove="Build\**" />
     <EmbeddedResource Remove="Build\**" />
     <None Remove="Build\**" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Compile Remove="Strategies\Legacy\Selection\ConstructorSelectorPolicyBase.cs" />
   </ItemGroup>
 
 

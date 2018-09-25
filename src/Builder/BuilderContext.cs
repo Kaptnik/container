@@ -111,17 +111,43 @@ namespace Unity.Builder
 
         public object Resolve(Type type, string name) => NewBuildUp(type, name);
 
-        public ResolveDelegate<TContext> CreateResolver<TContext>(object value) 
-            where TContext : IBuildContext
+        public object Resolve(PropertyInfo property, string name, object value = null)
         {
-            throw new NotImplementedException();
+            if (null == _resolverOverrides) return value;
+
+            // Walk backwards over the resolvers, this way newer resolvers can replace
+            // older ones.
+            for (int index = _resolverOverrides.Length - 1; index >= 0; --index)
+            {
+                //var context = this;
+                //var resolver = _resolverOverrides[index].GetResolver(ref context, dependencyType);
+                //if (resolver != null)
+                //{
+                //    return resolver;
+                //}
+            }
+
+            return null;
         }
 
-        public Expression CreateExpression(object value) 
+        public object Resolve(ParameterInfo parameter, string name, object value = null)
         {
-            throw new NotImplementedException();
-        }
+            if (null == _resolverOverrides) return value;
 
+            // Walk backwards over the resolvers, this way newer resolvers can replace
+            // older ones.
+            //for (int index = _resolverOverrides.Length - 1; index >= 0; --index)
+            //{
+            //    var context = this;
+            //    var resolver = _resolverOverrides[index].GetResolver(ref context, dependencyType);
+            //    if (resolver != null)
+            //    {
+            //        return resolver;
+            //    }
+            //}
+
+            return null;
+        }
 
         #endregion
 

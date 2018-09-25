@@ -72,14 +72,6 @@ namespace Unity.Builder
         IPolicyList Policies { get; }
 
         /// <summary>
-        /// The current object being built up or torn down.
-        /// </summary>
-        /// <value>
-        /// The current object being manipulated by the build operation. May
-        /// be null if the object hasn't been created yet.</value>
-        object Existing { get; set; }
-
-        /// <summary>
         /// Flag indicating if the build operation should continue.
         /// </summary>
         /// <value>true means that building should not call any more

@@ -5,17 +5,16 @@ using System.Globalization;
 using System.Linq;
 using System.Reflection;
 using Unity.Build.Delegates;
-using Unity.Build.Policy;
+using Unity.Build.Factory;
 using Unity.Builder;
 using Unity.Container;
 using Unity.Container.Lifetime;
 using Unity.Events;
 using Unity.Extension;
-using Unity.Factory;
+using Unity.Factory.Expressed;
+using Unity.Factory.Types;
 using Unity.Policy;
-using Unity.Policy.BuildPlanCreator;
 using Unity.Policy.Lifetime;
-using Unity.Policy.Selection;
 using Unity.Registration;
 using Unity.Storage;
 using Unity.Strategies;
@@ -24,8 +23,8 @@ using Unity.Strategies.Legacy.Creation;
 using Unity.Strategies.Legacy.Method;
 using Unity.Strategies.Legacy.Property;
 using Unity.Strategies.Legacy.Selection;
+using Unity.Strategies.Legacy.Setup;
 using Unity.Strategies.Resolve;
-using Unity.Strategy;
 
 namespace Unity
 {
@@ -127,10 +126,10 @@ namespace Unity
             _strategies.Add(new LifetimeStrategy(), UnityBuildStage.Lifetime);
             _strategies.Add(new MappingBuildTypeStrategy(), UnityBuildStage.TypeMapping);
             _strategies.Add(new BuildActivatedStrategy(), UnityBuildStage.Creation);
-            _strategies.Add(new BuildCompiledStrategy(), UnityBuildStage.Creation);
             _strategies.Add(new BuildPlanStrategy(), UnityBuildStage.Creation);
 
             // Build plan strategy chain
+            _buildPlanStrategies.Add(new DynamicMethodSetupStrategy(), BuilderStage.PreCreation); 
             _buildPlanStrategies.Add(new DynamicMethodConstructorStrategy(), BuilderStage.Creation);
             _buildPlanStrategies.Add(new DynamicMethodPropertySetterStrategy(), BuilderStage.Initialization);
             _buildPlanStrategies.Add(new DynamicMethodCallStrategy(), BuilderStage.Initialization);
@@ -143,9 +142,10 @@ namespace Unity
             // Default Policies
             Set(null, null, GetDefaultPolicies());
             Set(typeof(Func<>), string.Empty, typeof(ILifetimePolicy), new PerResolveLifetimeManager());
-            Set(typeof(Func<>), string.Empty, typeof(IBuildPlanPolicy), new DeferredResolveCreatorPolicy());
-            Set(typeof(Lazy<>), string.Empty, typeof(ResolverFactoryDelegate<BuilderContext>), 
-                                              LazyResolverDelegateFactory.CreateResolverFactoryDelegate<BuilderContext>(_context.Policies));
+            Set(typeof(Func<>), string.Empty, typeof(ResolveDelegate<>), 
+                                              FuncResolverDelegateFactory<BuilderContext>.ResolveDelegate);
+            Set(typeof(Lazy<>), string.Empty, typeof(ResolverFactoryDelegate<>), 
+                                              LazyResolverDelegateFactory.ResolverFactoryDelegate<BuilderContext>(_context.Policies));
 
             // Register this instance
             RegisterInstance(typeof(IUnityContainer), null, this, new ContainerLifetimeManager());
@@ -200,10 +200,11 @@ namespace Unity
         {
             var defaults = new InternalRegistration(null, null);
 
-            defaults.Set(typeof(IBuildPlanCreatorPolicy), new DynamicMethodBuildPlanCreatorPolicy(_buildPlanStrategies));
-            defaults.Set(typeof(ISelectConstructor),      new DefaultUnityConstructorSelectorPolicy());
-            defaults.Set(typeof(IPropertySelectorPolicy), new DefaultUnitySelectProperties());
-            defaults.Set(typeof(IMethodSelectorPolicy),   new DefaultUnityMethodSelectorPolicy());
+            defaults.Set(typeof(IBuildPlanCreatorPolicy),    new DynamicMethodBuildPlanCreatorPolicy(_buildPlanStrategies));
+            defaults.Set(typeof(IExpressionFactory<object>), new ExpressionFactoryVisitor());
+            defaults.Set(typeof(IConstructorSelectorPolicy), new DefaultConstructorSelectorPolicy());
+            defaults.Set(typeof(IPropertySelectorPolicy),    new DefaultPropertiesSelectorPolicy());
+            defaults.Set(typeof(IMethodSelectorPolicy),      new DefaultMethodsSelectorPolicy());
 
             return defaults;
         }

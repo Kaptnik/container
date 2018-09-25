@@ -1,15 +1,12 @@
-﻿
-
-using System.Collections.Generic;
-using Unity.Policy;
+﻿using System.Collections.Generic;
 using Unity.Strategies;
 
-namespace Unity.Strategy
+namespace Unity.Storage
 {
     /// <summary>
     /// Represents a chain of responsibility for builder strategies.
     /// </summary>
-    public interface IStrategyChain : IEnumerable<BuilderStrategy>, IBuildPlanPolicy
+    public interface IStrategyChain : IEnumerable<BuilderStrategy>
     {
     }
 }

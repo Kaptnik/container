@@ -1,13 +1,14 @@
 ﻿using System.Collections.Generic;
 using Unity.Build.Context;
+using Unity.Policy.Selection;
 
-namespace Unity.Policy.Selection
+namespace Unity.Policy
 {
     /// <summary>
     /// A policy that returns a sequence
     /// of properties that should be injected for the given type.
     /// </summary>
-    public interface IPropertySelectorPolicy
+    public interface IPropertySelectorPolicy : IBuilderPolicy
     {
         /// <summary>
         /// Returns sequence of properties on the given type that

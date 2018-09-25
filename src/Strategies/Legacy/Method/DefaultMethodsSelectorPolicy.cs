@@ -4,6 +4,7 @@ using System.Reflection;
 using Unity.Attributes;
 using Unity.Build.Context;
 using Unity.Build.Delegates;
+using Unity.Policy;
 using Unity.Policy.Selection;
 using Unity.Utility;
 
@@ -13,7 +14,7 @@ namespace Unity.Strategies.Legacy.Selection
     /// An implementation of <see cref="IMethodSelectorPolicy"/> that is aware
     /// of the build keys used by the Unity container.
     /// </summary>
-    public class DefaultUnityMethodSelectorPolicy : IMethodSelectorPolicy
+    public class DefaultMethodsSelectorPolicy : IMethodSelectorPolicy
     {
         /// <summary>
         /// Return the sequence of methods to call while building the target object.

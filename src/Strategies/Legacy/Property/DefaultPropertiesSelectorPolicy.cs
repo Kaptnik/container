@@ -4,6 +4,7 @@ using System.Reflection;
 using Unity.Attributes;
 using Unity.Build.Context;
 using Unity.Build.Delegates;
+using Unity.Policy;
 using Unity.Policy.Selection;
 using Unity.Utility;
 
@@ -13,7 +14,7 @@ namespace Unity.Strategies.Legacy.Selection
     /// An implementation of <see cref="IPropertySelectorPolicy"/> that is aware of
     /// the build keys used by the unity container.
     /// </summary>
-    public class DefaultUnitySelectProperties : IPropertySelectorPolicy
+    public class DefaultPropertiesSelectorPolicy : IPropertySelectorPolicy
     {
         /// <summary>
         /// Returns sequence of properties on the given type that

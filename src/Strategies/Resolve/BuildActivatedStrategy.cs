@@ -16,8 +16,9 @@ namespace Unity.Strategies.Resolve
 
         public override bool RequiredToBuildType(IUnityContainer container, INamedType registration, params InjectionMember[] injectionMembers)
         {
-            return registration is ContainerRegistration containerRegistration && containerRegistration.LifetimeManager is ISingletonLifetimePolicy ||
-                   registration is InternalRegistration internalRegistration && internalRegistration.Get(typeof(ILifetimePolicy)) is ISingletonLifetimePolicy;
+            return false;
+            //return registration is ContainerRegistration containerRegistration && containerRegistration.LifetimeManager is ISingletonLifetimePolicy ||
+            //       registration is InternalRegistration internalRegistration && internalRegistration.Get(typeof(ILifetimePolicy)) is ISingletonLifetimePolicy;
         }
 
         #endregion
@@ -27,23 +28,23 @@ namespace Unity.Strategies.Resolve
 
         public override void PreBuildUp<TContext>(ref TContext context)
         {
-            var resolver = context.Registration.Get<ResolveDelegate<TContext>>() ?? (ResolveDelegate<TContext>)(
-                           context.Policies.Get(context.BuildKey.Type, string.Empty, typeof(ResolveDelegate<TContext>)) ??
-                           GetGeneric(context.Policies, typeof(ResolveDelegate<TContext>),
-                               context.OriginalBuildKey,
-                               context.OriginalBuildKey.Type));
+            //var resolver = context.Registration.Get<ResolveDelegate<TContext>>() ?? (ResolveDelegate<TContext>)(
+            //               context.Policies.Get(context.BuildKey.Type, string.Empty, typeof(ResolveDelegate<TContext>)) ??
+            //               GetGeneric(context.Policies, typeof(ResolveDelegate<TContext>),
+            //                   context.OriginalBuildKey,
+            //                   context.OriginalBuildKey.Type));
 
-            if (null == resolver)
-            {
-                var factory = context.Registration.Get<ResolverFactoryDelegate<TContext>>() ?? GetOpenGenericPolicy<TContext>(context.Registration) ??
-                              GetPolicy<ResolverFactoryDelegate<TContext>>(context.Policies, context.BuildKey);
+            //if (null == resolver)
+            //{
+            //    var factory = context.Registration.Get<ResolverFactoryDelegate<TContext>>() ?? GetOpenGenericPolicy<TContext>(context.Registration) ??
+            //                  GetPolicy<ResolverFactoryDelegate<TContext>>(context.Policies, context.BuildKey);
 
-                resolver = factory?.Invoke(ref context);
-                if (null != resolver) context.Registration.Set(typeof(ResolveDelegate<TContext>), resolver);
-            }
+            //    resolver = factory?.Invoke(ref context);
+            //    if (null != resolver) context.Registration.Set(typeof(ResolveDelegate<TContext>), resolver);
+            //}
 
-            context.Existing = resolver(ref context);
-            context.BuildComplete = true;
+            //context.Existing = resolver(ref context);
+            //context.BuildComplete = true;
         }
 
         #endregion

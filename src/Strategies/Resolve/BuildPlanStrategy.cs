@@ -1,6 +1,7 @@
 using System;
 using System.Globalization;
 using System.Reflection;
+using Unity.Build.Delegates;
 using Unity.Builder;
 using Unity.Exceptions;
 using Unity.Policy;
@@ -16,6 +17,14 @@ namespace Unity.Strategies.Resolve
     /// </summary>
     public class BuildPlanStrategy : BuilderStrategy
     {
+        #region Static Members
+
+        public static readonly ResolveDelegate<BuilderContext> OverriddenBuildPlanMarkerPolicy =
+            (ref BuilderContext context) => throw new InvalidOperationException("This should never be executed");
+
+        #endregion
+
+
         #region BuilderStrategy
 
         /// <summary>
@@ -24,26 +33,29 @@ namespace Unity.Strategies.Resolve
         /// <param name="context">The context for the operation.</param>
         public override void PreBuildUp<TContext>(ref TContext context)
         {
-            var plan = context.Registration.Get<IBuildPlanPolicy>() ?? (IBuildPlanPolicy)(
-                           context.Policies.Get(context.BuildKey.Type, string.Empty, typeof(IBuildPlanPolicy)) ??
-                           GetGeneric(context.Policies, typeof(IBuildPlanPolicy),
-                               context.OriginalBuildKey,
-                               context.OriginalBuildKey.Type));
+            var plan = (ResolveDelegate<TContext>)(
+                context.Registration.Get(typeof(ResolveDelegate<>)) ??
+                context.Policies.Get(context.BuildKey.Type, string.Empty, typeof(ResolveDelegate<>)) ??
+                GetGeneric(context.Policies, typeof(ResolveDelegate<>),
+                           context.OriginalBuildKey,
+                           context.OriginalBuildKey.Type));
 
-            if (plan == null || plan is OverriddenBuildPlanMarkerPolicy)
+            if (plan == null || ReferenceEquals(plan, OverriddenBuildPlanMarkerPolicy))
             {
-                var planCreator = context.Registration.Get<IBuildPlanCreatorPolicy>() ?? GetOpenGenericPolicy(context.Registration) ??
+                var planCreator = context.Registration.Get<IBuildPlanCreatorPolicy>() ?? 
+                                  GetOpenGenericPolicy(context.Registration) ??
                                   GetPolicy<IBuildPlanCreatorPolicy>(context.Policies, context.BuildKey);
+
                 if (planCreator != null)
                 {
                     plan = planCreator.CreatePlan(ref context, context.BuildKey);
-                    context.Registration.Set(typeof(IBuildPlanPolicy), plan);
+                    context.Registration.Set(typeof(ResolveDelegate<>), plan);
                 }
                 else
                     throw new ResolutionFailedException(context.OriginalBuildKey.Type, context.OriginalBuildKey.Name, null, context);
             }
 
-            plan?.BuildUp(ref context);
+            plan?.Invoke(ref context);
         }
 
         #endregion
@@ -70,7 +82,7 @@ namespace Unity.Strategies.Resolve
             return null;
         }
 
-        private static IBuildPlanCreatorPolicy GetOpenGenericPolicy(IPolicySet namedType)
+        private static IBuildPlanCreatorPolicy GetOpenGenericPolicy(IPolicySet namedType) 
         {
             if (namedType is InternalRegistration registration && !(namedType is ContainerRegistration) &&
                 null != registration.Type && registration.Type.GetTypeInfo().IsGenericTypeDefinition)

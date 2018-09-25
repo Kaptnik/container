@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
-using Unity.Build;
 using Unity.Build.Context;
 using Unity.Builder;
 using Unity.Policy;
@@ -15,7 +14,7 @@ namespace Unity.Strategies.Legacy
     /// </summary>
     public class DynamicBuildPlanGenerationContext
     {
-        private readonly Queue<Expression> _buildPlanExpressions;
+        #region Static Fields
 
         private static readonly MethodInfo ResolveDependencyMethod =
             typeof(IResolverPolicy).GetTypeInfo().GetDeclaredMethod(nameof(IResolverPolicy.Resolve))
@@ -25,11 +24,15 @@ namespace Unity.Strategies.Legacy
             typeof(DynamicBuildPlanGenerationContext).GetTypeInfo()
                                                      .GetDeclaredMethod(nameof(GetResolver))
                                                      .MakeGenericMethod(typeof(IBuilderContext));
+        #endregion
 
-        private static readonly MemberInfo GetBuildContextExistingObjectProperty =
-            typeof(IBuilderContext).GetTypeInfo()
-                                   .DeclaredMembers
-                                   .First(m => m.Name == nameof(IBuilderContext.Existing));
+
+        #region Fields
+
+        private readonly Queue<Expression> _buildPlanExpressions;
+
+        #endregion
+
         /// <summary>
         /// 
         /// </summary>
@@ -40,6 +43,18 @@ namespace Unity.Strategies.Legacy
             ContextParameter = Expression.Parameter(typeof(IBuilderContext), "context");
             _buildPlanExpressions = new Queue<Expression>();
         }
+
+
+
+        #region Public Members
+
+        public Expression Constructor { get; set; }
+
+        public IList<Expression> Properties { get; } = new List<Expression>();
+
+        public IList<Expression> Methods { get; } = new List<Expression>();
+
+        #endregion
 
         /// <summary>
         /// The type that is to be built with the dynamic build plan.
@@ -93,12 +108,6 @@ namespace Unity.Strategies.Legacy
                     resolvedObjectExpression);
         }
 
-        internal Expression GetExistingObjectExpression()
-        {
-            return Expression.MakeMemberAccess(ContextParameter,
-                                                GetBuildContextExistingObjectProperty);
-        }
-
         internal Expression GetClearCurrentOperationExpression()
         {
             return Expression.Assign(
@@ -118,29 +127,6 @@ namespace Unity.Strategies.Legacy
                                ResolveDependencyMethod,
                                ContextParameter),
                            dependencyType);
-        }
-
-        internal DynamicBuildPlanMethod GetBuildMethod()
-        {
-            var planDelegate = (Func<IBuilderContext, object>)
-                Expression.Lambda(
-                    Expression.Block(
-                        _buildPlanExpressions.Concat(new[] { GetExistingObjectExpression() })),
-                        ContextParameter)
-                .Compile();
-
-            return context =>
-                {
-                    try
-                    {
-                        context.Existing = planDelegate(context);
-                    }
-                    catch (TargetInvocationException e)
-                    {
-                        if (e.InnerException != null) throw e.InnerException;
-                        throw;
-                    }
-                };
         }
 
         private Expression RestoreCurrentOperationExpression(ParameterExpression savedOperationExpression)
@@ -168,7 +154,7 @@ namespace Unity.Strategies.Legacy
         /// <param name="dependencyType">Type of the dependency being resolved.</param>
         /// <param name="resolver">The configured resolver.</param>
         /// <returns>The found dependency resolver.</returns>
-        public static IResolverPolicy GetResolver<TContext>(ref TContext context, Type dependencyType, IResolverPolicy resolver) 
+        public static IResolverPolicy GetResolver<TContext>(ref TContext context, Type dependencyType, IResolverPolicy resolver)
             where TContext : IBuilderContext
         {
             var overridden = context.GetOverriddenResolver(dependencyType);

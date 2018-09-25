@@ -1,14 +1,15 @@
 ﻿using System.Collections.Generic;
 using Unity.Build.Context;
+using Unity.Policy.Selection;
 
-namespace Unity.Policy.Selection
+namespace Unity.Policy
 {
     /// <summary>
     /// A policy that will examine the given
     /// types and return a sequence of <see cref="System.Reflection.MethodInfo"/> objects
     /// that should be called as part of building the object.
     /// </summary>
-    public interface IMethodSelectorPolicy
+    public interface IMethodSelectorPolicy : IBuilderPolicy
     {
         /// <summary>
         /// Return the sequence of methods to call while building the target object.

@@ -12,6 +12,8 @@ namespace Unity
         public const string LifetimeManagerInUse = "The lifetime manager is already registered. Lifetime managers cannot be reused, please create a new one.";
         public const string MarkerBuildPlanInvoked = "The override marker build plan policy has been invoked. This should never happen, looks like a bug in the container.";
         public const string MustHaveSameNumberOfGenericArguments = "The supplied type {0} does not have the same number of generic arguments as the target type {1}.";
+        public const string NoSelectorFound = "No appropriate constructor selector is registered for type {0}.";
+        public const string MissingDependency = "Could not resolve dependency for build key {0}.";
         public const string NoConstructorFound = "The type {0} does not have an accessible constructor.";
         public const string OptionalDependenciesMustBeReferenceTypes = "Optional dependencies must be reference types. The type {0} is a value type.";
         public const string PropertyNotSettable = "The property {0} on type {1} is not settable.";

@@ -4,15 +4,15 @@ using System.Linq;
 using System.Reflection;
 using Unity.Attributes;
 using Unity.Build.Context;
-using Unity.Build.Policy;
+using Unity.Policy;
 
-namespace Unity.Strategies.Legacy.Selection
+namespace Unity.Strategies.Legacy.Creation
 {
     /// <summary>
-    /// An implementation of <see cref="ISelectConstructor"/> that is
+    /// An implementation of <see cref="IConstructorSelectorPolicy"/> that is
     /// aware of the build keys used by the Unity container.
     /// </summary>
-    public class DefaultUnityConstructorSelectorPolicy : ISelectConstructor
+    public class DefaultConstructorSelectorPolicy : IConstructorSelectorPolicy
     {
         #region Fields
 
@@ -22,9 +22,9 @@ namespace Unity.Strategies.Legacy.Selection
         #endregion
 
 
-        #region ISelectConstructor
+        #region IConstructorSelectorPolicy
 
-        public object Select<TContext>(ref TContext context) where TContext : IBuildContext
+        public object SelectConstructor<TContext>(ref TContext context) where TContext : IBuildContext
         {
             return FindAttributedConstructor(ref context) ??
                    FindLongestConstructor(ref context);

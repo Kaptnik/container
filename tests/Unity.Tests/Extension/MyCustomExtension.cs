@@ -28,7 +28,7 @@ namespace Unity.Tests.v5.Extension
 
         public IMyCustomConfigurator AddPolicy()
         {
-            Context.Policies.Set(null, null, typeof(IBuildPlanPolicy), new MyCustomPolicy());
+            // TODO: Context.Policies.Set(null, null, typeof(IBuildPlanPolicy), new MyCustomPolicy());
             this.checkPolicyAdded = true;
             return this;
         }
