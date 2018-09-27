@@ -5,6 +5,7 @@ using System.Reflection;
 using Unity.Build.Factory;
 using Unity.Build.Policy;
 using Unity.Builder;
+using Unity.Build.Context;
 using Unity.Container.Lifetime;
 using Unity.Exceptions;
 using Unity.Expressions;

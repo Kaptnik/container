@@ -123,10 +123,10 @@ namespace Unity
                                                      typeof(UnityContainer).GetTypeInfo().GetDeclaredMethod(nameof(ResolveGenericArray))), UnityBuildStage.Enumerable);
             _strategies.Add(new EnumerableResolveStrategy(typeof(UnityContainer).GetTypeInfo().GetDeclaredMethod(nameof(ResolveEnumerable)),
                                                           typeof(UnityContainer).GetTypeInfo().GetDeclaredMethod(nameof(ResolveGenericEnumerable))), UnityBuildStage.Enumerable);
-            _strategies.Add(new LifetimeStrategy(), UnityBuildStage.Lifetime);
+            _strategies.Add(new LifetimeStrategy(),         UnityBuildStage.Lifetime);
             _strategies.Add(new MappingBuildTypeStrategy(), UnityBuildStage.TypeMapping);
-            _strategies.Add(new BuildActivatedStrategy(), UnityBuildStage.Creation);
-            _strategies.Add(new BuildPlanStrategy(), UnityBuildStage.Creation);
+            _strategies.Add(new BuildActivatedStrategy(),   UnityBuildStage.Creation);
+            _strategies.Add(new BuildPlanStrategy(),        UnityBuildStage.Creation);
 
             // Build plan strategy chain
             _buildPlanStrategies.Add(new DynamicMethodSetupStrategy(), BuilderStage.PreCreation); 
@@ -200,8 +200,13 @@ namespace Unity
         {
             var defaults = new InternalRegistration(null, null);
 
+            var visitorExp = new ExpressionFactoryVisitor();
+            defaults.Set(typeof(IExpressionFactory<object>),          visitorExp);
+            defaults.Set(typeof(IExpressionFactory<ConstructorInfo>), visitorExp);
+            defaults.Set(typeof(IExpressionFactory<PropertyInfo>),    visitorExp);
+            defaults.Set(typeof(IExpressionFactory<ParameterInfo>),   visitorExp);
+
             defaults.Set(typeof(IBuildPlanCreatorPolicy),    new DynamicMethodBuildPlanCreatorPolicy(_buildPlanStrategies));
-            defaults.Set(typeof(IExpressionFactory<object>), new ExpressionFactoryVisitor());
             defaults.Set(typeof(IConstructorSelectorPolicy), new DefaultConstructorSelectorPolicy());
             defaults.Set(typeof(IPropertySelectorPolicy),    new DefaultPropertiesSelectorPolicy());
             defaults.Set(typeof(IMethodSelectorPolicy),      new DefaultMethodsSelectorPolicy());

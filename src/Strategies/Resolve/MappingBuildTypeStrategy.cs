@@ -3,6 +3,7 @@ using System.Linq;
 using System.Reflection;
 using Unity.Build.Delegates;
 using Unity.Builder;
+using Unity.Build.Context;
 using Unity.Policy;
 using Unity.Policy.Mapping;
 using Unity.Registration;
